@@ -1,0 +1,25 @@
+{
+    "name": "com.bridge.app.manager",
+    "version": "1.0.0",
+    "displayName": "3ridge App Manager",
+    "description": "Manages the app's core functionality.",
+    "unity": "2019.1",
+    "unityRelease": "0b5",
+    "dependencies": {
+   },
+   "keywords": [
+      "Bridge",
+      "3ridge",
+      "App",
+      "Manager",
+      "App Manager",
+      "Bridge App Manager",
+      "3ridge App Manager"
+    ],
+    "author": {
+      "name": "Hlulani Maswanganyi",
+      "email": "hlulani@3ridge.co.za",
+      "url": "https://www.3ridge.co.za"
+    }
+  }
+  

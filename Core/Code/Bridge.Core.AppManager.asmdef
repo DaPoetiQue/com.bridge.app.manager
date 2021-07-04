@@ -1,0 +1,17 @@
+{
+    "name": "Bridge.Core.AppManager",
+    "rootNamespace": "Bridge.Core.AppManager",
+    "references": [
+        "GUID:5ef81270e65190e4babbe8d8e6e466c5",
+        "GUID:e716835e950357547805ba81a6fab883"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
