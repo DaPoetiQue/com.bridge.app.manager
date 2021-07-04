@@ -6,6 +6,8 @@
     "unity": "2019.1",
     "unityRelease": "0b5",
     "dependencies": {
+      "com.bridge.debugger": "1.0.0",
+      "com.bridge.events.manager": "1.0.0"
    },
    "keywords": [
       "Bridge",
