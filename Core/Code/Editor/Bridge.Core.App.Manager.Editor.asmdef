@@ -1,0 +1,22 @@
+{
+    "name": "Bridge.Core.App.Manager.Editor",
+    "rootNamespace": "Bridge.Core.App.Manager.Editor",
+    "references": [
+        "GUID:7a83b60555168a847b46d0c28f02531d",
+        "GUID:5ef81270e65190e4babbe8d8e6e466c5",
+        "GUID:c8e6dd032a5f5574ca08313a3b5f894b"
+    ],
+    "includePlatforms": [
+        "Editor",
+        "macOSStandalone",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

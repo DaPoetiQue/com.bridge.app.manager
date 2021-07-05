@@ -2,7 +2,7 @@ using UnityEngine;
 using Bridge.Core.Debug;
 using Bridge.Core.Events;
 
-namespace Bridge.Core.AppManager
+namespace Bridge.Core.App.Manager
 {
     public class AppManager : MonoDebug
     {

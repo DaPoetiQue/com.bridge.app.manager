@@ -5,10 +5,7 @@
     "description": "Manages the app's core functionality.",
     "unity": "2019.1",
     "unityRelease": "0b5",
-    "dependencies": {
-      "com.bridge.debugger": "1.0.0",
-      "com.bridge.events.manager": "1.0.0"
-   },
+    "dependencies": {},
    "keywords": [
       "Bridge",
       "3ridge",
@@ -19,7 +16,7 @@
       "3ridge App Manager"
     ],
     "author": {
-      "name": "Hlulani Maswanganyi",
+      "name": "3ridge",
       "email": "hlulani@3ridge.co.za",
       "url": "https://www.3ridge.co.za"
     }
