@@ -1,9 +1,11 @@
 using UnityEngine;
 using Bridge.Core.Debug;
-using Bridge.Core.Events;
+using Bridge.Core.App.Events;
 
 namespace Bridge.Core.App.Manager
 {
+    [RequireComponent(typeof(AppFrameRateHandler))]
+
     public class AppManager : MonoDebug
     {
         #region Instances
@@ -43,13 +45,18 @@ namespace Bridge.Core.App.Manager
         {
             EventsManager.Instance.OnAppViewChangedEvent.AddListener(OnAppViewStateChanged);
             EventsManager.Instance.OnAppInitializedEvent.Invoke();
+
+            if(Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
+            {
+                Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            }
         }
 
         public void OnAppViewStateChanged(AppEventsData.AppViewState appViewState)
         {
             this.appViewState = appViewState;
 
-             Log(LogData.LogLevel.Debug, this, $"App view changed to {appViewState.ToString()}.");
+             Log(LogLevel.Debug, this, $"App view changed to {appViewState.ToString()}.");
         }
 
         #endregion
