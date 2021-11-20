@@ -3,7 +3,6 @@ using System.IO;
 using UnityEngine.SceneManagement;
 using UnityEditor.Build.Reporting;
 using Bridge.Core.App.Manager;
-
 using System;
 using Bridge.Core.UnityEditor.App.Manager;
 using UnityEngine;
@@ -14,25 +13,22 @@ public static class AppBuildConfig
         {
             try
             {
+                int sceneCount = SceneManager.sceneCount;
+                string[] scenePath = new string[sceneCount];
 
+                for (int i = 0; i < sceneCount; i++)
+                {
+                    scenePath[i] = SceneUtility.GetScenePathByBuildIndex(i);
+                    UnityEngine.Debug.Log($"--> Found Scene @ : {scenePath[i]}");
+                }
+
+                Build(AppBuildManagerEditorWindow.GetBuildSettings(), scenePath, false);
             }
             catch (Exception exception)
             {
                 throw exception;
             }
-
-            int sceneCount = SceneManager.sceneCount;
-            string[] scenePath = new string[sceneCount];
-
-            for (int i = 0; i < sceneCount; i++)
-            {
-                scenePath[i] = SceneUtility.GetScenePathByBuildIndex(i);
-                UnityEngine.Debug.Log($"Found Scene @ : {scenePath[i]}");
-            }
-
-            Build(AppBuildManagerEditorWindow.GetBuildSettings(), scenePath, false);
-
-    }
+        }
 
         public static void Build(BuildSettings buildSettings, string[] scenePath, bool runApp)
         {
@@ -75,22 +71,26 @@ public static class AppBuildConfig
                 BuildPlayerOptions buildOptions = new BuildPlayerOptions();
                 buildOptions.scenes = scenes;
 
-            string buildDirectory = Directory.GetParent(Directory.GetCurrentDirectory()) + $"/App Builds/{settings.configurations.platform.ToString()}";
+            //string buildDirectory = Directory.GetParent(Directory.GetCurrentDirectory()) + $"/App Builds/{settings.configurations.platform.ToString()}";
 
-            UnityEngine.Debug.Log($"--> Dir : {buildDirectory}");
+            //UnityEngine.Debug.Log($"--> Dir : {buildDirectory}");
 
-            if (!Directory.Exists(buildDirectory))
-            {
-                Directory.CreateDirectory(buildDirectory);
-            }
+            //if (!Directory.Exists(buildDirectory))
+            //{
+            //    Directory.CreateDirectory(buildDirectory);
+            //}
 
-            string appFilePath = Path.Combine(buildDirectory, settings.appInfo.appName + ".apk");
+            //string appFilePath = Path.Combine(buildDirectory, settings.appInfo.appName + ".apk");
 
-            settings.configurations.buildLocation = appFilePath;
+            //settings.configurations.buildLocation = appFilePath;
 
             //settings.configurations.buildLocation = EditorUtility.SaveFilePanel("Choose A Build Folder", Application.dataPath + "/../", settings.appInfo.appName, "apk");
 
-            if (string.IsNullOrEmpty(settings.configurations.buildLocation))
+                settings.configurations.buildLocation = EditorUtility.SaveFilePanel("Choose A Build Folder", Application.dataPath + "/../", settings.appInfo.appName, "apk");
+
+                UnityEngine.Debug.Log($"--> Building App At Path : {settings.configurations.buildLocation}");
+
+                if (string.IsNullOrEmpty(settings.configurations.buildLocation))
                 {
                     return;
                 }

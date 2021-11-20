@@ -195,18 +195,50 @@ namespace Bridge.Core.App.Manager
     [Serializable]
     public class BuildCompiler
     {
-        public string echoStart;
+        #region Property Fields
+
+        public string echoPrepareBuild;
         public string removeDirectory;
         public string echoCopy;
         public string copyCommand;
-        public string echoBuild;
-        public string buildAppCommand;
-        public string echoEnd;
+        public string changeDirectory;
+        public string echoCompile;
+        public string compileBuildCommand;
         public string pause;
+
+        #endregion
 
         public override string ToString()
         {
-            return $"{echoStart = "echo Preparing Build..."} \n {removeDirectory} \n {echoCopy = "echo Copying App Project Files..."} \n {copyCommand} \n {echoBuild = "echo Build Started..."} \n {buildAppCommand} \n {echoEnd = "echo Build Completed..."} \n {pause = "@pause"}";
+            return $"{echoPrepareBuild} \n " +
+                   $"{removeDirectory} \n " +
+                   $"{echoCopy} \n " +
+                   $"{copyCommand} \n " +
+                   $"{changeDirectory} \n " +
+                   $"{echoCompile} \n " +
+                   $"{compileBuildCommand} \n " +
+                   $"{pause} ";
+        }
+    }
+
+    [Serializable]
+    public class Compiler
+    {
+        #region Property Fields
+
+        public string echoInitializeBuild;
+        public string startBuildCommand;
+        public string echoEndBuild;
+        public string pause;
+
+        #endregion
+
+        public override string ToString()
+        {
+            return $"{echoInitializeBuild} \n  " +
+                   $"{startBuildCommand} \n " +
+                   $"{echoEndBuild} \n " +
+                   $"{pause}";
         }
     }
 
