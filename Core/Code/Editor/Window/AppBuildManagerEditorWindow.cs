@@ -1,13 +1,9 @@
-using System;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Rendering;
 using System.IO;
-using UnityEngine.SceneManagement;
-using UnityEditor.Build.Reporting;
 using Bridge.Core.App.Manager;
 using Bridge.Core.Debug;
-using System.Diagnostics;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
@@ -360,14 +356,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
             if (GUILayout.Button("Build & Launch App", GUILayout.Height(45)))
             {
                 CreateBuildCompiler();
-
-                // "/AppBuilder.bat"
-                //var info = new FileInfo("AppBuilder.bat");
-
-                //bool exist = File.Exists(info.FullName);
-
-                // UnityEngine.Debug.Log($"File Exist : {exist}");
-                //Build(command);
             }
 
             if (File.Exists(appSettings.configurations.buildLocation) == true)
@@ -548,28 +536,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
             EditorUserBuildSettings.SetBuildLocation(buildSettings.configurations.platform, buildSettings.configurations.buildLocation);
         }
 
-        private static void BuildApp(BuildSettings buildSettings, bool runApp)
-        {
-            switch(buildSettings.configurations.platform)
-            {
-                case BuildTarget.Android:
-
-                    BuildAndroid(buildSettings, runApp);
-
-                    break;
-
-                case BuildTarget.iOS:
-
-
-                    if (BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.iOS, BuildTarget.iOS))
-                    {
-                    
-                    }
-
-                    break;
-            }
-        }
-
         private static void CreateBuildCompiler()
         {
             var info = new FileInfo("AppBuilder.bat");
@@ -609,10 +575,21 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             string projectCopyCommand = $"robocopy {projectDir} {targetDestDir} {excludedFolders} {excludeFiles}";
 
+            // Build Command
+            string rootPath = "C:/Program Files/";
+            string unityVersion = Application.unityVersion;
+            string path = "/Editor/Unity.exe";
+            string pathCombined = "\"" + rootPath +unityVersion+path + "\"";
+
+            string buildCommand = pathCombined + $" -quit -batchmode -projectPath -executeMethod AppBuildConfig.BuildApp";
+           
+            UnityEngine.Debug.Log($"-->Build Path : {buildCommand}");
+
             BuildCompiler compiler = new BuildCompiler
             {
                 //echoStart = "echo Build Started.....",
                 removeDirectory = directoryToRemove,
+                buildAppCommand = buildCommand,
                 copyCommand = projectCopyCommand,
                 //pause = "@pause"
             };
@@ -631,49 +608,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
             System.Diagnostics.Process.Start(command);
         }
 
-        private static void BuildAndroid(BuildSettings settings, bool runApp)
-        {
-            BuildPlayerOptions buildOptions = new BuildPlayerOptions();
-            buildOptions.scenes = new[] {SceneManager.GetActiveScene().path};
-            settings.configurations.buildLocation = EditorUtility.SaveFilePanel("Choose A Build Folder", Application.dataPath + "/../", settings.appInfo.appName, "apk");
-
-            if(string.IsNullOrEmpty(settings.configurations.buildLocation))
-            {
-                return;
-            }
-
-            if (File.Exists(settings.configurations.buildLocation))
-            {
-                File.Delete(settings.configurations.buildLocation);
-            }
-
-            buildOptions.locationPathName = settings.configurations.buildLocation;
-
-            buildOptions.target = BuildTarget.Android;
-
-            if(runApp)
-            {
-                buildOptions.options = BuildOptions.AutoRunPlayer;
-            }
-            else
-            {
-                buildOptions.options = BuildOptions.None;
-            }
-
-            BuildReport report = BuildPipeline.BuildPlayer(buildOptions);
-            BuildSummary summary = report.summary;
-
-            if(summary.result == BuildResult.Succeeded)
-            {
-                EditorWindow.FocusWindowIfItsOpen<AppBuildManagerEditorWindow>();
-                //Debugger.Log(DebugData.LogType.LogInfo, "App build completed successfully.");
-            }
-
-            if (summary.result == BuildResult.Failed)
-            {
-                //DebugConsole.Log(LogLevel.Success, $"App build failed.");
-            }
-        }
 
         private static void OpenFileInExplorer(string assetPat)
         {

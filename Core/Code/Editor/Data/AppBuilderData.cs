@@ -197,12 +197,16 @@ namespace Bridge.Core.App.Manager
     {
         public string echoStart;
         public string removeDirectory;
+        public string echoCopy;
         public string copyCommand;
+        public string echoBuild;
+        public string buildAppCommand;
+        public string echoEnd;
         public string pause;
 
         public override string ToString()
         {
-            return $"{echoStart = "echo Build Started....."} \n {removeDirectory} \n {copyCommand} \n {pause = "@pause"}";
+            return $"{echoStart = "echo Preparing Build..."} \n {removeDirectory} \n {echoCopy = "echo Copying App Project Files..."} \n {copyCommand} \n {echoBuild = "echo Build Started..."} \n {buildAppCommand} \n {echoEnd = "echo Build Completed..."} \n {pause = "@pause"}";
         }
     }
 
