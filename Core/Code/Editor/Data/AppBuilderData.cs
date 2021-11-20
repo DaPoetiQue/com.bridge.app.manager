@@ -1,8 +1,7 @@
-using JetBrains.Annotations;
 using System;
+using UnityEditor;
 // using Bridge.Core.App.Data.Storage;
 using UnityEngine;
-using UnityEditor;
 
 namespace Bridge.Core.App.Manager
 {
@@ -109,7 +108,7 @@ namespace Bridge.Core.App.Manager
         public bool developmentBuild;
 
         [HideInInspector]
-        public string buildLocation; 
+        public string buildLocation;
     }
 
     #region Display Data
@@ -176,7 +175,7 @@ namespace Bridge.Core.App.Manager
                 return RuntimeOS.Standalone;
             }
 
-            if(buildSettings.configurations.platform == BuildTarget.XboxOne ||
+            if (buildSettings.configurations.platform == BuildTarget.XboxOne ||
                 buildSettings.configurations.platform == BuildTarget.PS4 ||
                 buildSettings.configurations.platform == BuildTarget.PS5 ||
                 buildSettings.configurations.platform == BuildTarget.Switch)
@@ -197,11 +196,13 @@ namespace Bridge.Core.App.Manager
     public class BuildCompiler
     {
         public string echoStart;
+        public string removeDirectory;
+        public string copyCommand;
         public string pause;
 
         public override string ToString()
         {
-            return $"{echoStart} \n {pause}";
+            return $"{echoStart = "echo Build Started....."} \n {removeDirectory} \n {copyCommand} \n {pause = "@pause"}";
         }
     }
 
