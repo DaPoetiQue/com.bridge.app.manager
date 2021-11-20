@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor.Build.Reporting;
 using Bridge.Core.App.Manager;
 using Bridge.Core.Debug;
+using System.Diagnostics;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
@@ -83,11 +84,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
         #region Settings
 
         private static BuildSettings appSettings;
-        private static bool RunAppOnCmpletion;
+        private static bool RunAppOnCompletion;
         private static AndroidPreferredInstallLocation installLocation;
-
-        private static bool addCustomSceneRootContent;
-        // private static SceneRootObject sceneRootObject;
 
         #region Storage Data
 
@@ -157,7 +155,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             settingsHeaderStyle.padding.top = 40;
             settingsHeaderStyle.padding.left = 50;
             settingsHeaderStyle.alignment = TextAnchor.LowerCenter;
-            settingsHeaderContent.text = "App Build Manager";
+            settingsHeaderContent.text = "Build Manager";
 
             #endregion
 
@@ -179,13 +177,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
             appSettings.appInfo.appVersion = "1.0";
             appSettings.configurations.platform = BuildTarget.Android; // This will be loaded from a json file called buildSettings.json
             appSettings.androidSettings.SdkVersion = AndroidSdkVersions.AndroidApiLevel24;
-
-            //// This will be loaded from a json file called sceneSetup.json
-            //sceneRootObject = CreateInstance<SceneRootObject>();
-            //// sceneRootObject.settings.estimatedLighting =;
-            //sceneRootObject.settings.lightShadowType = LightShadows.Hard;
-
-            //sceneRootObject.settings.sceneFocusData = CreateInstance<ARSceneFocusData>();
         }
 
         #endregion
@@ -202,7 +193,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 appSettings.appInfo = GetBuildSettings().appInfo;
 
                 window = GetWindow<AppBuildManagerEditorWindow>();
-                Debugger.Log(DebugData.LogType.LogInfo, this, "Window Refreshed!.");
+                Bridge.Core.Debug.Debugger.Log(DebugData.LogType.LogInfo, this, "Window Refreshed!.");
             }
 
             DrawLayouts();
@@ -213,7 +204,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         {
             if(headerSectionTexture == null)
             {
-                Debugger.Log(DebugData.LogType.LogWarning, this, "Header Texture Missing");
+                Bridge.Core.Debug.Debugger.Log(DebugData.LogType.LogWarning, this, "Header Texture Missing");
             }
 
             #region Header Section
@@ -303,6 +294,46 @@ namespace Bridge.Core.UnityEditor.App.Manager
             EditorGUILayout.PropertyField(appConfigSerializedObjectProperty, true);
             appConfigSerializedObject.ApplyModifiedProperties();
 
+            if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Console)
+            {
+                GUILayout.Space(10);
+
+                SerializedObject appDisplayObject = new SerializedObject(appSettings);
+                SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("consoleDisplaySettings");
+                EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
+                appDisplayObject.ApplyModifiedProperties();
+            }
+
+            if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Mobile)
+            {
+                GUILayout.Space(10);
+
+                SerializedObject appDisplayObject = new SerializedObject(appSettings);
+                SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("mobileDisplaySettings");
+                EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
+                appDisplayObject.ApplyModifiedProperties();
+            }
+
+            if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Standalone)
+            {
+                GUILayout.Space(10);
+
+                SerializedObject appDisplayObject = new SerializedObject(appSettings);
+                SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("standaloneDisplaySettings");
+                EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
+                appDisplayObject.ApplyModifiedProperties();
+            }
+
+            if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Web)
+            {
+                GUILayout.Space(10);
+
+                SerializedObject appDisplayObject = new SerializedObject(appSettings);
+                SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("webDisplaySettings");
+                EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
+                appDisplayObject.ApplyModifiedProperties();
+            }
+
             if (appSettings.configurations.platform == BuildTarget.Android)
             {
                 GUILayout.Space(10);
@@ -317,11 +348,26 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region App Builder
 
-            GUILayout.Space(4);
+            GUILayout.Space(10);
 
-            if (GUILayout.Button("Install & Launch App", GUILayout.Height(45)))
+            if (GUILayout.Button("Apply Settings", GUILayout.Height(45)))
             {
-                BuildApp(appSettings, RunAppOnCmpletion);
+               
+            }
+
+            GUILayout.Space(10);
+
+            if (GUILayout.Button("Build & Launch App", GUILayout.Height(45)))
+            {
+                CreateBuildCompiler();
+
+                // "/AppBuilder.bat"
+                //var info = new FileInfo("AppBuilder.bat");
+
+                //bool exist = File.Exists(info.FullName);
+
+                // UnityEngine.Debug.Log($"File Exist : {exist}");
+                //Build(command);
             }
 
             if (File.Exists(appSettings.configurations.buildLocation) == true)
@@ -347,7 +393,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         #region Root Builder Actions
 
-        private static BuildSettings GetBuildSettings()
+        public static BuildSettings GetBuildSettings()
         {
             BuildSettings settings = appSettings;
 
@@ -362,7 +408,11 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region Configurations
 
-            settings.configurations.allowedOrientation = PlayerSettings.defaultInterfaceOrientation;
+            if(appSettings.configurations.platform == BuildTarget.Android || appSettings.configurations.platform == BuildTarget.iOS)
+            {
+                settings.mobileDisplaySettings.allowedOrientation = PlayerSettings.defaultInterfaceOrientation;
+            }
+
             settings.configurations.platform = EditorUserBuildSettings.activeBuildTarget;
             settings.configurations.allowDebugging = EditorUserBuildSettings.allowDebugging;
             settings.configurations.developmentBuild = EditorUserBuildSettings.development;
@@ -415,37 +465,40 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             buildSettings.appInfo.appIdentifier = $"com.{companyName}.{appName}";
 
-            switch (buildSettings.configurations.allowedOrientation)
+            if(appSettings.configurations.platform == BuildTarget.Android || appSettings.configurations.platform == BuildTarget.iOS)
             {
-                case UIOrientation.AutoRotation:
+                switch (buildSettings.mobileDisplaySettings.allowedOrientation)
+                {
+                    case UIOrientation.AutoRotation:
 
-                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
+                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
 
-                    break;
+                        break;
 
-                case UIOrientation.Portrait:
+                    case UIOrientation.Portrait:
 
-                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
 
-                    break;
+                        break;
 
-                case UIOrientation.PortraitUpsideDown:
+                    case UIOrientation.PortraitUpsideDown:
 
-                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.PortraitUpsideDown; ;
+                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.PortraitUpsideDown; ;
 
-                    break;
+                        break;
 
-                case UIOrientation.LandscapeLeft:
+                    case UIOrientation.LandscapeLeft:
 
-                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
+                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
 
-                    break;
+                        break;
 
-                case UIOrientation.LandscapeRight:
+                    case UIOrientation.LandscapeRight:
 
-                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeRight;
+                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeRight;
 
-                    break;
+                        break;
+                }
             }
 
             if (buildSettings.appInfo.splashScreen != null)
@@ -517,6 +570,40 @@ namespace Bridge.Core.UnityEditor.App.Manager
             }
         }
 
+        private static void CreateBuildCompiler()
+        {
+            var info = new FileInfo("AppBuilder.bat");
+            string directory = info.DirectoryName + "/Build Compiler";
+            string command = directory + "/" + info.Name;
+
+            UnityEngine.Debug.Log($"Creating Compiler - Directory : {directory} - File Path : {command}");
+
+            if(!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+                UnityEngine.Debug.Log($"--> Creating Build Compiler Directory : <color=cyan>{directory}</color>");
+            }
+
+            BuildCompiler compiler = new BuildCompiler
+            {
+                echoStart = "echo Build Started.....",
+                pause = "@pause"
+            };
+
+            File.WriteAllText(command, compiler.ToString());
+
+            if(File.Exists(command))
+            {
+                UnityEngine.Debug.Log($"--> <color=orange>Build Started....</color>");
+                Build(command);
+            }
+        }
+
+        private static void Build(string command)
+        {
+            System.Diagnostics.Process.Start(command);
+        }
+
         private static void BuildAndroid(BuildSettings settings, bool runApp)
         {
             BuildPlayerOptions buildOptions = new BuildPlayerOptions();
@@ -564,7 +651,11 @@ namespace Bridge.Core.UnityEditor.App.Manager
         private static void OpenFileInExplorer(string assetPat)
         {
             //DebugConsole.Log(LogLevel.Debug, $"Path : {assetPat}");
-        }    
+        }
+
+        #endregion
+
+        #region Settings
 
         #endregion
 
