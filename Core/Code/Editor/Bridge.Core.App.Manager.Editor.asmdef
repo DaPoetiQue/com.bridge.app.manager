@@ -2,9 +2,11 @@
     "name": "Bridge.Core.UnityEditor.App.Manager",
     "rootNamespace": "Bridge.Core.UnityEditor.App.Manager",
     "references": [
-        "GUID:7a83b60555168a847b46d0c28f02531d",
         "GUID:5ef81270e65190e4babbe8d8e6e466c5",
-        "GUID:c8e6dd032a5f5574ca08313a3b5f894b"
+        "GUID:8e228a56e721fb14fa1b84b0012ff361",
+        "GUID:c8e6dd032a5f5574ca08313a3b5f894b",
+        "GUID:03609a11b5415cd4a97216d63394db02",
+        "GUID:e716835e950357547805ba81a6fab883"
     ],
     "includePlatforms": [
         "Editor",

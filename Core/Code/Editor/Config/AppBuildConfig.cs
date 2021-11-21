@@ -22,7 +22,7 @@ public static class AppBuildConfig
                     UnityEngine.Debug.Log($"--> Found Scene @ : {scenePath[i]}");
                 }
 
-                Build(AppBuildManagerEditorWindow.GetBuildSettings(), scenePath, false);
+                Build(AppBuildManagerEditor.GetBuildSettings(AppBuildManagerEditor.GetDefaultStorageInfo()), scenePath, false);
             }
             catch (Exception exception)
             {
@@ -30,7 +30,7 @@ public static class AppBuildConfig
             }
         }
 
-        public static void Build(BuildSettings buildSettings, string[] scenePath, bool runApp)
+        public static void Build(BuildSettingsData buildSettings, string[] scenePath, bool runApp)
         {
             switch (buildSettings.configurations.platform)
             {
@@ -58,13 +58,13 @@ public static class AppBuildConfig
             }
         }
 
-        private static void BuildStandaloneWindows(BuildSettings settings, string[] scenes, bool runApp)
+        private static void BuildStandaloneWindows(BuildSettingsData settings, string[] scenes, bool runApp)
         {
 
         }
 
 
-        private static void BuildAndroid(BuildSettings settings, string[] scenes, bool runApp)
+        private static void BuildAndroid(BuildSettingsData settings, string[] scenes, bool runApp)
         {
             try
             {
@@ -118,7 +118,7 @@ public static class AppBuildConfig
 
                 if (summary.result == BuildResult.Succeeded)
                 {
-                    EditorWindow.FocusWindowIfItsOpen<AppBuildManagerEditorWindow>();
+                    EditorWindow.FocusWindowIfItsOpen<AppBuildManagerEditor>();
                     //Debugger.Log(DebugData.LogType.LogInfo, "App build completed successfully.");
                 }
 

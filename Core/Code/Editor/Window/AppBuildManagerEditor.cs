@@ -1,18 +1,26 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Rendering;
+using System;
 using System.IO;
 using Bridge.Core.App.Manager;
-using Bridge.Core.Debug;
-using System;
+using Bridge.Core.UnityEditor.Debugger;
+using Bridge.Core.App.Data.Storage;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
-    public class AppBuildManagerEditorWindow : EditorWindow
+    public class AppBuildManagerEditor : EditorWindow
     {
         #region Components
 
-        private static AppBuildManagerEditorWindow window;
+        private static AppBuildManagerEditor window;
+
+        #endregion
+
+        #region Serializations
+
+        private static string fileName = "BuildSettingsData";
+        private static string folderName = "BridgeEditor";
 
         #endregion
 
@@ -21,7 +29,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         [MenuItem("Window/3ridge/App Build Manager #&m")]
         public static void OpenAppBuildManagerEditor()
         {
-            var windowInstance = GetWindow<AppBuildManagerEditorWindow>("App Build Manager");
+            var windowInstance = GetWindow<AppBuildManagerEditor>("App Build Manager");
             windowInstance.minSize = new Vector2(350, 400);
             windowInstance.maxSize = new Vector2(500, 600);
             windowInstance.Show();
@@ -173,7 +181,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             // If config not loaded. set default settings.
             appSettings.appInfo.appVersion = "1.0";
             appSettings.configurations.platform = BuildTarget.Android; // This will be loaded from a json file called buildSettings.json
-            appSettings.androidSettings.SdkVersion = AndroidSdkVersions.AndroidApiLevel24;
+            appSettings.androidSettings.sdkVersion = AndroidSdkVersions.AndroidApiLevel24;
         }
 
         #endregion
@@ -189,8 +197,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
             {
                 appSettings.appInfo = GetBuildSettings().appInfo;
 
-                window = GetWindow<AppBuildManagerEditorWindow>();
-                Bridge.Core.Debug.Debugger.Log(DebugData.LogType.LogInfo, this, "Window Refreshed!.");
+                window = GetWindow<AppBuildManagerEditor>();
+                DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
             }
 
             DrawLayouts();
@@ -201,7 +209,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         {
             if(headerSectionTexture == null)
             {
-                Bridge.Core.Debug.Debugger.Log(DebugData.LogType.LogWarning, this, "Header Texture Missing");
+                DebugConsole.Log(Debug.LogLevel.Warning, this, "Header Texture Missing");
             }
 
             #region Header Section
@@ -349,7 +357,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             if (GUILayout.Button("Apply Settings", GUILayout.Height(45)))
             {
-                AppBuildConfig.BuildApp();
+                ApplyAppSettings(appSettings);
             }
 
             GUILayout.Space(10);
@@ -382,33 +390,58 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         #region App Build Settings
 
+        /// <summary>
+        /// Used by the App Build Manager To Update Build Settings Window.
+        /// </summary>
+        /// <returns></returns>
         public static BuildSettings GetBuildSettings()
         {
-            BuildSettings settings = appSettings;
+            appSettings = GetBuildSettings(GetDefaultStorageInfo()).ToInstance();
+            return appSettings;
+        }
 
-            #region App Info
+        /// <summary>
+        /// Global Build Setting Data
+        /// </summary>
+        /// <param name="directoryInfo">The directory info used to load the data file from storage.</param>
+        /// <returns>Returns A Serializable Version Of The Build Settings Data</returns>
+        public static BuildSettingsData GetBuildSettings(StorageData.DirectoryInfoData directoryInfo)
+        {
+            BuildSettingsData settings = new BuildSettingsData();
 
-            settings.appInfo.companyName = PlayerSettings.companyName;
-            settings.appInfo.appName = PlayerSettings.productName;
-            settings.appInfo.appVersion = PlayerSettings.bundleVersion;
-            settings.appInfo.appIcon = PlayerSettings.GetIconsForTargetGroup(BuildTargetGroup.Unknown)[0];
-
-            #endregion
-
-            #region Configurations
-
-            if(appSettings.configurations.platform == BuildTarget.Android || appSettings.configurations.platform == BuildTarget.iOS)
+            Storage.JsonData.Load<BuildSettingsData>(directoryInfo, (loadedResults, loadStatus) =>
             {
-                settings.mobileDisplaySettings.allowedOrientation = PlayerSettings.defaultInterfaceOrientation;
-            }
+                if (loadStatus.error)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Error, $"Load Failed With Error: {loadStatus.errorValue}");
+                    return;
+                }
 
-            settings.configurations.platform = EditorUserBuildSettings.activeBuildTarget;
-            settings.configurations.allowDebugging = EditorUserBuildSettings.allowDebugging;
-            settings.configurations.developmentBuild = EditorUserBuildSettings.development;
+                if (loadStatus.success)
+                {
+                    settings = loadedResults;
 
-            #endregion
+                    DebugConsole.Log(Debug.LogLevel.Success, $"Load Completed With Results : {loadStatus.successValue}");
+                }
+            });
 
             return settings;
+        }
+
+        /// <summary>
+        /// The default storage director info for the App Build Manager.
+        /// </summary>
+        /// <returns></returns>
+        public static StorageData.DirectoryInfoData GetDefaultStorageInfo()
+        {
+            var directoryInfo = new StorageData.DirectoryInfoData
+            {
+                fileName = fileName,
+                folderName = folderName,
+                extensionType = StorageData.ExtensionType.json
+            };
+
+            return directoryInfo;
         }
 
         /// <summary>
@@ -417,21 +450,17 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <param name="buildSettings"></param>
         private static void ApplyAppSettings(BuildSettings buildSettings)
         {
-            // DebugConsole.Log(LogLevel.Debug, $"XR Loaded : {XRSettings.loadedDeviceName}");
-
             if (string.IsNullOrEmpty(buildSettings.appInfo.companyName))
             {
-                //DebugConsole.Log(LogLevel.Warning, "App info's company name field is empty. Please assign company name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
+                DebugConsole.Log(Debug.LogLevel.Warning, "App info's company name field is empty. Please assign company name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
                 return;
             }
 
             if (string.IsNullOrEmpty(buildSettings.appInfo.appName))
             {
-                //DebugConsole.Log(LogLevel.Warning, "App info's app name field is empty. Please assign app name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
+                DebugConsole.Log(Debug.LogLevel.Warning, "App info's app name field is empty. Please assign app name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
                 return;
             }
-
-            
 
             PlayerSettings.companyName = (string.IsNullOrEmpty(buildSettings.appInfo.companyName)) ? PlayerSettings.companyName : buildSettings.appInfo.companyName;
             PlayerSettings.productName = (string.IsNullOrEmpty(buildSettings.appInfo.appName)) ? PlayerSettings.productName : buildSettings.appInfo.appName;
@@ -442,7 +471,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
             if (companyName.Contains(" "))
             {
                 companyName = companyName.Replace(" ", "");
-
             }
 
             string appName = buildSettings.appInfo.appName;
@@ -513,14 +541,12 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                     PlayerSettings.SetMobileMTRendering(BuildTargetGroup.Android, false);
 
-                    PlayerSettings.Android.minSdkVersion = buildSettings.androidSettings.SdkVersion;
+                    PlayerSettings.Android.minSdkVersion = buildSettings.androidSettings.sdkVersion;
                     PlayerSettings.Android.androidTVCompatibility = false;
                     PlayerSettings.Android.preferredInstallLocation = buildSettings.androidSettings.installLocation;
                     PlayerSettings.Android.ARCoreEnabled = true;
 
                     EditorUserBuildSettings.buildAppBundle = buildSettings.androidSettings.buildAppBundle;
-
-                    // DebugConsole.Log(LogLevel.Debug, $"{XRSettings.loadedDeviceName}");
 
                     break;
 
@@ -533,8 +559,23 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             EditorUserBuildSettings.allowDebugging = buildSettings.configurations.allowDebugging;
             EditorUserBuildSettings.development = buildSettings.configurations.developmentBuild;
-
             EditorUserBuildSettings.SetBuildLocation(buildSettings.configurations.platform, buildSettings.configurations.buildLocation);
+
+            BuildSettingsData serializedSettings = buildSettings.ToSerializable();
+
+            Storage.JsonData.Save(GetDefaultStorageInfo(), serializedSettings, (infoData, saveResults) =>
+            {
+                if (saveResults.error)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Error, $"Save Failed With Error: { saveResults.errorValue}");
+                    return;
+                }
+
+                if(saveResults.success)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Success, $"Save Completed With Results : {saveResults.successValue}");
+                }
+            });
         }
 
         private static void CreateBuildCompiler()
@@ -607,7 +648,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 string compilerDirectory = $"\"{targetDestDir.Replace("\\", "/")}{buildScripts}\"";
                 string targetDirectory = $"\"{targetDestDir.Replace("\\", "/")}\"";
                 string changeDirectoryCommand = "chdir /d " + compilerDirectory;
-                string buildCommand = pathCombined + $" -quit -bachmode -projectPath .. -executeMethod AppBuildConfig.BuildApp";
+                string buildCommand = pathCombined + $" -quit -batchMode -projectPath .. -executeMethod AppBuildConfig.BuildApp";
                 string compilerBatchFile = "./" + compilerFileName;
 
                 UnityEngine.Debug.Log($"-->Change To Temp Compiler Directory : {changeDirectoryCommand}");
@@ -644,7 +685,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 if (File.Exists(buildScriptsCommand))
                 {
                     UnityEngine.Debug.Log($"--> <color=orange>Build Started....</color>");
-                    Build(buildScriptsCommand);
+                    StartBatchBuildCommand(buildScriptsCommand);
                 }
             }
             catch (Exception exception)
@@ -653,9 +694,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
             }
         }
 
-        private static void Build(string command)
+        private static void StartBatchBuildCommand(string buildCommand)
         {
-            System.Diagnostics.Process.Start(command);
+            System.Diagnostics.Process.Start(buildCommand);
         }
 
 

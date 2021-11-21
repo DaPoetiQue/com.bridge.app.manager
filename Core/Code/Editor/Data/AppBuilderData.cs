@@ -7,21 +7,39 @@ namespace Bridge.Core.App.Manager
 {
     #region App Info
 
-    public enum RuntimePlatform
+    public enum RuntimePlatform : byte
     {
-        Android, iOS
+        StandaloneOSX = 1, 
+        StandaloneWindows, 
+        iOS, 
+        Android,
+        StandaloneWindows64,
+        WebGL, 
+        WSAPlayer, 
+        StandaloneLinux64, 
+        PS4, 
+        XBoxOne, 
+        TVOS, 
+        Switch, 
+        Lumin, 
+        Stadia, 
+        CloudRendering, 
+        GameCoreXBoxSeries, 
+        GameCoreXBoxOne, 
+        PS5, 
+        EmbeddedLinux, 
+        NoTarget
     }
 
-    public enum RuntimeOS
+    public enum RuntimeOS : byte
     {
-        Console,
+        Console = 1,
         Mobile,
         None,
         Standalone,
         TV,
         Web
     }
-
 
     [Serializable]
     public struct AppResolution
@@ -61,8 +79,72 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public AndroidBuildSettings androidSettings;
+
+        #region Converted Settings
+
+        public BuildSettingsData ToSerializable()
+        {
+            return new BuildSettingsData
+            {
+                appInfo = appInfo,
+                configurations = configurations,
+                consoleDisplaySettings = consoleDisplaySettings,
+                mobileDisplaySettings = mobileDisplaySettings,
+                standaloneDisplaySettings = standaloneDisplaySettings,
+                webDisplaySettings = webDisplaySettings,
+                androidSettings = androidSettings
+            };
+        }
+
+        #endregion
     }
 
+    /// <summary>
+    /// This class contains the serializable app build settings.
+    /// </summary>
+    [Serializable]
+    public class BuildSettingsData
+    {
+        [Space(5)]
+        public AppInfo appInfo;
+
+        [Space(5)]
+        public BuildConfig configurations;
+
+        #region Display Settings
+
+        [Space(5)]
+        public ConsoleDisplaySettings consoleDisplaySettings;
+
+        [Space(5)]
+        public MobileDisplaySettings mobileDisplaySettings;
+
+        [Space(5)]
+        public StandaloneDisplaySettings standaloneDisplaySettings;
+
+        [Space(5)]
+        public WebDisplaySettings webDisplaySettings;
+
+        #endregion
+
+        [Space(5)]
+        public AndroidBuildSettings androidSettings;
+
+        public BuildSettings ToInstance()
+        {
+            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+
+            buildSettings.appInfo = appInfo;
+            buildSettings.configurations = configurations;
+            buildSettings.consoleDisplaySettings = consoleDisplaySettings;
+            buildSettings.mobileDisplaySettings = mobileDisplaySettings;
+            buildSettings.standaloneDisplaySettings = standaloneDisplaySettings;
+            buildSettings.webDisplaySettings = webDisplaySettings;
+            buildSettings.androidSettings = androidSettings;
+
+            return buildSettings;
+        }
+    }
 
     /// <summary>
     /// Information about the app.
@@ -96,7 +178,7 @@ namespace Bridge.Core.App.Manager
     public struct BuildConfig
     {
         [Space(5)]
-        public string scene;
+        public string[] buildScenes;
 
         [Space(5)]
         public BuildTarget platform;
@@ -152,7 +234,7 @@ namespace Bridge.Core.App.Manager
         public AndroidPreferredInstallLocation installLocation;
 
         [Space(5)]
-        public AndroidSdkVersions SdkVersion;
+        public AndroidSdkVersions sdkVersion;
 
         [Space(5)]
         public bool buildAppBundle;
