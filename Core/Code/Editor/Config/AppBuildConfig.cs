@@ -71,24 +71,22 @@ public static class AppBuildConfig
                 BuildPlayerOptions buildOptions = new BuildPlayerOptions();
                 buildOptions.scenes = scenes;
 
-            //string buildDirectory = Directory.GetParent(Directory.GetCurrentDirectory()) + $"/App Builds/{settings.configurations.platform.ToString()}";
+                string buildDirectory = Directory.GetParent(Directory.GetCurrentDirectory()) + $"/App Builds/{settings.configurations.platform.ToString()}";
 
-            //UnityEngine.Debug.Log($"--> Dir : {buildDirectory}");
+                UnityEngine.Debug.Log($"--> Dir : {buildDirectory}");
 
-            //if (!Directory.Exists(buildDirectory))
-            //{
-            //    Directory.CreateDirectory(buildDirectory);
-            //}
+                if (!Directory.Exists(buildDirectory))
+                {
+                    Directory.CreateDirectory(buildDirectory);
+                }
 
-            //string appFilePath = Path.Combine(buildDirectory, settings.appInfo.appName + ".apk");
+            
+                string appFilePath = Path.Combine("D:/Documents/Work/Tools/Builds", settings.appInfo.appName + ".apk");
+                // string appFilePath = Path.Combine(buildDirectory, settings.appInfo.appName + ".apk");
 
-            //settings.configurations.buildLocation = appFilePath;
+            settings.configurations.buildLocation = appFilePath;
 
-            //settings.configurations.buildLocation = EditorUtility.SaveFilePanel("Choose A Build Folder", Application.dataPath + "/../", settings.appInfo.appName, "apk");
-
-                settings.configurations.buildLocation = EditorUtility.SaveFilePanel("Choose A Build Folder", Application.dataPath + "/../", settings.appInfo.appName, "apk");
-
-                UnityEngine.Debug.Log($"--> Building App At Path : {settings.configurations.buildLocation}");
+            UnityEngine.Debug.Log($"--> Building App At Path : {settings.configurations.buildLocation}");
 
                 if (string.IsNullOrEmpty(settings.configurations.buildLocation))
                 {

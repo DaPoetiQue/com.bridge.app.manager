@@ -648,7 +648,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 string compilerDirectory = $"\"{targetDestDir.Replace("\\", "/")}{buildScripts}\"";
                 string targetDirectory = $"\"{targetDestDir.Replace("\\", "/")}\"";
                 string changeDirectoryCommand = "chdir /d " + compilerDirectory;
-                string buildCommand = pathCombined + $" -quit -batchMode -projectPath .. -executeMethod AppBuildConfig.BuildApp";
+                string buildCommand = pathCombined + $" -quit -batchMode -projectPath .. -executeMethod BuildScript.Build";
                 string compilerBatchFile = "./" + compilerFileName;
 
                 UnityEngine.Debug.Log($"-->Change To Temp Compiler Directory : {changeDirectoryCommand}");
