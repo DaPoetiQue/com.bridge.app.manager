@@ -279,6 +279,7 @@ namespace Bridge.Core.App.Manager
     {
         #region Property Fields
 
+        public string echoOff;
         public string echoPrepareBuild;
         public string removeDirectory;
         public string echoCopy;
@@ -292,7 +293,8 @@ namespace Bridge.Core.App.Manager
 
         public override string ToString()
         {
-            return $"{echoPrepareBuild} \n " +
+            return $"{echoOff} \n " +
+                   $"{echoPrepareBuild} \n " +
                    $"{removeDirectory} \n " +
                    $"{echoCopy} \n " +
                    $"{copyCommand} \n " +
@@ -308,8 +310,11 @@ namespace Bridge.Core.App.Manager
     {
         #region Property Fields
 
+        public string echoOff;
         public string echoInitializeBuild;
+        public string editorLogBuildStarted;
         public string startBuildCommand;
+        public string editorLogBuildEnded;
         public string echoEndBuild;
         public string pause;
 
@@ -317,8 +322,11 @@ namespace Bridge.Core.App.Manager
 
         public override string ToString()
         {
-            return $"{echoInitializeBuild} \n  " +
+            return $"{echoOff} \n  " +
+                   $"{echoInitializeBuild} \n  " +
+                   $"{editorLogBuildStarted} \n " +
                    $"{startBuildCommand} \n " +
+                   $"{editorLogBuildEnded} \n " +
                    $"{echoEndBuild} \n " +
                    $"{pause}";
         }
