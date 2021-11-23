@@ -80,9 +80,14 @@ public static class AppBuildConfig
                     Directory.CreateDirectory(buildDirectory);
                 }
 
-            
-                string appFilePath = Path.Combine("D:/Documents/Work/Tools/Builds", settings.appInfo.appName + ".apk");
-                // string appFilePath = Path.Combine(buildDirectory, settings.appInfo.appName + ".apk");
+            string path = Directory.GetCurrentDirectory() + "/Builds";
+
+            if(!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            string appFilePath = Path.Combine(path, settings.appInfo.appName + ".apk");
 
             settings.configurations.buildLocation = appFilePath;
 
