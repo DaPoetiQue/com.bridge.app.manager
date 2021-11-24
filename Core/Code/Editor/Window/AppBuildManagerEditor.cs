@@ -383,10 +383,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 BuildSettingsData buildSettings = GetBuildSettings(GetDefaultStorageInfo());
 
                 string fileFullPath = buildSettings.configurations.buildLocation;
-                //string fileExtension = $".{PlatformSpecificData.GetFileExtension(buildSettings.configurations.platform).ToString()}";
-                //string directory = fileFullPath.Replace(buildSettings.appInfo.appName + fileExtension, string.Empty);
-
-                //buildSettings.configurations.targetBuildDirectory = directory;
                 buildSettings.configurations.buildLocation = fileFullPath;
 
                 if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) || Directory.Exists(buildSettings.configurations.targetBuildDirectory) == false)
@@ -410,6 +406,13 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     DebugConsole.Log(Debug.LogLevel.Debug, this, $"Directory : {buildSettings.configurations.targetBuildDirectory}");
                 }
             }
+
+            GUILayout.Space(10);
+
+            SerializedObject buildSerializedObject = new SerializedObject(appSettings);
+            SerializedProperty buildSerializedObjectProperty = buildSerializedObject.FindProperty("includeBuildScripts");
+            EditorGUILayout.PropertyField(buildSerializedObjectProperty, true);
+            buildSerializedObject.ApplyModifiedProperties();
 
             #endregion
 

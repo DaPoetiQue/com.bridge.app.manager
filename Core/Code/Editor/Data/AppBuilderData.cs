@@ -87,19 +87,23 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public AndroidBuildSettings androidSettings;
 
+        [Space(5)]
+        public bool includeBuildScripts;
+
         #region Converted Settings
 
-        public BuildSettingsData ToSerializable()
+       public BuildSettingsData ToSerializable()
         {
             return new BuildSettingsData
             {
-                appInfo = appInfo,
-                configurations = configurations,
-                consoleDisplaySettings = consoleDisplaySettings,
-                mobileDisplaySettings = mobileDisplaySettings,
-                standaloneDisplaySettings = standaloneDisplaySettings,
-                webDisplaySettings = webDisplaySettings,
-                androidSettings = androidSettings
+                appInfo = this.appInfo,
+                configurations = this.configurations,
+                consoleDisplaySettings = this.consoleDisplaySettings,
+                mobileDisplaySettings = this.mobileDisplaySettings,
+                standaloneDisplaySettings = this.standaloneDisplaySettings,
+                webDisplaySettings = this.webDisplaySettings,
+                androidSettings = this.androidSettings,
+                includeBuildScripts = this.includeBuildScripts
             };
         }
 
@@ -137,6 +141,9 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public AndroidBuildSettings androidSettings;
 
+        [Space(5)]
+        public bool includeBuildScripts;
+
         public BuildSettings ToInstance()
         {
             BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
@@ -148,6 +155,7 @@ namespace Bridge.Core.App.Manager
             buildSettings.standaloneDisplaySettings = standaloneDisplaySettings;
             buildSettings.webDisplaySettings = webDisplaySettings;
             buildSettings.androidSettings = androidSettings;
+            buildSettings.includeBuildScripts = includeBuildScripts;
 
             return buildSettings;
         }
@@ -389,7 +397,10 @@ namespace Bridge.Core.App.Manager
 
         public string echoOff;
         public string echoCleaningBuild;
+        public string editorLogCleanStarted;
         public string cleanBuildPathCommand;
+        public string removeBuildScriptsCommand;
+        public string editorLogCleanEnded;
         public string echoEndBuild;
         public string pause;
 
@@ -399,7 +410,10 @@ namespace Bridge.Core.App.Manager
         {
             return $"{echoOff} \n  " +
                    $"{echoCleaningBuild} \n  " +
+                   $"{editorLogCleanStarted} \n  " +
                    $"{cleanBuildPathCommand} \n  " +
+                   $"{removeBuildScriptsCommand} \n  " +
+                   $"{editorLogCleanEnded} \n  " +
                    $"{echoEndBuild} \n " +
                    $"{pause}";
         }
