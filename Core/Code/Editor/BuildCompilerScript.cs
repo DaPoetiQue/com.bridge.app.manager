@@ -8,7 +8,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 {
     public static class BuildCompilerScript
     {
-        public static void BuildCompiler(BuildSettingsData appSettings)
+        public static void BuildCompiler(BuildSettingsData buildSettings)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 }
 
                 string targetDest = Path.GetTempPath();
-                string targetDestDir = Path.Combine(targetDest, appSettings.appInfo.appName.Replace(" ", string.Empty));
+                string targetDestDir = Path.Combine(targetDest, buildSettings.appInfo.appName.Replace(" ", string.Empty));
 
                 UnityEngine.Debug.Log($"--> Target Directory : <color=cyan>{targetDestDir}</color>");
 
@@ -58,7 +58,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 }
 
                 //string excludedFolders = "/E /xd Library Temp Build Builds Obj Logs UserSettings MemoryCaptures";
-                string excludedFolders = "/E /xd Library";
+                string excludedFolders = "/E /xd ";
 
                 string directoryToRemove = (Directory.Exists(targetDestDir)) ? "@RD /S /Q " + targetDestDir : string.Empty;
 
@@ -91,6 +91,15 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 string projectDir = "chdir /d " + targetDestDir;
 
+                string openBuildFolderCommand = $"Start \"\" {buildSettings.configurations.targetBuildDirectory}";
+
+                string buildDir = $"{targetDestDir}\\Builds";
+                string moveBuildCommand = $"move {buildDir}\\*.* {buildSettings.configurations.targetBuildDirectory.Replace("/","\\")}";
+
+                string purgeCacheCommand = $"rmdir {targetDestDir}";
+
+                UnityEngine.Debug.Log($"-->Copy Build To : {moveBuildCommand}");
+
                 UnityEngine.Debug.Log($"-->Change To Build Compiler Directory : {projectDir}");
 
                 #region Editor Log
@@ -110,6 +119,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     startBuildCommand = buildCommand,
                     editorLogBuildEnded = logEditorCommand,
                     echoEndBuild = "echo Build Completed...",
+                    moveBuildCommand = moveBuildCommand,
+                    purgeCacheCommand = purgeCacheCommand,
+                    openBuildFolderCommand = openBuildFolderCommand,
                     pause = "@pause"
                 };
 

@@ -64,14 +64,14 @@ public static class AppBuildConfig
         }
 
 
-        private static void BuildAndroid(BuildSettingsData settings, string[] scenes, bool runApp)
+        private static void BuildAndroid(BuildSettingsData buildSettings, string[] scenes, bool runApp)
         {
             try
             {
                 BuildPlayerOptions buildOptions = new BuildPlayerOptions();
                 buildOptions.scenes = scenes;
 
-                string buildDirectory = Directory.GetParent(Directory.GetCurrentDirectory()) + $"/App Builds/{settings.configurations.platform.ToString()}";
+                string buildDirectory = Directory.GetParent(Directory.GetCurrentDirectory()) + $"/App Builds/{buildSettings.configurations.platform.ToString()}";
 
                 UnityEngine.Debug.Log($"--> Dir : {buildDirectory}");
 
@@ -80,30 +80,23 @@ public static class AppBuildConfig
                     Directory.CreateDirectory(buildDirectory);
                 }
 
-            string path = Directory.GetCurrentDirectory() + "/Builds";
+         
+            buildSettings.configurations.targetBuildDirectory = GetBuildFolderPath(buildSettings);
+            buildSettings.configurations.buildLocation = GetBuildFilePath(buildSettings);
 
-            if(!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
+            UnityEngine.Debug.Log($"--> Building App At Path : {buildSettings.configurations.buildLocation}");
 
-            string appFilePath = Path.Combine(path, settings.appInfo.appName + ".apk");
-
-            settings.configurations.buildLocation = appFilePath;
-
-            UnityEngine.Debug.Log($"--> Building App At Path : {settings.configurations.buildLocation}");
-
-                if (string.IsNullOrEmpty(settings.configurations.buildLocation))
+                if (string.IsNullOrEmpty(buildSettings.configurations.buildLocation))
                 {
                     return;
                 }
 
-                if (File.Exists(settings.configurations.buildLocation))
+                if (File.Exists(buildSettings.configurations.buildLocation))
                 {
-                    File.Delete(settings.configurations.buildLocation);
+                    File.Delete(buildSettings.configurations.buildLocation);
                 }
 
-                buildOptions.locationPathName = settings.configurations.buildLocation;
+                buildOptions.locationPathName = buildSettings.configurations.buildLocation;
 
                 buildOptions.target = BuildTarget.Android;
 
@@ -135,4 +128,28 @@ public static class AppBuildConfig
                 throw exception;
             }
         }
+
+        public static string GetBuildFilePath(BuildSettingsData buildSettings)
+        {
+            string buildDir = Directory.GetCurrentDirectory() + "/Builds";
+
+            if (!Directory.Exists(buildDir))
+            {
+                Directory.CreateDirectory(buildDir);
+            }
+
+            return Path.Combine(buildDir, buildSettings.appInfo.appName + $".{PlatformSpecificData.GetFileExtension(buildSettings.configurations.platform)}");
+        }
+
+    public static string GetBuildFolderPath(BuildSettingsData buildSettings)
+    {
+        string buildDir = Directory.GetCurrentDirectory() + "/Builds";
+
+        if (!Directory.Exists(buildDir))
+        {
+            Directory.CreateDirectory(buildDir);
+        }
+
+        return buildDir;
     }
+}

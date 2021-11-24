@@ -31,6 +31,13 @@ namespace Bridge.Core.App.Manager
         NoTarget
     }
 
+    public enum BuildFileExtension : byte
+    {
+        apk,
+        exe,
+        none
+    }
+
     public enum RuntimeOS : byte
     {
         Console = 1,
@@ -191,6 +198,9 @@ namespace Bridge.Core.App.Manager
 
         [HideInInspector]
         public string buildLocation;
+
+        [HideInInspector]
+        public string targetBuildDirectory;
     }
 
     #region Display Data
@@ -274,6 +284,38 @@ namespace Bridge.Core.App.Manager
         }
     }
 
+    public static class PlatformSpecificData
+    {
+        public static BuildFileExtension GetFileExtension(BuildTarget platform)
+        {
+            BuildFileExtension output = BuildFileExtension.none;
+
+            switch(platform)
+            {
+                case BuildTarget.Android:
+
+                    output = BuildFileExtension.apk;
+
+                    break;
+
+                case BuildTarget.StandaloneWindows:
+
+                    output = BuildFileExtension.exe;
+
+                    break;
+
+                case BuildTarget.StandaloneWindows64:
+
+                    output = BuildFileExtension.exe;
+
+                    break;
+            }
+
+            return output;
+        }
+    }
+
+
     [Serializable]
     public class BuildCompiler
     {
@@ -316,6 +358,9 @@ namespace Bridge.Core.App.Manager
         public string startBuildCommand;
         public string editorLogBuildEnded;
         public string echoEndBuild;
+        public string moveBuildCommand;
+        public string purgeCacheCommand;
+        public string openBuildFolderCommand;
         public string pause;
 
         #endregion
@@ -328,6 +373,9 @@ namespace Bridge.Core.App.Manager
                    $"{startBuildCommand} \n " +
                    $"{editorLogBuildEnded} \n " +
                    $"{echoEndBuild} \n " +
+                   $"{moveBuildCommand} \n " +
+                   $"{purgeCacheCommand} \n " +
+                   $"{openBuildFolderCommand} \n " +
                    $"{pause}";
         }
     }

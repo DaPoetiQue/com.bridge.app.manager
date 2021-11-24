@@ -6,6 +6,8 @@ using System.IO;
 using Bridge.Core.App.Manager;
 using Bridge.Core.UnityEditor.Debugger;
 using Bridge.Core.App.Data.Storage;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
@@ -357,14 +359,44 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             if (GUILayout.Button("Apply Settings", GUILayout.Height(45)))
             {
-                ApplyAppSettings(appSettings);
+                ApplyAppSettings(appSettings.ToSerializable());
             }
 
             GUILayout.Space(10);
 
             if (GUILayout.Button("Build & Launch App", GUILayout.Height(45)))
             {
-                BuildCompilerScript.BuildCompiler(GetBuildSettings(GetDefaultStorageInfo()));
+                BuildSettingsData buildSettings = GetBuildSettings(GetDefaultStorageInfo());
+
+                string fileFullPath = buildSettings.configurations.buildLocation;
+                string fileExtension = $".{PlatformSpecificData.GetFileExtension(buildSettings.configurations.platform).ToString()}";
+                string directory = fileFullPath.Replace(buildSettings.appInfo.appName + fileExtension, string.Empty);
+
+                buildSettings.configurations.targetBuildDirectory = directory;
+                buildSettings.configurations.buildLocation = fileFullPath;
+
+                if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) || Directory.Exists(buildSettings.configurations.targetBuildDirectory) == false)
+                {
+                    buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "");
+
+                    DebugConsole.Log(Debug.LogLevel.Debug, this, $"Build Directory Set @ : {appSettings.configurations.buildLocation}");
+                }
+
+                ApplyAppSettings(buildSettings);
+
+                #region Saving Editor Data
+
+                Scene currentScene = SceneManager.GetActiveScene();
+                EditorSceneManager.SaveScene(currentScene);
+                EditorApplication.ExecuteMenuItem("File/Save Project");
+
+                #endregion
+
+                if (!string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) && Directory.Exists(buildSettings.configurations.targetBuildDirectory) == true)
+                {
+                    BuildCompilerScript.BuildCompiler(buildSettings);
+                    DebugConsole.Log(Debug.LogLevel.Debug, this, $"Directory : {buildSettings.configurations.targetBuildDirectory}");
+                }
             }
 
             if (File.Exists(appSettings.configurations.buildLocation) == true)
@@ -448,7 +480,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// This method create build settings for the selected platform.
         /// </summary>
         /// <param name="buildSettings"></param>
-        private static void ApplyAppSettings(BuildSettings buildSettings)
+        private static void ApplyAppSettings(BuildSettingsData buildSettings)
         {
             if (string.IsNullOrEmpty(buildSettings.appInfo.companyName))
             {
@@ -561,9 +593,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             EditorUserBuildSettings.development = buildSettings.configurations.developmentBuild;
             EditorUserBuildSettings.SetBuildLocation(buildSettings.configurations.platform, buildSettings.configurations.buildLocation);
 
-            BuildSettingsData serializedSettings = buildSettings.ToSerializable();
-
-            Storage.JsonData.Save(GetDefaultStorageInfo(), serializedSettings, (infoData, saveResults) =>
+            Storage.JsonData.Save(GetDefaultStorageInfo(), buildSettings, (infoData, saveResults) =>
             {
                 if (saveResults.error)
                 {
