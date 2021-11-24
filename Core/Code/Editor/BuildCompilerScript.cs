@@ -14,7 +14,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
             {
                 #region Header Data
 
-                string buildScripts = "/BuildScripts";
                 string compilerFileName = "Compiler.bat";
                 string buildCompilerFileName = "BuildCompiler.bat";
 
@@ -24,8 +23,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 var compilerData = new FileInfo(compilerFileName);
                 string compilerDir = compilerData.DirectoryName;
-                string compileScriptsDir = compilerDir + buildScripts;
-                string compileScriptsCommand = compileScriptsDir + "/" + compilerData.Name;
+                string compileScriptsDir = compilerDir + GetBuildScriptFolderName();
+                string compilerFilePath = compileScriptsDir + "/" + compilerData.Name;
 
                 #endregion
 
@@ -33,12 +32,12 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 var buildCompilerData = new FileInfo(buildCompilerFileName);
                 string buildCompilerDir = buildCompilerData.DirectoryName;
-                string buildScriptsDir = buildCompilerDir + buildScripts;
-                string buildScriptsCommand = buildScriptsDir + "/" + buildCompilerData.Name;
+                string buildScriptsDir = buildCompilerDir + GetBuildScriptFolderName();
+                string buildScriptsFilePath = buildScriptsDir + "/" + buildCompilerData.Name;
 
                 #endregion
 
-                UnityEngine.Debug.Log($"Creating Compiler - Directory : {buildScriptsDir} - File Path : {buildScriptsCommand}");
+                UnityEngine.Debug.Log($"Creating Compiler - Directory : {buildScriptsDir} - File Path : {buildScriptsFilePath}");
 
                 if (!Directory.Exists(buildScriptsDir))
                 {
@@ -80,7 +79,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 string unityVersion = Application.unityVersion;
                 string path = "/Editor/Unity.exe";
                 string pathCombined = "\"" + rootPath + unityVersion + path + "\"";
-                string compilerDirectory = $"\"{targetDestDir.Replace("\\", "/")}{buildScripts}\"";
+                string compilerDirectory = $"\"{targetDestDir.Replace("\\", "/")}{GetBuildScriptFolderName()}\"";
                 string targetDirectory = $"\"{targetDestDir.Replace("\\", "/")}\"";
                 string changeDirectoryCommand = "chdir /d " + compilerDirectory;
                 string buildMethodName = "AppBuildConfig.BuildApp";
@@ -91,7 +90,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 string projectDir = "chdir /d " + targetDestDir;
 
-                string openBuildFolderCommand = $"Start \"\" {buildSettings.configurations.targetBuildDirectory}";
+                string openBuildFolderPath = $"Start \"\" \"{buildSettings.configurations.targetBuildDirectory}\"";
 
                 string buildDir = $"{targetDestDir}\\Builds";
                 string moveBuildCommand = $"move {buildDir}\\*.* {buildSettings.configurations.targetBuildDirectory.Replace("/","\\")}";
@@ -121,7 +120,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     echoEndBuild = "echo Build Completed...",
                     moveBuildCommand = moveBuildCommand,
                     purgeCacheCommand = purgeCacheCommand,
-                    openBuildFolderCommand = openBuildFolderCommand,
+                    openBuildFolderPath = openBuildFolderPath,
                     pause = "@pause"
                 };
 
@@ -138,14 +137,14 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     pause = "@pause"
                 };
 
-                File.WriteAllText(compileScriptsCommand, compiler.ToString());
+                // Batch Files
+                CreateBatchFile(compilerFilePath, compiler);
+                CreateBatchFile(buildScriptsFilePath, buildCompiler);
 
-                File.WriteAllText(buildScriptsCommand, buildCompiler.ToString());
-
-                if (File.Exists(buildScriptsCommand))
+                if (File.Exists(buildScriptsFilePath))
                 {
                     UnityEngine.Debug.Log($"--> <color=orange>Build Started....</color>");
-                    StartBatchBuildCommand(buildScriptsCommand);
+                    StartBatchBuildCommand(buildScriptsFilePath);
                 }
             }
             catch (Exception exception)
@@ -153,6 +152,27 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 throw exception;
             }
         }
+
+        private static void CreateBatchFile<T>(string path, T fileData)
+        {
+            File.WriteAllText(path, fileData.ToString());
+        }
+
+        private static string GetBuildScriptFolderName()
+        {
+            return "\\BuildScripts";
+        }
+
+        public static void OpenBuildFolder()
+        {
+            string buildFolderPath = AppBuildManagerEditor.GetBuildSettings(AppBuildManagerEditor.GetDefaultStorageInfo()).configurations.targetBuildDirectory;
+
+            if (Directory.Exists(buildFolderPath))
+            {
+                Process.Start("explorer.exe", buildFolderPath.Replace("/", "\\"));
+            }
+        }
+
         private static void StartBatchBuildCommand(string buildCommand)
         {
             Process.Start(buildCommand);

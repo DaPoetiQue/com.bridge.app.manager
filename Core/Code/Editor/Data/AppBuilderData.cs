@@ -360,7 +360,7 @@ namespace Bridge.Core.App.Manager
         public string echoEndBuild;
         public string moveBuildCommand;
         public string purgeCacheCommand;
-        public string openBuildFolderCommand;
+        public string openBuildFolderPath;
         public string pause;
 
         #endregion
@@ -375,7 +375,7 @@ namespace Bridge.Core.App.Manager
                    $"{echoEndBuild} \n " +
                    $"{moveBuildCommand} \n " +
                    $"{purgeCacheCommand} \n " +
-                   $"{openBuildFolderCommand} \n " +
+                   $"{openBuildFolderPath} \n " +
                    $"{pause}";
         }
     }

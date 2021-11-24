@@ -357,32 +357,44 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             GUILayout.Space(10);
 
+            EditorGUILayout.BeginHorizontal();
+
             if (GUILayout.Button("Apply Settings", GUILayout.Height(45)))
             {
                 ApplyAppSettings(appSettings.ToSerializable());
             }
 
-            GUILayout.Space(10);
+            if (Directory.Exists(appSettings.configurations.targetBuildDirectory) == true)
+            {
+                GUILayout.Space(2);
 
-            if (GUILayout.Button("Build & Launch App", GUILayout.Height(45)))
+                if (GUILayout.Button("Open Build Folder", GUILayout.Height(45)))
+                {
+                    BuildCompilerScript.OpenBuildFolder();
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            GUILayout.Space(5);
+
+            if (GUILayout.Button("Build & Launch App", GUILayout.Height(60)))
             {
                 BuildSettingsData buildSettings = GetBuildSettings(GetDefaultStorageInfo());
 
                 string fileFullPath = buildSettings.configurations.buildLocation;
-                string fileExtension = $".{PlatformSpecificData.GetFileExtension(buildSettings.configurations.platform).ToString()}";
-                string directory = fileFullPath.Replace(buildSettings.appInfo.appName + fileExtension, string.Empty);
+                //string fileExtension = $".{PlatformSpecificData.GetFileExtension(buildSettings.configurations.platform).ToString()}";
+                //string directory = fileFullPath.Replace(buildSettings.appInfo.appName + fileExtension, string.Empty);
 
-                buildSettings.configurations.targetBuildDirectory = directory;
+                //buildSettings.configurations.targetBuildDirectory = directory;
                 buildSettings.configurations.buildLocation = fileFullPath;
 
                 if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) || Directory.Exists(buildSettings.configurations.targetBuildDirectory) == false)
                 {
                     buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "");
-
+                    ApplyAppSettings(buildSettings);
                     DebugConsole.Log(Debug.LogLevel.Debug, this, $"Build Directory Set @ : {appSettings.configurations.buildLocation}");
                 }
-
-                ApplyAppSettings(buildSettings);
 
                 #region Saving Editor Data
 
@@ -396,16 +408,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 {
                     BuildCompilerScript.BuildCompiler(buildSettings);
                     DebugConsole.Log(Debug.LogLevel.Debug, this, $"Directory : {buildSettings.configurations.targetBuildDirectory}");
-                }
-            }
-
-            if (File.Exists(appSettings.configurations.buildLocation) == true)
-            {
-                GUILayout.Space(10);
-
-                if (GUILayout.Button("Open Build Folder", GUILayout.Height(45)))
-                {
-                    OpenFileInExplorer(appSettings.configurations.buildLocation);
                 }
             }
 
@@ -606,11 +608,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     DebugConsole.Log(Debug.LogLevel.Success, $"Save Completed With Results : {saveResults.successValue}");
                 }
             });
-        }
-
-        private static void OpenFileInExplorer(string assetPat)
-        {
-            //DebugConsole.Log(LogLevel.Debug, $"Path : {assetPat}");
         }
 
         #endregion
