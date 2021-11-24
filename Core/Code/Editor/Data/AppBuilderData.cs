@@ -323,12 +323,12 @@ namespace Bridge.Core.App.Manager
 
         public string echoOff;
         public string echoPrepareBuild;
-        public string removeDirectory;
+        public string removeDirectoryCommand;
         public string echoCopy;
         public string copyCommand;
-        public string changeDirectory;
+        public string changeToBuildDirectory;
         public string echoCompile;
-        public string compileBuildCommand;
+        public string compilerBuildCommand;
         public string pause;
 
         #endregion
@@ -337,12 +337,12 @@ namespace Bridge.Core.App.Manager
         {
             return $"{echoOff} \n " +
                    $"{echoPrepareBuild} \n " +
-                   $"{removeDirectory} \n " +
+                   $"{removeDirectoryCommand} \n " +
                    $"{echoCopy} \n " +
                    $"{copyCommand} \n " +
-                   $"{changeDirectory} \n " +
+                   $"{changeToBuildDirectory} \n " +
                    $"{echoCompile} \n " +
-                   $"{compileBuildCommand} \n " +
+                   $"{compilerBuildCommand} \n " +
                    $"{pause} ";
         }
     }
@@ -355,12 +355,13 @@ namespace Bridge.Core.App.Manager
         public string echoOff;
         public string echoInitializeBuild;
         public string editorLogBuildStarted;
-        public string startBuildCommand;
-        public string editorLogBuildEnded;
-        public string echoEndBuild;
+        public string startBuildCommand;    
         public string moveBuildCommand;
         public string purgeCacheCommand;
         public string openBuildFolderPath;
+        public string changeToProjectDirectory;
+        public string editorLogBuildEnded;
+        public string cleanBuildCommand;
         public string pause;
 
         #endregion
@@ -370,12 +371,36 @@ namespace Bridge.Core.App.Manager
             return $"{echoOff} \n  " +
                    $"{echoInitializeBuild} \n  " +
                    $"{editorLogBuildStarted} \n " +
-                   $"{startBuildCommand} \n " +
-                   $"{editorLogBuildEnded} \n " +
-                   $"{echoEndBuild} \n " +
+                   $"{startBuildCommand} \n " +           
                    $"{moveBuildCommand} \n " +
                    $"{purgeCacheCommand} \n " +
                    $"{openBuildFolderPath} \n " +
+                   $"{changeToProjectDirectory} \n " +
+                   $"{editorLogBuildEnded} \n " +
+                   $"{cleanBuildCommand} \n " +
+                   $"{pause}";
+        }
+    }
+
+    [Serializable]
+    public class BuildCleaner
+    {
+        #region Property Fields
+
+        public string echoOff;
+        public string echoCleaningBuild;
+        public string cleanBuildPathCommand;
+        public string echoEndBuild;
+        public string pause;
+
+        #endregion
+
+        public override string ToString()
+        {
+            return $"{echoOff} \n  " +
+                   $"{echoCleaningBuild} \n  " +
+                   $"{cleanBuildPathCommand} \n  " +
+                   $"{echoEndBuild} \n " +
                    $"{pause}";
         }
     }
