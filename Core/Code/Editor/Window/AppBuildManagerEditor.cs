@@ -370,7 +370,17 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 if (GUILayout.Button("Open Build Folder", GUILayout.Height(45)))
                 {
-                    BuildCompilerScript.OpenBuildFolder();
+                    Storage.Directory.OpenFolder(GetBuildSettings(GetDefaultStorageInfo()).configurations.targetBuildDirectory);
+                }
+            }
+
+            if (Directory.Exists(Storage.Directory.GetProjectTempDirectory()))
+            {
+                GUILayout.Space(2);
+
+                if (GUILayout.Button("Clear Project Cache", GUILayout.Height(45)))
+                {
+                    BuildCompilerScript.ClearProjectCache();
                 }
             }
 
@@ -402,7 +412,11 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 if (!string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) && Directory.Exists(buildSettings.configurations.targetBuildDirectory) == true)
                 {
-                    BuildCompilerScript.BuildCompiler(buildSettings);
+                    BuildCompilerScript.BuildCompiler(buildSettings, callback => 
+                    {
+                        
+                    });
+
                     DebugConsole.Log(Debug.LogLevel.Debug, this, $"Directory : {buildSettings.configurations.targetBuildDirectory}");
                 }
             }

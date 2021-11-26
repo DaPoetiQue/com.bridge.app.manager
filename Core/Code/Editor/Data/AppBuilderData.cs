@@ -323,6 +323,15 @@ namespace Bridge.Core.App.Manager
         }
     }
 
+    [Serializable]
+    public struct BatchFileData
+    {
+        public string batchFile;
+        public string projectRootPath;
+        public string fileRootPath;
+        public string fullbatchFilePath;
+    }
+
 
     [Serializable]
     public class BuildCompiler
@@ -333,7 +342,7 @@ namespace Bridge.Core.App.Manager
         public string echoPrepareBuild;
         public string removeDirectoryCommand;
         public string echoCopy;
-        public string copyCommand;
+        public string copyContentCommand;
         public string changeToBuildDirectory;
         public string echoCompile;
         public string compilerBuildCommand;
@@ -347,7 +356,7 @@ namespace Bridge.Core.App.Manager
                    $"{echoPrepareBuild} \n " +
                    $"{removeDirectoryCommand} \n " +
                    $"{echoCopy} \n " +
-                   $"{copyCommand} \n " +
+                   $"{copyContentCommand} \n " +
                    $"{changeToBuildDirectory} \n " +
                    $"{echoCompile} \n " +
                    $"{compilerBuildCommand} \n " +
@@ -365,11 +374,10 @@ namespace Bridge.Core.App.Manager
         public string editorLogBuildStarted;
         public string startBuildCommand;    
         public string moveBuildCommand;
-        public string purgeCacheCommand;
         public string openBuildFolderPath;
         public string changeToProjectDirectory;
         public string editorLogBuildEnded;
-        public string cleanBuildCommand;
+        public string echoBuildCompleted;
         public string pause;
 
         #endregion
@@ -381,11 +389,10 @@ namespace Bridge.Core.App.Manager
                    $"{editorLogBuildStarted} \n " +
                    $"{startBuildCommand} \n " +           
                    $"{moveBuildCommand} \n " +
-                   $"{purgeCacheCommand} \n " +
                    $"{openBuildFolderPath} \n " +
                    $"{changeToProjectDirectory} \n " +
                    $"{editorLogBuildEnded} \n " +
-                   $"{cleanBuildCommand} \n " +
+                   $"{echoBuildCompleted} \n " +
                    $"{pause}";
         }
     }
@@ -399,10 +406,7 @@ namespace Bridge.Core.App.Manager
         public string echoCleaningBuild;
         public string editorLogCleanStarted;
         public string cleanBuildPathCommand;
-        public string removeBuildScriptsCommand;
         public string editorLogCleanEnded;
-        public string echoEndBuild;
-        public string pause;
 
         #endregion
 
@@ -412,10 +416,7 @@ namespace Bridge.Core.App.Manager
                    $"{echoCleaningBuild} \n  " +
                    $"{editorLogCleanStarted} \n  " +
                    $"{cleanBuildPathCommand} \n  " +
-                   $"{removeBuildScriptsCommand} \n  " +
-                   $"{editorLogCleanEnded} \n  " +
-                   $"{echoEndBuild} \n " +
-                   $"{pause}";
+                   $"{editorLogCleanEnded}";
         }
     }
 
