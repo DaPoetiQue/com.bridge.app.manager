@@ -6,6 +6,7 @@ using System.IO;
 using Bridge.Core.App.Manager;
 using Bridge.Core.UnityEditor.Debugger;
 using Bridge.Core.App.Data.Storage;
+using Bridge.Core.App.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 
@@ -390,35 +391,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             if (GUILayout.Button("Build & Launch App", GUILayout.Height(60)))
             {
-                BuildSettingsData buildSettings = GetBuildSettings(GetDefaultStorageInfo());
-
-                string fileFullPath = buildSettings.configurations.buildLocation;
-                buildSettings.configurations.buildLocation = fileFullPath;
-
-                if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) || Directory.Exists(buildSettings.configurations.targetBuildDirectory) == false)
-                {
-                    buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "");
-                    ApplyAppSettings(buildSettings);
-                    DebugConsole.Log(Debug.LogLevel.Debug, this, $"Build Directory Set @ : {appSettings.configurations.buildLocation}");
-                }
-
-                #region Saving Editor Data
-
-                Scene currentScene = SceneManager.GetActiveScene();
-                EditorSceneManager.SaveScene(currentScene);
-                EditorApplication.ExecuteMenuItem("File/Save Project");
-
-                #endregion
-
-                if (!string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) && Directory.Exists(buildSettings.configurations.targetBuildDirectory) == true)
-                {
-                    BuildCompilerScript.BuildCompiler(buildSettings, callback => 
-                    {
-                        
-                    });
-
-                    DebugConsole.Log(Debug.LogLevel.Debug, this, $"Directory : {buildSettings.configurations.targetBuildDirectory}");
-                }
+                Build();
             }
 
             GUILayout.Space(10);
@@ -438,6 +411,51 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             GUILayout.EndArea();
         }
+
+        #region Build App
+
+        [MenuItem("3ridge/Config/Build App #B")]
+        private static void Build()
+        {
+            BuildSettingsData buildSettings = GetBuildSettings(GetDefaultStorageInfo());
+
+            string fileFullPath = buildSettings.configurations.buildLocation;
+            buildSettings.configurations.buildLocation = fileFullPath;
+
+            if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) || Directory.Exists(buildSettings.configurations.targetBuildDirectory) == false)
+            {
+                buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "");
+                ApplyAppSettings(buildSettings);
+                DebugConsole.Log(Debug.LogLevel.Debug, $"Build Directory Set @ : {appSettings.configurations.buildLocation}");
+            }
+
+            #region Saving Editor Data
+
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.SaveScene(currentScene);
+            EditorApplication.ExecuteMenuItem("File/Save Project");
+
+            #endregion
+
+            if (!string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) && Directory.Exists(buildSettings.configurations.targetBuildDirectory) == true)
+            {
+                BuildCompilerScript.BuildCompiler(buildSettings, (results, resultsData) =>
+                {
+                   if(results.error)
+                   {
+                        DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                        return;
+                   }
+
+                   if(results.success)
+                   {
+                        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                   }
+                });
+            }
+        }
+
+        #endregion
 
         #region App Build Settings
 
@@ -501,128 +519,43 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <param name="buildSettings"></param>
         private static void ApplyAppSettings(BuildSettingsData buildSettings)
         {
-            if (string.IsNullOrEmpty(buildSettings.appInfo.companyName))
-            {
-                DebugConsole.Log(Debug.LogLevel.Warning, "App info's company name field is empty. Please assign company name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(buildSettings.appInfo.appName))
-            {
-                DebugConsole.Log(Debug.LogLevel.Warning, "App info's app name field is empty. Please assign app name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
-                return;
-            }
-
-            PlayerSettings.companyName = (string.IsNullOrEmpty(buildSettings.appInfo.companyName)) ? PlayerSettings.companyName : buildSettings.appInfo.companyName;
-            PlayerSettings.productName = (string.IsNullOrEmpty(buildSettings.appInfo.appName)) ? PlayerSettings.productName : buildSettings.appInfo.appName;
-            PlayerSettings.bundleVersion = (string.IsNullOrEmpty(buildSettings.appInfo.appVersion)) ? PlayerSettings.bundleVersion : buildSettings.appInfo.appVersion;
-
-            string companyName = buildSettings.appInfo.companyName;
-
-            if (companyName.Contains(" "))
-            {
-                companyName = companyName.Replace(" ", "");
-            }
-
-            string appName = buildSettings.appInfo.appName;
-
-            if (appName.Contains(" "))
-            {
-                appName = appName.Replace(" ", "");
-            }
-
-            buildSettings.appInfo.appIdentifier = $"com.{companyName}.{appName}";
-
-            if(appSettings.configurations.platform == BuildTarget.Android || appSettings.configurations.platform == BuildTarget.iOS)
-            {
-                switch (buildSettings.mobileDisplaySettings.allowedOrientation)
+            ApplyAppInfo(buildSettings.appInfo, (callbackResults, resultsData) =>
+            { 
+                if(callbackResults.error)
                 {
-                    case UIOrientation.AutoRotation:
-
-                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
-
-                        break;
-
-                    case UIOrientation.Portrait:
-
-                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
-
-                        break;
-
-                    case UIOrientation.PortraitUpsideDown:
-
-                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.PortraitUpsideDown; ;
-
-                        break;
-
-                    case UIOrientation.LandscapeLeft:
-
-                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
-
-                        break;
-
-                    case UIOrientation.LandscapeRight:
-
-                        PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeRight;
-
-                        break;
-                }
-            }
-
-            if (buildSettings.appInfo.splashScreen != null)
-            {
-                PlayerSettings.SplashScreen.background = buildSettings.appInfo.splashScreen;
-                PlayerSettings.SplashScreen.backgroundColor = Color.black;
-            }
-
-            if (buildSettings.appInfo.appIcon != null)
-            {
-                PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Unknown, new Texture2D[] { buildSettings.appInfo.appIcon });
-            }
-
-            switch (EditorUserBuildSettings.activeBuildTarget)
-            {
-                case BuildTarget.Android:
-
-                    PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, buildSettings.appInfo.appIdentifier);
-
-                    GraphicsDeviceType[] graphicsDeviceType = new GraphicsDeviceType[1];
-                    graphicsDeviceType[0] = GraphicsDeviceType.OpenGLES3;
-                    PlayerSettings.SetGraphicsAPIs(buildSettings.configurations.platform, graphicsDeviceType);
-
-                    PlayerSettings.SetMobileMTRendering(BuildTargetGroup.Android, false);
-
-                    PlayerSettings.Android.minSdkVersion = buildSettings.androidSettings.sdkVersion;
-                    PlayerSettings.Android.androidTVCompatibility = false;
-                    PlayerSettings.Android.preferredInstallLocation = buildSettings.androidSettings.installLocation;
-                    PlayerSettings.Android.ARCoreEnabled = true;
-
-                    EditorUserBuildSettings.buildAppBundle = buildSettings.androidSettings.buildAppBundle;
-
-                    break;
-
-                case BuildTarget.iOS:
-
-                    PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, buildSettings.appInfo.appIdentifier);
-
-                    break;
-            }
-
-            EditorUserBuildSettings.allowDebugging = buildSettings.configurations.allowDebugging;
-            EditorUserBuildSettings.development = buildSettings.configurations.developmentBuild;
-            EditorUserBuildSettings.SetBuildLocation(buildSettings.configurations.platform, buildSettings.configurations.buildLocation);
-
-            Storage.JsonData.Save(GetDefaultStorageInfo(), buildSettings, (infoData, saveResults) =>
-            {
-                if (saveResults.error)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, $"Save Failed With Error: { saveResults.errorValue}");
+                    DebugConsole.Log(Debug.LogLevel.Error, $"Failed to apply app info with results : {callbackResults.errorValue}.");
                     return;
                 }
 
-                if(saveResults.success)
+                if(callbackResults.success)
                 {
-                    DebugConsole.Log(Debug.LogLevel.Success, $"Save Completed With Results : {saveResults.successValue}");
+                    buildSettings.appInfo = resultsData;
+
+                    ApplyBuildSettings(buildSettings, (callbackResults, resultsData) =>
+                    { 
+                        if(callbackResults.error)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Error, $"Failed to apply build settings with results : {callbackResults.errorValue}.");
+                            return;
+                        }
+
+                        if(callbackResults.success)
+                        {
+                            Storage.JsonData.Save(GetDefaultStorageInfo(), buildSettings, (infoData, saveResults) =>
+                            {
+                                if (saveResults.error)
+                                {
+                                    DebugConsole.Log(Debug.LogLevel.Error, saveResults.errorValue);
+                                    return;
+                                }
+
+                                if (saveResults.success)
+                                {
+                                    DebugConsole.Log(Debug.LogLevel.Success, saveResults.successValue);
+                                }
+                            });
+                        }
+                    });
                 }
             });
         }
@@ -630,6 +563,379 @@ namespace Bridge.Core.UnityEditor.App.Manager
         #endregion
 
         #region Settings
+
+        /// <summary>
+        /// Applies the app info for the current project.
+        /// </summary>
+        /// <param name="appInfo"></param>
+        /// <param name="callback"></param>
+        private static void ApplyAppInfo(AppInfo appInfo, Action<AppEventsData.CallBackResults, AppInfo> callback = null)
+        {
+            AppEventsData.CallBackResults callBackResults = new AppEventsData.CallBackResults();
+
+            try
+            {
+                if (string.IsNullOrEmpty(appInfo.companyName))
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, "App info's company name field is empty. Please assign company name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(appInfo.appName))
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, "App info's app name field is empty. Please assign app name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
+                    return;
+                }
+
+                PlayerSettings.companyName = (string.IsNullOrEmpty(appInfo.companyName)) ? PlayerSettings.companyName : appInfo.companyName;
+                PlayerSettings.productName = (string.IsNullOrEmpty(appInfo.appName)) ? PlayerSettings.productName : appInfo.appName;
+                PlayerSettings.bundleVersion = (string.IsNullOrEmpty(appInfo.appVersion)) ? PlayerSettings.bundleVersion : appInfo.appVersion;
+
+                string companyName = appInfo.companyName;
+
+                if (companyName.Contains(" "))
+                {
+                    companyName = companyName.Replace(" ", "");
+                }
+
+                string appName = appInfo.appName;
+
+                if (appName.Contains(" "))
+                {
+                    appName = appName.Replace(" ", "");
+                }
+
+                if (appInfo.splashScreen != null)
+                {
+                    PlayerSettings.SplashScreen.background = appInfo.splashScreen;
+                    PlayerSettings.SplashScreen.backgroundColor = Color.black;
+                }
+
+                if (appInfo.appIcon != null)
+                {
+                    PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Unknown, new Texture2D[] { appInfo.appIcon });
+                }
+
+                appInfo.appIdentifier = $"com.{companyName}.{appName}";
+
+                callBackResults.success = true;
+                callback.Invoke(callBackResults, appInfo);
+            }
+            catch (Exception exception)
+            {
+                callBackResults.error = true;
+                callBackResults.errorValue = exception.Message;
+                callback.Invoke(callBackResults, appInfo);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buildSettings"></param>
+        /// <param name="callback"></param>
+        private static void ApplyBuildSettings(BuildSettingsData buildSettings, Action<AppEventsData.CallBackResults, BuildSettingsData> callback = null)
+        {
+            AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
+
+            try
+            {
+                SwitchBuildTarget(buildSettings.configurations, switchResults =>
+                {
+                    if(switchResults.error)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Warning, switchResults.errorValue);
+                        return;
+                    }
+
+                    if(switchResults.success)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Success, $"Applied build settings for : {buildSettings.configurations.platform}");
+
+                        if (appSettings.configurations.platform == BuildTarget.Android || appSettings.configurations.platform == BuildTarget.iOS)
+                        {
+                            switch (buildSettings.mobileDisplaySettings.allowedOrientation)
+                            {
+                                case UIOrientation.AutoRotation:
+
+                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
+
+                                    break;
+
+                                case UIOrientation.Portrait:
+
+                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+
+                                    break;
+
+                                case UIOrientation.PortraitUpsideDown:
+
+                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.PortraitUpsideDown; ;
+
+                                    break;
+
+                                case UIOrientation.LandscapeLeft:
+
+                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
+
+                                    break;
+
+                                case UIOrientation.LandscapeRight:
+
+                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeRight;
+
+                                    break;
+                            }
+                        }
+
+                        switch (EditorUserBuildSettings.activeBuildTarget)
+                        {
+                            case BuildTarget.Android:
+
+                                PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, buildSettings.appInfo.appIdentifier);
+
+                                GraphicsDeviceType[] graphicsDeviceType = new GraphicsDeviceType[1];
+                                graphicsDeviceType[0] = GraphicsDeviceType.OpenGLES3;
+                                PlayerSettings.SetGraphicsAPIs(buildSettings.configurations.platform, graphicsDeviceType);
+
+                                PlayerSettings.SetMobileMTRendering(BuildTargetGroup.Android, false);
+
+                                PlayerSettings.Android.minSdkVersion = buildSettings.androidSettings.sdkVersion;
+                                PlayerSettings.Android.androidTVCompatibility = false;
+                                PlayerSettings.Android.preferredInstallLocation = buildSettings.androidSettings.installLocation;
+                                PlayerSettings.Android.ARCoreEnabled = true;
+
+                                EditorUserBuildSettings.buildAppBundle = buildSettings.androidSettings.buildAppBundle;
+
+                                break;
+
+                            case BuildTarget.iOS:
+
+                                PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, buildSettings.appInfo.appIdentifier);
+
+                                break;
+
+                            case BuildTarget.StandaloneWindows:
+
+                                break;
+                        }
+
+                        EditorUserBuildSettings.allowDebugging = buildSettings.configurations.allowDebugging;
+                        EditorUserBuildSettings.development = buildSettings.configurations.developmentBuild;
+                        EditorUserBuildSettings.SetBuildLocation(buildSettings.configurations.platform, buildSettings.configurations.buildLocation);
+
+                        results.success = true;
+                        callback.Invoke(results, buildSettings);
+                    }
+                });
+            }
+            catch (Exception exception)
+            {
+                results.error = true;
+                results.errorValue = exception.Message;
+                callback.Invoke(results, new BuildSettingsData());
+            }
+        }
+
+        /// <summary>
+        /// Switch build platform to the selected target platform.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="callback"></param>
+        private static void SwitchBuildTarget(BuildConfig config, Action<AppEventsData.CallBackResults> callback = null)
+        {
+            AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
+
+            try
+            {
+                IsPlatformSupported(config.platform, supportResults => 
+                {
+                    if(supportResults.error)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Warning, supportResults.errorValue);
+                        EditorUtility.DisplayDialog("3ridge Build Settings", supportResults.errorValue, "Cancel");
+                        return;
+                    }
+
+                    if(supportResults.success)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Success, $"Config Success : {supportResults.successValue}");
+                        if (config.platform == EditorUserBuildSettings.activeBuildTarget)
+                        {
+                            results.success = true;
+                            results.successValue = $"Applied build settings for : {config.platform.ToString()}";          
+                        }
+                        else
+                        {
+                            EditorUserBuildSettings.SwitchActiveBuildTargetAsync(GetBuildTargetGroup(config.platform), config.platform);
+
+                            results.success = true;
+                            results.successValue = $"Current build target has been successfully switched to : {config.platform}";
+                        }
+
+                        callback.Invoke(results);
+                    }
+                });
+            }
+            catch (Exception exception)
+            {
+                results.error = true;
+                results.errorValue = exception.Message;
+                callback.Invoke(results);
+            }
+        }
+
+        /// <summary>
+        /// Checks if the selected build platform is supported in the editor.
+        /// </summary>
+        /// <param name="buildTarget"></param>
+        /// <param name="callback"></param>
+        private static void IsPlatformSupported(BuildTarget buildTarget, Action<AppEventsData.CallBackResults> callback = null)
+        {
+            AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
+
+            try
+            {
+                var moduleManager = Type.GetType("UnityEditor.Modules.ModuleManager,UnityEditor.dll");
+                var isPlatformSupportLoaded = moduleManager.GetMethod("IsPlatformSupportLoaded", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+                var getTargetStringFromBuildTarget = moduleManager.GetMethod("GetTargetStringFromBuildTarget", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+
+                results.success = (bool)isPlatformSupportLoaded.Invoke(null, new object[] { (string)getTargetStringFromBuildTarget.Invoke(null, new object[] { buildTarget }) });
+
+                if(results.success == true)
+                {
+                    results.successValue = $"Build platform for {buildTarget.ToString()} is supported.";
+                }
+                else
+                {
+                    results.error = true;
+                    results.errorValue = $"There is no build module installed for : {buildTarget.ToString()}.";
+                }
+
+                callback.Invoke(results);
+            }
+            catch(Exception exception)
+            {
+                results.error = true;
+                results.errorValue = exception.Message;
+                callback.Invoke(results);
+            }
+        }
+
+        /// <summary>
+        /// Gets the target group for the selected platform.
+        /// </summary>
+        /// <param name="platform"></param>
+        /// <returns>Return a build target group for the assigned platform</returns>
+        private static BuildTargetGroup GetBuildTargetGroup(BuildTarget platform)
+        {
+            bool standalone = platform == BuildTarget.StandaloneWindows || platform == BuildTarget.StandaloneWindows64 || platform == BuildTarget.StandaloneOSX || platform == BuildTarget.StandaloneLinux64;
+            BuildTargetGroup group = new BuildTargetGroup();
+
+            if(standalone)
+            {
+                group = BuildTargetGroup.Standalone;
+            }
+            else
+            {
+                switch(platform)
+                {
+                    case BuildTarget.Android:
+
+                        group = BuildTargetGroup.Android;
+
+                        break;
+
+                    case BuildTarget.CloudRendering:
+
+                        group = BuildTargetGroup.CloudRendering;
+
+                        break;
+
+                    case BuildTarget.iOS:
+
+                        group = BuildTargetGroup.iOS;
+
+                        break;
+
+                    case BuildTarget.EmbeddedLinux:
+
+                        group = BuildTargetGroup.EmbeddedLinux;
+
+                        break;
+
+                    case BuildTarget.GameCoreXboxOne:
+
+                        group = BuildTargetGroup.GameCoreXboxOne;
+
+                        break;
+
+                    case BuildTarget.GameCoreXboxSeries:
+
+                        group = BuildTargetGroup.GameCoreXboxSeries;
+
+                        break;
+
+                    case BuildTarget.Lumin:
+
+                        group = BuildTargetGroup.Lumin;
+
+                        break;
+
+                    case BuildTarget.PS4:
+
+                        group = BuildTargetGroup.PS4;
+
+                        break;
+
+                    case BuildTarget.PS5:
+
+                        group = BuildTargetGroup.PS5;
+
+                        break;
+
+                    case BuildTarget.Stadia:
+
+                        group = BuildTargetGroup.Stadia;
+
+                        break;
+
+                    case BuildTarget.Switch:
+
+                        group = BuildTargetGroup.Switch;
+
+                        break;
+
+                    case BuildTarget.tvOS:
+
+                        group = BuildTargetGroup.tvOS;
+
+                        break;
+
+                    case BuildTarget.WebGL:
+
+                        group = BuildTargetGroup.WebGL;
+
+                        break;
+
+                    case BuildTarget.WSAPlayer:
+
+                        group = BuildTargetGroup.WSA;
+
+                        break;
+
+                    case BuildTarget.XboxOne:
+
+                        group = BuildTargetGroup.XboxOne;
+
+                        break;
+                   ;
+
+                }
+            }
+
+            return group;
+        }
 
         #endregion
 

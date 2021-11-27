@@ -4,13 +4,17 @@ using System.Diagnostics;
 using System.IO;
 using UnityEngine;
 using Bridge.Core.App.Data.Storage;
+using Bridge.Core.App.Events;
+using Bridge.Core.UnityEditor.Debugger;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
     public static class BuildCompilerScript
     {
-        public static void BuildCompiler(BuildSettingsData buildSettings, Action<BuildSettingsData> callback = null)
+        public static void BuildCompiler(BuildSettingsData buildSettings, Action<AppEventsData.CallBackResults, BuildSettingsData> callback = null)
         {
+            AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
+
             try
             {
                 #region Defining Build Batch File Data
@@ -110,9 +114,44 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 #region Create Batch File Data
 
                 // Batch Files
-                CreateBatchFile(compilerBatchFileData.fullbatchFilePath, compiler);
-                CreateBatchFile(buildCompilerBatchFileData.fullbatchFilePath, buildCompiler);
-                CreateBatchFile(buildCleanerBatchFileData.fullbatchFilePath, buildCleaner);
+                CreateBatchFile(compilerBatchFileData.fullbatchFilePath, compiler, results =>
+                {
+                    if(results.error)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    }
+
+                    if (results.success)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                    }
+                });
+
+                CreateBatchFile(buildCompilerBatchFileData.fullbatchFilePath, buildCompiler, results =>
+                {
+                    if (results.error)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    }
+
+                    if (results.success)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                    }
+                });
+
+                CreateBatchFile(buildCleanerBatchFileData.fullbatchFilePath, buildCleaner, results =>
+                {
+                    if (results.error)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    }
+
+                    if (results.success)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                    }
+                });
 
                 #endregion
 
@@ -122,17 +161,36 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     Storage.BatchCommands.RunBatchCommand(buildCompilerBatchFileData.fullbatchFilePath);
                 }
 
-                callback.Invoke(buildSettings);
+                results.success = true;
+                results.successValue = "Build Started...";
+
+                callback.Invoke(results, buildSettings);
             }
             catch (Exception exception)
             {
-                throw exception;
+                results.error = true;
+                results.errorValue = exception.Message;
+                callback.Invoke(results, null);
             }
         }
 
-        private static void CreateBatchFile<T>(string path, T fileData)
+        private static void CreateBatchFile<T>(string path, T fileData, Action<AppEventsData.CallBackResults> callback = null)
         {
-            File.WriteAllText(path, fileData.ToString());
+            AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
+
+            if(string.IsNullOrEmpty(path) == false)
+            {
+                File.WriteAllText(path, fileData.ToString());
+
+                results.success = true;
+                results.successValue = $"A new Batch file has been created successfully @ : {path}.";
+                
+                callback.Invoke(results);
+            }
+            else
+            {
+                callback.Invoke(results);
+            }
         }
 
         #region File Names
