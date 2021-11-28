@@ -361,35 +361,42 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
                 appDisplayObject.ApplyModifiedProperties();
 
-                if(appSettings.configurations.platform == BuildTarget.StandaloneWindows || appSettings.configurations.platform == BuildTarget.StandaloneWindows64)
-                {
-                    GUILayout.Space(10);
+                GUILayout.Space(10);
 
-                    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
-                    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("windowsBuildSettings");
-                    EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                    buildSettingsObject.ApplyModifiedProperties();
-                }
+                SerializedObject buildSettingsObject = new SerializedObject(appSettings);
+                SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("standaloneBuildSettings");
+                EditorGUILayout.PropertyField(buildSettingsProperty, true);
+                buildSettingsObject.ApplyModifiedProperties();
 
-                if (appSettings.configurations.platform == BuildTarget.StandaloneOSX)
-                {
-                    GUILayout.Space(10);
+                //if(appSettings.configurations.platform == BuildTarget.StandaloneWindows || appSettings.configurations.platform == BuildTarget.StandaloneWindows64)
+                //{
+                //    GUILayout.Space(10);
 
-                    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
-                    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("macBuildSettings");
-                    EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                    buildSettingsObject.ApplyModifiedProperties();
-                }
+                //    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
+                //    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("windowsBuildSettings");
+                //    EditorGUILayout.PropertyField(buildSettingsProperty, true);
+                //    buildSettingsObject.ApplyModifiedProperties();
+                //}
 
-                if (appSettings.configurations.platform == BuildTarget.StandaloneLinux64)
-                {
-                    GUILayout.Space(10);
+                //if (appSettings.configurations.platform == BuildTarget.StandaloneOSX)
+                //{
+                //    GUILayout.Space(10);
 
-                    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
-                    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("linuxBuildSettings");
-                    EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                    buildSettingsObject.ApplyModifiedProperties();
-                }
+                //    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
+                //    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("macBuildSettings");
+                //    EditorGUILayout.PropertyField(buildSettingsProperty, true);
+                //    buildSettingsObject.ApplyModifiedProperties();
+                //}
+
+                //if (appSettings.configurations.platform == BuildTarget.StandaloneLinux64)
+                //{
+                //    GUILayout.Space(10);
+
+                //    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
+                //    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("linuxBuildSettings");
+                //    EditorGUILayout.PropertyField(buildSettingsProperty, true);
+                //    buildSettingsObject.ApplyModifiedProperties();
+                //}
             }
 
             if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Web)
@@ -776,8 +783,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
                                 break;
 
                             case BuildTarget.StandaloneWindows:
-
-                                PlayerSettings.SetScriptingBackend(GetBuildTargetGroup(buildSettings.configurations.platform), buildSettings.windowsBuildSettings.scriptingBackend);
+                       
+                                PlayerSettings.SetScriptingBackend(GetBuildTargetGroup(buildSettings.configurations.platform), buildSettings.standaloneBuildSettings.otherSettings.scriptingBackend);
 
                                 break;
                         }

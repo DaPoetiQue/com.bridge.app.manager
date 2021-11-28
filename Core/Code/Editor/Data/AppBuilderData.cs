@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 // using Bridge.Core.App.Data.Storage;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 namespace Bridge.Core.App.Manager
@@ -99,13 +100,7 @@ namespace Bridge.Core.App.Manager
         public iOSBuildSettings iOSBuildSettings;
 
         [Space(5)]
-        public OSXBuildSettings macBuildSettings;
-
-        [Space(5)]
-        public WindowsBuildSettings windowsBuildSettings;
-
-        [Space(5)]
-        public LinuxBuildSettings linuxBuildSettings;
+        public StandaloneBuildSettings standaloneBuildSettings;
 
         [Space(5)]
         public WebGLBuildSettings webGLBuildSettings;
@@ -130,9 +125,7 @@ namespace Bridge.Core.App.Manager
                 webDisplaySettings = this.webDisplaySettings,
                 androidBuildSettings = this.androidBuildSettings,
                 iOSBuildSettings = this.iOSBuildSettings,
-                macBuildSettings = this.macBuildSettings,
-                windowsBuildSettings = this.windowsBuildSettings,
-                linuxBuildSettings = this.linuxBuildSettings,
+                standaloneBuildSettings = this.standaloneBuildSettings,
                 webGLBuildSettings = this.webGLBuildSettings,
                 buildAndRun = buildAndRun
             };
@@ -182,13 +175,7 @@ namespace Bridge.Core.App.Manager
         public iOSBuildSettings iOSBuildSettings;
 
         [Space(5)]
-        public OSXBuildSettings macBuildSettings;
-
-        [Space(5)]
-        public WindowsBuildSettings windowsBuildSettings;
-
-        [Space(5)]
-        public LinuxBuildSettings linuxBuildSettings;
+        public StandaloneBuildSettings standaloneBuildSettings;
 
         [Space(5)]
         public WebGLBuildSettings webGLBuildSettings;
@@ -211,9 +198,7 @@ namespace Bridge.Core.App.Manager
             buildSettings.webDisplaySettings = this.webDisplaySettings;
             buildSettings.androidBuildSettings = this.androidBuildSettings;
             buildSettings.iOSBuildSettings = this.iOSBuildSettings;
-            buildSettings.macBuildSettings = this.macBuildSettings;
-            buildSettings.windowsBuildSettings = this.windowsBuildSettings;
-            buildSettings.linuxBuildSettings = this.linuxBuildSettings;
+            buildSettings.standaloneBuildSettings = this.standaloneBuildSettings;
             buildSettings.webGLBuildSettings = this.webGLBuildSettings;
             buildSettings.buildAndRun = this.buildAndRun;
 
@@ -415,14 +400,25 @@ namespace Bridge.Core.App.Manager
     }
 
     [Serializable]
-    public struct OSXBuildSettings
+    public class StandaloneBuildSettings
     {
         [Space(5)]
-        public ScriptingImplementation scriptingBackend;
+        public WindowsBuildSettings windows;
 
         [Space(5)]
-        public ApiCompatibilityLevel apiCompatibilityLevel;
+        public OSXBuildSettings mac;
 
+        [Space(5)]
+        public LinuxBuildSettings linux;
+
+        [Space(5)]
+        public OtherSettings otherSettings;
+    }
+
+
+    [Serializable]
+    public struct OSXBuildSettings
+    {
         [Space(5)]
         public int build;
 
@@ -430,36 +426,53 @@ namespace Bridge.Core.App.Manager
         public string category;
 
         [Space(5)]
-        public bool macAppStoreValidation;
+        public bool storeValidation;
 
         [Space(5)]
-        public string cameraUsageDescription;
+        public UsageDescriptionData UsageDescription;
+    }
+
+    [Serializable]
+    public struct OtherSettings
+    {
+        [Space(5)]
+        public ScriptingImplementation scriptingBackend;
 
         [Space(5)]
-        public string microPhoneUsageDescription;
+        public ApiCompatibilityLevel apiCompatibility;
+    }
+
+    [Serializable]
+    public struct UsageDescriptionData
+    {
+        [Space(5)]
+        public string camera;
 
         [Space(5)]
-        public string blueToothUsageDescription;
+        public string microPhone;
+
+        [Space(5)]
+        public string blueTooth;
     }
 
     [Serializable]
     public struct WindowsBuildSettings
     {
         [Space(5)]
-        public ScriptingImplementation scriptingBackend;
+        public ColorSpace colorSpace;
 
         [Space(5)]
-        public ApiCompatibilityLevel apiCompatibilityLevel;
+        public GraphicsDeviceType graphicsApi;
     }
 
     [Serializable]
     public struct LinuxBuildSettings
     {
         [Space(5)]
-        public ScriptingImplementation scriptingBackend;
+        public ColorSpace colorSpace;
 
         [Space(5)]
-        public ApiCompatibilityLevel apiCompatibilityLevel;
+        public GraphicsDeviceType graphicsApi;
     }
 
     [Serializable]
