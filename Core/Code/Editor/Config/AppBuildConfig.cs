@@ -5,66 +5,25 @@ using UnityEditor.Build.Reporting;
 using Bridge.Core.App.Manager;
 using System;
 using Bridge.Core.UnityEditor.App.Manager;
-using UnityEngine;
+using Bridge.Core.UnityEditor.Debugger;
 
 public static class AppBuildConfig
 {
-        public static void BuildApp()
+    public static void BuildApp()
+    {
+        try
         {
-            try
-            {
-                int sceneCount = SceneManager.sceneCount;
-                string[] scenePath = new string[sceneCount];
-
-                for (int i = 0; i < sceneCount; i++)
-                {
-                    scenePath[i] = SceneUtility.GetScenePathByBuildIndex(i);
-                    UnityEngine.Debug.Log($"--> Found Scene @ : {scenePath[i]}");
-                }
-
-                Build(AppBuildManagerEditor.GetBuildSettings(AppBuildManagerEditor.GetDefaultStorageInfo()), scenePath, false);
-            }
-            catch (Exception exception)
-            {
-                throw exception;
-            }
+            BuildSettingsData settings = AppBuildManagerEditor.GetBuildSettings(AppBuildManagerEditor.GetDefaultStorageInfo());
+            BuildApplication(settings, GetBuildScenes(), settings.buildAndRun);
         }
-
-        public static void Build(BuildSettingsData buildSettings, string[] scenePath, bool runApp)
+        catch (Exception exception)
         {
-            switch (buildSettings.configurations.platform)
-            {
-                case BuildTarget.Android:
-
-                    BuildAndroid(buildSettings, scenePath, runApp);
-
-                    break;
-
-                case BuildTarget.iOS:
-
-
-                    if (BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.iOS, BuildTarget.iOS))
-                    {
-
-                    }
-
-                    break;
-
-                case BuildTarget.StandaloneWindows:
-
-                    BuildStandaloneWindows(buildSettings, scenePath, runApp);
-
-                    break;
-            }
+            DebugConsole.Log(Bridge.Core.Debug.LogLevel.Error, $"Build failed with error : {exception.Message}");
+            throw exception;
         }
+    }
 
-        private static void BuildStandaloneWindows(BuildSettingsData settings, string[] scenes, bool runApp)
-        {
-
-        }
-
-
-        private static void BuildAndroid(BuildSettingsData buildSettings, string[] scenes, bool runApp)
+    private static void BuildApplication(BuildSettingsData buildSettings, string[] scenes, bool runApp)
         {
             try
             {
@@ -73,32 +32,30 @@ public static class AppBuildConfig
 
                 string buildDirectory = Directory.GetParent(Directory.GetCurrentDirectory()) + $"/App Builds/{buildSettings.configurations.platform.ToString()}";
 
-                UnityEngine.Debug.Log($"--> Dir : {buildDirectory}");
-
                 if (!Directory.Exists(buildDirectory))
                 {
                     Directory.CreateDirectory(buildDirectory);
+                    DebugConsole.Log(Bridge.Core.Debug.LogLevel.Debug, $"A new build directory has been created @ : {buildDirectory}");
                 }
-
-         
-            buildSettings.configurations.targetBuildDirectory = GetBuildFolderPath(buildSettings);
-            buildSettings.configurations.buildLocation = GetBuildFilePath(buildSettings);
-
-            UnityEngine.Debug.Log($"--> Building App At Path : {buildSettings.configurations.buildLocation}");
+   
+                buildSettings.configurations.targetBuildDirectory = GetBuildFolderPath(buildSettings);
+                buildSettings.configurations.buildLocation = GetBuildFilePath(buildSettings);
 
                 if (string.IsNullOrEmpty(buildSettings.configurations.buildLocation))
                 {
+                    DebugConsole.Log(Bridge.Core.Debug.LogLevel.Warning, $"Build location not assigned.");
                     return;
                 }
 
                 if (File.Exists(buildSettings.configurations.buildLocation))
                 {
                     File.Delete(buildSettings.configurations.buildLocation);
+                    DebugConsole.Log(Bridge.Core.Debug.LogLevel.Warning, $"Removing file @ : {buildSettings.configurations.buildLocation}");
                 }
 
                 buildOptions.locationPathName = buildSettings.configurations.buildLocation;
 
-                buildOptions.target = BuildTarget.Android;
+                buildOptions.target = buildSettings.configurations.platform;
 
                 if (runApp)
                 {
@@ -115,12 +72,12 @@ public static class AppBuildConfig
                 if (summary.result == BuildResult.Succeeded)
                 {
                     EditorWindow.FocusWindowIfItsOpen<AppBuildManagerEditor>();
-                    //Debugger.Log(DebugData.LogType.LogInfo, "App build completed successfully.");
+                    DebugConsole.Log(Bridge.Core.Debug.LogLevel.Success, "App build completed successfully.");
                 }
 
                 if (summary.result == BuildResult.Failed)
                 {
-                    //DebugConsole.Log(LogLevel.Success, $"App build failed.");
+                    DebugConsole.Log(Bridge.Core.Debug.LogLevel.Error, "App build failed.");
                 }
             }
             catch (Exception exception)
@@ -129,7 +86,21 @@ public static class AppBuildConfig
             }
         }
 
-        public static string GetBuildFilePath(BuildSettingsData buildSettings)
+    private static string[] GetBuildScenes()
+    {
+        int sceneCount = SceneManager.sceneCount;
+        string[] scenePath = new string[sceneCount];
+
+        for (int i = 0; i < sceneCount; i++)
+        {
+            scenePath[i] = SceneUtility.GetScenePathByBuildIndex(i);
+            DebugConsole.Log(Bridge.Core.Debug.LogLevel.Debug, $"Found scene @ : {scenePath[i]}");
+        }
+
+        return scenePath;
+    }
+
+    public static string GetBuildFilePath(BuildSettingsData buildSettings)
         {
             string buildDir = Directory.GetCurrentDirectory() + "/Builds";
 

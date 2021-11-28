@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 // using Bridge.Core.App.Data.Storage;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Bridge.Core.App.Manager
 {
@@ -66,6 +68,10 @@ namespace Bridge.Core.App.Manager
         public AppInfo appInfo;
 
         [Space(5)]
+        [NonReorderable]
+        public SceneAsset[] buildScenes;
+
+        [Space(5)]
         public BuildConfig configurations;
 
         #region Display Settings
@@ -84,11 +90,30 @@ namespace Bridge.Core.App.Manager
 
         #endregion
 
-        [Space(5)]
-        public AndroidBuildSettings androidSettings;
+        #region Platform Build Settings
 
         [Space(5)]
-        public bool includeBuildScripts;
+        public AndroidBuildSettings androidBuildSettings;
+
+        [Space(5)]
+        public iOSBuildSettings iOSBuildSettings;
+
+        [Space(5)]
+        public OSXBuildSettings macBuildSettings;
+
+        [Space(5)]
+        public WindowsBuildSettings windowsBuildSettings;
+
+        [Space(5)]
+        public LinuxBuildSettings linuxBuildSettings;
+
+        [Space(5)]
+        public WebGLBuildSettings webGLBuildSettings;
+
+        #endregion
+
+        [Space(5)]
+        public bool buildAndRun;
 
         #region Converted Settings
 
@@ -97,13 +122,19 @@ namespace Bridge.Core.App.Manager
             return new BuildSettingsData
             {
                 appInfo = this.appInfo,
+                buildScenes = this.buildScenes,
                 configurations = this.configurations,
                 consoleDisplaySettings = this.consoleDisplaySettings,
                 mobileDisplaySettings = this.mobileDisplaySettings,
                 standaloneDisplaySettings = this.standaloneDisplaySettings,
                 webDisplaySettings = this.webDisplaySettings,
-                androidSettings = this.androidSettings,
-                includeBuildScripts = this.includeBuildScripts
+                androidBuildSettings = this.androidBuildSettings,
+                iOSBuildSettings = this.iOSBuildSettings,
+                macBuildSettings = this.macBuildSettings,
+                windowsBuildSettings = this.windowsBuildSettings,
+                linuxBuildSettings = this.linuxBuildSettings,
+                webGLBuildSettings = this.webGLBuildSettings,
+                buildAndRun = buildAndRun
             };
         }
 
@@ -120,6 +151,10 @@ namespace Bridge.Core.App.Manager
         public AppInfo appInfo;
 
         [Space(5)]
+        [NonReorderable]
+        public SceneAsset[] buildScenes;
+
+        [Space(5)]
         public BuildConfig configurations;
 
         #region Display Settings
@@ -138,24 +173,49 @@ namespace Bridge.Core.App.Manager
 
         #endregion
 
-        [Space(5)]
-        public AndroidBuildSettings androidSettings;
+        #region Platform Build Settings
 
         [Space(5)]
-        public bool includeBuildScripts;
+        public AndroidBuildSettings androidBuildSettings;
+
+        [Space(5)]
+        public iOSBuildSettings iOSBuildSettings;
+
+        [Space(5)]
+        public OSXBuildSettings macBuildSettings;
+
+        [Space(5)]
+        public WindowsBuildSettings windowsBuildSettings;
+
+        [Space(5)]
+        public LinuxBuildSettings linuxBuildSettings;
+
+        [Space(5)]
+        public WebGLBuildSettings webGLBuildSettings;
+
+        #endregion
+
+        [Space(5)]
+        public bool buildAndRun;
 
         public BuildSettings ToInstance()
         {
             BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
 
-            buildSettings.appInfo = appInfo;
-            buildSettings.configurations = configurations;
-            buildSettings.consoleDisplaySettings = consoleDisplaySettings;
-            buildSettings.mobileDisplaySettings = mobileDisplaySettings;
-            buildSettings.standaloneDisplaySettings = standaloneDisplaySettings;
-            buildSettings.webDisplaySettings = webDisplaySettings;
-            buildSettings.androidSettings = androidSettings;
-            buildSettings.includeBuildScripts = includeBuildScripts;
+            buildSettings.appInfo = this.appInfo;
+            buildSettings.buildScenes = this.buildScenes;
+            buildSettings.configurations = this.configurations;
+            buildSettings.consoleDisplaySettings = this.consoleDisplaySettings;
+            buildSettings.mobileDisplaySettings = this.mobileDisplaySettings;
+            buildSettings.standaloneDisplaySettings = this.standaloneDisplaySettings;
+            buildSettings.webDisplaySettings = this.webDisplaySettings;
+            buildSettings.androidBuildSettings = this.androidBuildSettings;
+            buildSettings.iOSBuildSettings = this.iOSBuildSettings;
+            buildSettings.macBuildSettings = this.macBuildSettings;
+            buildSettings.windowsBuildSettings = this.windowsBuildSettings;
+            buildSettings.linuxBuildSettings = this.linuxBuildSettings;
+            buildSettings.webGLBuildSettings = this.webGLBuildSettings;
+            buildSettings.buildAndRun = this.buildAndRun;
 
             return buildSettings;
         }
@@ -186,15 +246,20 @@ namespace Bridge.Core.App.Manager
         public string appIdentifier;
     }
 
+    [Serializable]
+    public class SceneData
+    {
+        [Space(5)]
+        [SerializeField]
+        public SceneAsset[] sceneList;
+    }
+
     /// <summary>
     /// App build settings.
     /// </summary>
     [Serializable]
     public struct BuildConfig
     {
-        [Space(5)]
-        public string[] buildScenes;
-
         [Space(5)]
         public BuildTarget platform;
 
@@ -230,10 +295,19 @@ namespace Bridge.Core.App.Manager
     public struct StandaloneDisplaySettings
     {
         [Space(5)]
-        public bool windowed;
+        public FullScreenMode fullScreenMode;
+
+        [Space(5)]
+        public bool defaultIsNativeResolution;
 
         [Space(5)]
         public AppResolution resolution;
+
+        [Space(5)]
+        public bool resizableWindow;
+
+        [Space(5)]
+        public bool allowFullScreenSwitch;
     }
 
     [Serializable]
@@ -244,19 +318,6 @@ namespace Bridge.Core.App.Manager
     }
 
     #endregion
-
-    [Serializable]
-    public struct AndroidBuildSettings
-    {
-        [Space(5)]
-        public AndroidPreferredInstallLocation installLocation;
-
-        [Space(5)]
-        public AndroidSdkVersions sdkVersion;
-
-        [Space(5)]
-        public bool buildAppBundle;
-    }
 
     public static class AppDataSettings
     {
@@ -323,101 +384,88 @@ namespace Bridge.Core.App.Manager
         }
     }
 
-    [Serializable]
-    public struct BatchFileData
-    {
-        public string batchFile;
-        public string projectRootPath;
-        public string fileRootPath;
-        public string fullbatchFilePath;
-    }
+    #endregion
 
+    #region Platform Build Settings
 
     [Serializable]
-    public class BuildCompiler
+    public struct AndroidBuildSettings
     {
-        #region Property Fields
+        [Space(5)]
+        public AndroidPreferredInstallLocation installLocation;
 
-        public string echoOff;
-        public string echoPrepareBuild;
-        public string removeDirectoryCommand;
-        public string echoCopy;
-        public string copyContentCommand;
-        public string changeToBuildDirectory;
-        public string echoCompile;
-        public string compilerBuildCommand;
-        public string pause;
+        [Space(5)]
+        public AndroidSdkVersions sdkVersion;
 
-        #endregion
-
-        public override string ToString()
-        {
-            return $"{echoOff} \n " +
-                   $"{echoPrepareBuild} \n " +
-                   $"{removeDirectoryCommand} \n " +
-                   $"{echoCopy} \n " +
-                   $"{copyContentCommand} \n " +
-                   $"{changeToBuildDirectory} \n " +
-                   $"{echoCompile} \n " +
-                   $"{compilerBuildCommand} \n " +
-                   $"{pause} ";
-        }
+        [Space(5)]
+        public bool buildAppBundle;
     }
 
     [Serializable]
-    public class Compiler
+    public struct iOSBuildSettings
     {
-        #region Property Fields
+        [Space(5)]
+        public string cameraUsageDescription;
 
-        public string echoOff;
-        public string echoInitializeBuild;
-        public string editorLogBuildStarted;
-        public string startBuildCommand;    
-        public string moveBuildCommand;
-        public string openBuildFolderPath;
-        public string changeToProjectDirectory;
-        public string editorLogBuildEnded;
-        public string echoBuildCompleted;
-        public string pause;
+        [Space(5)]
+        public string microPhoneUsageDescription;
 
-        #endregion
-
-        public override string ToString()
-        {
-            return $"{echoOff} \n  " +
-                   $"{echoInitializeBuild} \n  " +
-                   $"{editorLogBuildStarted} \n " +
-                   $"{startBuildCommand} \n " +           
-                   $"{moveBuildCommand} \n " +
-                   $"{openBuildFolderPath} \n " +
-                   $"{changeToProjectDirectory} \n " +
-                   $"{editorLogBuildEnded} \n " +
-                   $"{echoBuildCompleted} \n " +
-                   $"{pause}";
-        }
+        [Space(5)]
+        public string blueToothUsageDescription;
     }
 
     [Serializable]
-    public class BuildCleaner
+    public struct OSXBuildSettings
     {
-        #region Property Fields
+        [Space(5)]
+        public ScriptingImplementation scriptingBackend;
 
-        public string echoOff;
-        public string echoCleaningBuild;
-        public string editorLogCleanStarted;
-        public string cleanBuildPathCommand;
-        public string editorLogCleanEnded;
+        [Space(5)]
+        public ApiCompatibilityLevel apiCompatibilityLevel;
 
-        #endregion
+        [Space(5)]
+        public int build;
 
-        public override string ToString()
-        {
-            return $"{echoOff} \n  " +
-                   $"{echoCleaningBuild} \n  " +
-                   $"{editorLogCleanStarted} \n  " +
-                   $"{cleanBuildPathCommand} \n  " +
-                   $"{editorLogCleanEnded}";
-        }
+        [Space(5)]
+        public string category;
+
+        [Space(5)]
+        public bool macAppStoreValidation;
+
+        [Space(5)]
+        public string cameraUsageDescription;
+
+        [Space(5)]
+        public string microPhoneUsageDescription;
+
+        [Space(5)]
+        public string blueToothUsageDescription;
+    }
+
+    [Serializable]
+    public struct WindowsBuildSettings
+    {
+        [Space(5)]
+        public ScriptingImplementation scriptingBackend;
+
+        [Space(5)]
+        public ApiCompatibilityLevel apiCompatibilityLevel;
+    }
+
+    [Serializable]
+    public struct LinuxBuildSettings
+    {
+        [Space(5)]
+        public ScriptingImplementation scriptingBackend;
+
+        [Space(5)]
+        public ApiCompatibilityLevel apiCompatibilityLevel;
+    }
+
+    [Serializable]
+    public struct WebGLBuildSettings
+    {
+
     }
 
     #endregion
