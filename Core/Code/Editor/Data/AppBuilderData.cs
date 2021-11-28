@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
+using static UnityEditor.PlayerSettings;
 
 namespace Bridge.Core.App.Manager
 {
@@ -225,10 +226,52 @@ namespace Bridge.Core.App.Manager
         public Texture2D appIcon;
 
         [Space(5)]
-        public Sprite splashScreen;
+        public SplashScreen splashScreens;
 
         [HideInInspector]
         public string appIdentifier;
+    }
+
+    [Serializable]
+    public struct SplashScreen
+    {
+        [Space(5)]
+        [NonReorderable]
+        public SplashScreenLogoData[] screens;
+
+        [Space(5)]
+        public Sprite background;
+
+        [Space(5)]
+        public Color backgroundColor;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.UnityLogoStyle unityLogoStyle;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.AnimationMode animationMode;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.DrawMode logoDrawMode;
+
+        [Space(5)]
+        public bool showUnityLogo;
+
+        [Space(5)]
+        public bool showSplashScreen;
+    }
+
+    [Serializable]
+    public struct SplashScreenLogoData
+    {
+        [Space(5)]
+        public string name;
+
+        [Space(5)]
+        public Sprite logo;
+
+        [Space(5)]
+        public float duration;
     }
 
     [Serializable]

@@ -10,6 +10,8 @@ using Bridge.Core.App.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 using UnityEditorInternal;
+using UnityEditor.Build;
+using static UnityEditor.PlayerSettings;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
@@ -532,12 +534,133 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <returns></returns>
         public static BuildSettings GetBuildSettings()
         {
-            if(File.Exists(GetDefaultStorageInfo().fileDirectory))
+            Storage.Directory.DataPathExists(GetDefaultStorageInfo(), (resultsData, results) =>
             {
-                appSettings = GetBuildSettings(GetDefaultStorageInfo()).ToInstance();
-            }
+                if(results.error == true)
+                {
+                    GetDefaultBuildSettings(out appSettings);
+                    DebugConsole.Log(Debug.LogLevel.Warning, $"Build data not found @ : {GetDefaultStorageInfo().filePath}. - Getting default build settings.");
+                }
+
+                if(results.success == true)
+                {
+                    appSettings = GetBuildSettings(GetDefaultStorageInfo()).ToInstance();
+                    DebugConsole.Log(Debug.LogLevel.Success, $"Build data loaded successfully @ : {GetDefaultStorageInfo().filePath}.");
+                }
+
+            });
 
             return appSettings;
+        }
+
+        private static void GetDefaultBuildSettings(out BuildSettings buildSettings)
+        {
+            buildSettings = CreateInstance<BuildSettings>();
+
+            #region App Info
+
+            buildSettings.appInfo.companyName = companyName;
+            buildSettings.appInfo.appName = productName;
+            buildSettings.appInfo.appVersion = bundleVersion;
+            buildSettings.appInfo.appIdentifier = applicationIdentifier;
+
+            BuildTarget platform = EditorUserBuildSettings.activeBuildTarget;
+
+            var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(platform));
+            
+            if (GetIcons(nameBuild, IconKind.Application).Length > 0)
+            {
+                buildSettings.appInfo.appIcon = GetIcons(nameBuild, IconKind.Application)[0];
+            }
+
+            if(PlayerSettings.SplashScreen.logos.Length > 0)
+            {
+                buildSettings.appInfo.splashScreens.screens = GetSplashScreenLogoData(PlayerSettings.SplashScreen.logos);
+            }
+
+            if (PlayerSettings.SplashScreen.background != null)
+            {
+                buildSettings.appInfo.splashScreens.background = PlayerSettings.SplashScreen.background;
+                buildSettings.appInfo.splashScreens.backgroundColor = PlayerSettings.SplashScreen.backgroundColor;
+            }
+            else
+            {
+                buildSettings.appInfo.splashScreens.backgroundColor = Color.black;
+            }
+
+            buildSettings.appInfo.splashScreens.unityLogoStyle = PlayerSettings.SplashScreen.unityLogoStyle;
+            buildSettings.appInfo.splashScreens.animationMode = PlayerSettings.SplashScreen.animationMode;
+            buildSettings.appInfo.splashScreens.logoDrawMode = PlayerSettings.SplashScreen.drawMode;
+            buildSettings.appInfo.splashScreens.showSplashScreen = PlayerSettings.SplashScreen.show;
+            buildSettings.appInfo.splashScreens.showUnityLogo = PlayerSettings.SplashScreen.showUnityLogo;
+
+            #endregion
+
+            #region Build Scenes
+
+            buildSettings.buildScenes = new SceneAsset[AppBuildConfig.GetBuildScenes().Length];
+
+            for (int i = 0; i < buildSettings.buildScenes.Length; i++)
+            {
+                buildSettings.buildScenes[i] = AssetDatabase.LoadAssetAtPath<SceneAsset>(AppBuildConfig.GetBuildScenes()[i]);
+            }
+
+            #endregion
+
+            #region Build Config
+
+            buildSettings.configurations.platform = platform;
+            buildSettings.configurations.allowDebugging = EditorUserBuildSettings.allowDebugging;
+            buildSettings.configurations.developmentBuild = EditorUserBuildSettings.development;
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Converts Unity splash screen logos array to bridge splash screen logo data array.
+        /// </summary>
+        /// <param name="splashScreenLogos"></param>
+        /// <returns></returns>
+        private static SplashScreenLogoData[] GetSplashScreenLogoData(SplashScreenLogo[] splashScreenLogos)
+        {
+            if(splashScreenLogos.Length <= 0)
+            {
+                DebugConsole.Log(Debug.LogLevel.Warning, "There are no splash screen logos found/assigned.");
+                return null;
+            }
+
+            SplashScreenLogoData[] splashScreenLogoDataList = new SplashScreenLogoData[splashScreenLogos.Length];
+
+            for (int i = 0; i < splashScreenLogos.Length; i++)
+            {
+                splashScreenLogoDataList[i].duration = splashScreenLogos[i].duration;
+                splashScreenLogoDataList[i].logo = splashScreenLogos[i].logo;
+            }
+
+            return splashScreenLogoDataList;
+        }
+
+        /// <summary>
+        /// Converts Bridge splash screen logo data array to Unity splash screen logos array.
+        /// </summary>
+        /// <param name="splashScreenLogos"></param>
+        /// <returns></returns>
+        private static SplashScreenLogo[] GetSplashScreenLogos(SplashScreenLogoData[] splashScreenLogoData)
+        {
+            if (splashScreenLogoData.Length <= 0)
+            {
+                DebugConsole.Log(Debug.LogLevel.Warning, "There's no splash screen logo data found/assigned.");
+                return null;
+            }
+
+            SplashScreenLogo[] splashScreenLogosList = new SplashScreenLogo[splashScreenLogoData.Length];
+
+            for (int i = 0; i < splashScreenLogoData.Length; i++)
+            {
+                splashScreenLogosList[i] = SplashScreenLogo.Create(splashScreenLogoData[i].duration, splashScreenLogoData[i].logo);
+            }
+
+            return splashScreenLogosList;
         }
 
         /// <summary>
@@ -584,13 +707,26 @@ namespace Bridge.Core.UnityEditor.App.Manager
             return directoryInfo;
         }
 
+        private static Texture2D[] GetPlatformIconList(Texture2D icon)
+        {
+            int minIconsCount = 8;
+            Texture2D[] icons = new Texture2D[minIconsCount];
+
+            for (int i = 0; i < icons.Length; i++)
+            {
+                icons[i] = icon;
+            }
+
+            return icons;
+        }
+
         /// <summary>
         /// This method create build settings for the selected platform.
         /// </summary>
         /// <param name="buildSettings"></param>
         private static void ApplyAppSettings(BuildSettingsData buildSettings)
         {
-            ApplyAppInfo(buildSettings.appInfo, (callbackResults, resultsData) =>
+            ApplyAppInfo(buildSettings, (callbackResults, resultsData) =>
             { 
                 if(callbackResults.error)
                 {
@@ -638,65 +774,70 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <summary>
         /// Applies the app info for the current project.
         /// </summary>
-        /// <param name="appInfo"></param>
+        /// <param name="buildSettingsData"></param>
         /// <param name="callback"></param>
-        private static void ApplyAppInfo(AppInfo appInfo, Action<AppEventsData.CallBackResults, AppInfo> callback = null)
+        private static void ApplyAppInfo(BuildSettingsData buildSettingsData, Action<AppEventsData.CallBackResults, AppInfo> callback = null)
         {
             AppEventsData.CallBackResults callBackResults = new AppEventsData.CallBackResults();
 
             try
             {
-                if (string.IsNullOrEmpty(appInfo.companyName))
+                if (string.IsNullOrEmpty(buildSettingsData.appInfo.companyName))
                 {
                     DebugConsole.Log(Debug.LogLevel.Warning, "App info's company name field is empty. Please assign company name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
                     return;
                 }
 
-                if (string.IsNullOrEmpty(appInfo.appName))
+                if (string.IsNullOrEmpty(buildSettingsData.appInfo.appName))
                 {
                     DebugConsole.Log(Debug.LogLevel.Warning, "App info's app name field is empty. Please assign app name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
                     return;
                 }
 
-                PlayerSettings.companyName = (string.IsNullOrEmpty(appInfo.companyName)) ? PlayerSettings.companyName : appInfo.companyName;
-                PlayerSettings.productName = (string.IsNullOrEmpty(appInfo.appName)) ? PlayerSettings.productName : appInfo.appName;
-                PlayerSettings.bundleVersion = (string.IsNullOrEmpty(appInfo.appVersion)) ? PlayerSettings.bundleVersion : appInfo.appVersion;
+                PlayerSettings.companyName = (string.IsNullOrEmpty(buildSettingsData.appInfo.companyName)) ? PlayerSettings.companyName : buildSettingsData.appInfo.companyName;
+                PlayerSettings.productName = (string.IsNullOrEmpty(buildSettingsData.appInfo.appName)) ? PlayerSettings.productName : buildSettingsData.appInfo.appName;
+                PlayerSettings.bundleVersion = (string.IsNullOrEmpty(buildSettingsData.appInfo.appVersion)) ? PlayerSettings.bundleVersion : buildSettingsData.appInfo.appVersion;
 
-                string companyName = appInfo.companyName;
+                string companyName = buildSettingsData.appInfo.companyName;
 
                 if (companyName.Contains(" "))
                 {
                     companyName = companyName.Replace(" ", "");
                 }
 
-                string appName = appInfo.appName;
+                string appName = buildSettingsData.appInfo.appName;
 
                 if (appName.Contains(" "))
                 {
                     appName = appName.Replace(" ", "");
                 }
 
-                if (appInfo.splashScreen != null)
+                PlayerSettings.SplashScreen.logos = GetSplashScreenLogos(buildSettingsData.appInfo.splashScreens.screens);
+                PlayerSettings.SplashScreen.background = buildSettingsData.appInfo.splashScreens.background;
+                PlayerSettings.SplashScreen.backgroundColor = buildSettingsData.appInfo.splashScreens.backgroundColor;
+
+
+                PlayerSettings.SplashScreen.unityLogoStyle = buildSettingsData.appInfo.splashScreens.unityLogoStyle;
+                PlayerSettings.SplashScreen.animationMode = buildSettingsData.appInfo.splashScreens.animationMode;
+                PlayerSettings.SplashScreen.drawMode = buildSettingsData.appInfo.splashScreens.logoDrawMode;
+                PlayerSettings.SplashScreen.showUnityLogo = buildSettingsData.appInfo.splashScreens.showUnityLogo;
+                PlayerSettings.SplashScreen.show = buildSettingsData.appInfo.splashScreens.showSplashScreen;
+
+                if (buildSettingsData.appInfo.appIcon != null)
                 {
-                    PlayerSettings.SplashScreen.background = appInfo.splashScreen;
-                    PlayerSettings.SplashScreen.backgroundColor = Color.black;
+                    SetIconsForTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform), GetPlatformIconList(buildSettingsData.appInfo.appIcon));
                 }
 
-                if (appInfo.appIcon != null)
-                {
-                    PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Unknown, new Texture2D[] { appInfo.appIcon });
-                }
-
-                appInfo.appIdentifier = $"com.{companyName}.{appName}";
+                buildSettingsData.appInfo.appIdentifier = $"com.{companyName}.{appName}";
 
                 callBackResults.success = true;
-                callback.Invoke(callBackResults, appInfo);
+                callback.Invoke(callBackResults, buildSettingsData.appInfo);
             }
             catch (Exception exception)
             {
                 callBackResults.error = true;
                 callBackResults.errorValue = exception.Message;
-                callback.Invoke(callBackResults, appInfo);
+                callback.Invoke(callBackResults, buildSettingsData.appInfo);
             }
         }
 

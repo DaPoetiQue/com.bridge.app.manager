@@ -86,7 +86,7 @@ public static class AppBuildConfig
             }
         }
 
-    private static string[] GetBuildScenes()
+    public static string[] GetBuildScenes()
     {
         int sceneCount = SceneManager.sceneCount;
         string[] scenePath = new string[sceneCount];
