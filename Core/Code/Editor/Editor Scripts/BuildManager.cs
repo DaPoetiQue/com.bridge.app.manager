@@ -1,29 +1,22 @@
-using UnityEngine;
-using UnityEditor;
-using UnityEngine.Rendering;
-using System;
-using System.IO;
+using Bridge.Core.App.Events;
 using Bridge.Core.App.Manager;
 using Bridge.Core.UnityEditor.Debugger;
-using Bridge.Core.App.Data.Storage;
-using Bridge.Core.App.Events;
+using System;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
-using UnityEditorInternal;
 using UnityEditor.Build;
 using static UnityEditor.PlayerSettings;
+using Bridge.Core.App.Data.Storage;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
-    [CanEditMultipleObjects]
-    public class AppBuildManagerEditor : EditorWindow
+    public static class BuildManager
     {
-        #region Components
-
-        private static AppBuildManagerEditor window;
-
-        #endregion
-
         #region Serializations
 
         private static string fileName = "BuildSettingsData";
@@ -31,471 +24,24 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         #endregion
 
-        #region Open Editor Window
-
-        [MenuItem("Window/3ridge/App Build Manager #&m")]
-        public static void OpenAppBuildManagerEditor()
-        {
-            var windowInstance = GetWindow<AppBuildManagerEditor>("App Build Manager");
-            windowInstance.minSize = new Vector2(350, 400);
-            windowInstance.maxSize = new Vector2(500, 600);
-            windowInstance.Show();
-        }
-
-        #endregion
-
-        #region Window Layouts
-
-        #region Textures
-
-        private Texture2D iconTexture;
-        private Texture2D headerSectionTexture;
-        private Texture2D settingsSectionTexture;
-        private Texture2D settingsSectionContentTexture;
-
-        #endregion
-
-        #region Colors
-
-        private Color headerSectionColor = new Color(239.0f/ 255.0f, 124.0f / 255.0f, 24.0f / 255.0f, 1.0f);
-        private Color settingsSectionColor = new Color(25.0f / 255.0f, 25.0f / 255.0f, 25.0f / 255.0f, 1.0f);
-        private Color settingsSectionContentColor = new Color(25.0f / 255.0f, 25.0f / 255.0f, 25.0f / 255.0f, 1.0f);
-
-        #endregion
-
-        #region Rects
-
-        private Rect iconRect;
-        private Rect headerSectionRect;
-        private Rect settingsSectionRect;
-        private Rect settingsSectionContentRect;
-
-        #endregion
-
-        #region Window Styles
-
-        private GUIStyle settingsHeaderStyle = new GUIStyle();
-        private GUIStyle settingContentStyle = new GUIStyle();
-
-        #endregion
-
-        #region Data
-
-        private static Vector2 scrollPosition;
-
-        #endregion
-
-        #endregion
-
-        #region Window Content
-
-        private GUIContent settingsHeaderContent = new GUIContent();
-
-        #endregion
-
-        #region Settings
-
-        private static BuildSettings appSettings;
-        private static bool RunAppOnCompletion;
-        private static AndroidPreferredInstallLocation installLocation;
-
-        #region Storage Data
-
-        //private static StorageData.DirectoryInfoData appInfoStorageData = new StorageData.DirectoryInfoData()
-        //{ 
-        //    fileName = "artoolkit",
-        //    folderName = "Editor Data",
-        //    extensionType = StorageData.ExtensionType.json
-        //};
-
-        #endregion
-
-        #endregion
-
-        #region Unity
-
-        private void OnEnable() => Init();
-
-        private void OnGUI() => OnWindowUpdates();
-
-        #endregion
-
-        #region Initializations
-
-        private void Init()
-        {
-            InitializeTextures();
-            InitializeLayoutStyles();
-            InitializeContentData();
-        }
-
-        private void InitializeTextures()
-        {
-            #region Header
-
-            headerSectionTexture = new Texture2D(1, 1);
-            headerSectionTexture.SetPixel(0, 0, headerSectionColor);
-            headerSectionTexture.Apply();
-
-            #endregion
-
-            #region Icon
-
-            iconTexture = Resources.Load<Texture2D>("Editor/Windows");
-
-            #endregion
-
-            #region Settings
-
-            settingsSectionTexture = new Texture2D(1, 1);
-            settingsSectionTexture.SetPixel(0, 0, settingsSectionColor);
-            settingsSectionTexture.Apply();
-
-            settingsSectionContentTexture = new Texture2D(1, 1);
-            settingsSectionContentTexture.SetPixel(0, 0, settingsSectionContentColor);
-            settingsSectionContentTexture.Apply();
-
-            #endregion
-        }
-
-        private void InitializeLayoutStyles()
-        {
-            #region Settings Header
-
-            settingsHeaderStyle.normal.textColor = Color.white;
-            settingsHeaderStyle.fontSize = 15;
-            settingsHeaderStyle.fontStyle = FontStyle.Bold;
-            settingsHeaderStyle.padding.top = 40;
-            settingsHeaderStyle.padding.left = 50;
-            settingsHeaderStyle.alignment = TextAnchor.LowerCenter;
-            settingsHeaderContent.text = "Build Manager";
-
-            #endregion
-
-            #region Settings Content
-
-            settingContentStyle.normal.textColor = Color.white;
-            settingContentStyle.fontSize = 12;
-            settingContentStyle.alignment = TextAnchor.LowerLeft;
-            settingContentStyle.padding.left = 25;
-
-            #endregion
-        }
-
-        private void InitializeContentData()
-        {
-            appSettings = CreateInstance<BuildSettings>();
-
-            // If config not loaded. set default settings.
-            appSettings.appInfo.appVersion = "1.0";
-            appSettings.configurations.platform = BuildTarget.Android; // This will be loaded from a json file called buildSettings.json
-            appSettings.androidBuildSettings.sdkVersion = AndroidSdkVersions.AndroidApiLevel24;
-        }
-
-        #endregion
-
-        #region Main
-
-        /// <summary>
-        /// Draws window layouts.
-        /// </summary>
-        private void OnWindowUpdates()
-        {
-            if (window == null)
-            {
-                appSettings.appInfo = GetBuildSettings().appInfo;
-
-                window = GetWindow<AppBuildManagerEditor>();
-                DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
-            }
-
-            DrawLayouts();
-            OnEditorWindowUpdate();
-        }
-
-        private void DrawLayouts()
-        {
-            if(headerSectionTexture == null)
-            {
-                DebugConsole.Log(Debug.LogLevel.Warning, this, "Header Texture Missing");
-            }
-
-            #region Header Section
-
-            headerSectionRect.x = 0;
-            headerSectionRect.y = 0;
-            headerSectionRect.width = Screen.width;
-            headerSectionRect.height = 100;
-
-            if(headerSectionTexture == null)
-            {
-                InitializeTextures();
-            }
-
-            GUI.DrawTexture(headerSectionRect, headerSectionTexture);
-
-            #endregion
-
-            #region Icon
-
-            iconRect.width = 100;
-            iconRect.height = 100;
-            iconRect.x = 10;
-            iconRect.y = 0;
-
-            GUI.DrawTexture(iconRect, iconTexture);
-            GUILayout.Label(settingsHeaderContent, settingsHeaderStyle);
-
-            #endregion
-
-            #region Settings Section
-
-            settingsSectionRect.x = 0;
-            settingsSectionRect.y = headerSectionRect.height;
-            settingsSectionRect.width = window.position.width;
-            settingsSectionRect.height = window.position.height - headerSectionRect.height;
-
-            GUI.DrawTexture(settingsSectionRect, settingsSectionTexture, ScaleMode.ScaleToFit);
-
-            settingsSectionContentRect.x = 0;
-            settingsSectionContentRect.y = settingsSectionRect.y;
-            settingsSectionContentRect.width = settingsSectionRect.width;
-            settingsSectionContentRect.height = settingsSectionRect.height;
-
-            GUI.DrawTexture(settingsSectionContentRect, settingsSectionContentTexture);
-
-            #endregion
-        }
-
-        private void OnEditorWindowUpdate()
-        {
-            GUILayout.BeginArea(settingsSectionRect);
-
-            #region Menu Content Area
-
-            #region Menu Content and Style Update
-
-            if (appSettings == null)
-            {
-                InitializeContentData();
-            }
-
-            GUIStyle style = new GUIStyle();
-            style.padding = new RectOffset(10, 10, 25, 25);
-
-            var layout = new GUILayoutOption[2];
-            layout[0] = GUILayout.Width(settingsSectionRect.width);
-            layout[1] = GUILayout.ExpandHeight(true);
-
-            #endregion
-
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style ,layout);
-
-            #region Scroll Area
-
-            #region App Info & Configurations
-
-            GUILayout.Space(10);
-            SerializedObject appInfoSerializedObject = new SerializedObject(appSettings);
-            SerializedProperty appInfoSerializedObjectProperty = appInfoSerializedObject.FindProperty("appInfo");
-            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty, true);
-            appInfoSerializedObject.ApplyModifiedProperties();
-
-            GUILayout.Space(10);
-            SerializedObject sceneDataSerializedObject = new SerializedObject(appSettings);
-            sceneDataSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
-            SerializedProperty sceneDataSerializedObjectProperty = sceneDataSerializedObject.FindProperty("buildScenes");
-            EditorGUILayout.PropertyField(sceneDataSerializedObjectProperty, true);
-            sceneDataSerializedObject.ApplyModifiedProperties();
-
-            GUILayout.Space(10);
-            SerializedObject appConfigSerializedObject = new SerializedObject(appSettings);
-            SerializedProperty appConfigSerializedObjectProperty = appConfigSerializedObject.FindProperty("configurations");
-            EditorGUILayout.PropertyField(appConfigSerializedObjectProperty, true);
-            appConfigSerializedObject.ApplyModifiedProperties();
-
-            if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Console)
-            {
-                GUILayout.Space(10);
-
-                SerializedObject appDisplayObject = new SerializedObject(appSettings);
-                SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("consoleDisplaySettings");
-                EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
-                appDisplayObject.ApplyModifiedProperties();
-            }
-
-            if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Mobile)
-            {
-                GUILayout.Space(10);
-
-                SerializedObject appDisplayObject = new SerializedObject(appSettings);
-                SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("mobileDisplaySettings");
-                EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
-                appDisplayObject.ApplyModifiedProperties();
-
-                if (appSettings.configurations.platform == BuildTarget.Android)
-                {
-                    GUILayout.Space(10);
-
-                    SerializedObject androidConfigSerializedObject = new SerializedObject(appSettings);
-                    SerializedProperty androidConfigSerializedObjectProperty = androidConfigSerializedObject.FindProperty("androidBuildSettings");
-                    EditorGUILayout.PropertyField(androidConfigSerializedObjectProperty, true);
-                    androidConfigSerializedObject.ApplyModifiedProperties();
-                }
-
-                if (appSettings.configurations.platform == BuildTarget.iOS)
-                {
-                    GUILayout.Space(10);
-
-                    SerializedObject androidConfigSerializedObject = new SerializedObject(appSettings);
-                    SerializedProperty androidConfigSerializedObjectProperty = androidConfigSerializedObject.FindProperty("iOSBuildSettings");
-                    EditorGUILayout.PropertyField(androidConfigSerializedObjectProperty, true);
-                    androidConfigSerializedObject.ApplyModifiedProperties();
-                }
-            }
-
-            if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Standalone)
-            {
-                GUILayout.Space(10);
-
-                SerializedObject appDisplayObject = new SerializedObject(appSettings);
-                SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("standaloneDisplaySettings");
-                EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
-                appDisplayObject.ApplyModifiedProperties();
-
-                GUILayout.Space(10);
-
-                SerializedObject buildSettingsObject = new SerializedObject(appSettings);
-                SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("standaloneBuildSettings");
-                EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                buildSettingsObject.ApplyModifiedProperties();
-
-                //if(appSettings.configurations.platform == BuildTarget.StandaloneWindows || appSettings.configurations.platform == BuildTarget.StandaloneWindows64)
-                //{
-                //    GUILayout.Space(10);
-
-                //    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
-                //    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("windowsBuildSettings");
-                //    EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                //    buildSettingsObject.ApplyModifiedProperties();
-                //}
-
-                //if (appSettings.configurations.platform == BuildTarget.StandaloneOSX)
-                //{
-                //    GUILayout.Space(10);
-
-                //    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
-                //    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("macBuildSettings");
-                //    EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                //    buildSettingsObject.ApplyModifiedProperties();
-                //}
-
-                //if (appSettings.configurations.platform == BuildTarget.StandaloneLinux64)
-                //{
-                //    GUILayout.Space(10);
-
-                //    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
-                //    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("linuxBuildSettings");
-                //    EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                //    buildSettingsObject.ApplyModifiedProperties();
-                //}
-            }
-
-            if (AppDataSettings.GetRuntimeOS(appSettings) == RuntimeOS.Web)
-            {
-                GUILayout.Space(10);
-
-                SerializedObject appDisplayObject = new SerializedObject(appSettings);
-                SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("webDisplaySettings");
-                EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
-                appDisplayObject.ApplyModifiedProperties();
-
-                if (appSettings.configurations.platform == BuildTarget.WebGL)
-                {
-                    GUILayout.Space(10);
-
-                    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
-                    SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("webGLBuildSettings");
-                    EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                    buildSettingsObject.ApplyModifiedProperties();
-                }
-            }
-
-            #endregion
-
-            #region App Builder
-
-            GUILayout.Space(10);
-
-            EditorGUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Apply Settings", GUILayout.Height(45)))
-            {
-                ApplyAppSettings(appSettings.ToSerializable());
-            }
-
-            if (Directory.Exists(appSettings.configurations.targetBuildDirectory) == true)
-            {
-                GUILayout.Space(2);
-
-                if (GUILayout.Button("Open Build Folder", GUILayout.Height(45)))
-                {
-                    Storage.Directory.OpenFolder(GetBuildSettings(GetDefaultStorageInfo()).configurations.targetBuildDirectory);
-                }
-            }
-
-            if (Directory.Exists(Storage.Directory.GetProjectTempDirectory()))
-            {
-                GUILayout.Space(2);
-
-                if (GUILayout.Button("Clear Project Cache", GUILayout.Height(45)))
-                {
-                    BuildCompilerScript.ClearProjectCache();
-                }
-            }
-
-            EditorGUILayout.EndHorizontal();
-
-            GUILayout.Space(5);
-
-            if (GUILayout.Button("Build App", GUILayout.Height(60)))
-            {
-                Build();
-            }
-
-            GUILayout.Space(10);
-
-            SerializedObject buildSerializedObject = new SerializedObject(appSettings);
-            SerializedProperty buildSerializedObjectProperty = buildSerializedObject.FindProperty("buildAndRun");
-            EditorGUILayout.PropertyField(buildSerializedObjectProperty, true);
-            buildSerializedObject.ApplyModifiedProperties();
-
-            #endregion
-
-            #endregion
-
-            EditorGUILayout.EndScrollView();
-
-            #endregion
-
-            GUILayout.EndArea();
-        }
-
         #region Build App
 
+        /// <summary>
+        /// This function builds the app to a defined directory.
+        /// </summary>
         [MenuItem("3ridge/Config/Build App #B")]
-        private static void Build()
+        public static void Build()
         {
             BuildSettingsData buildSettings = GetBuildSettings(GetDefaultStorageInfo());
 
             string fileFullPath = buildSettings.configurations.buildLocation;
             buildSettings.configurations.buildLocation = fileFullPath;
 
-            if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) || Directory.Exists(buildSettings.configurations.targetBuildDirectory) == false)
+            if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) ||   Storage.Directory.FolderExist(buildSettings.configurations.targetBuildDirectory) == false)
             {
                 buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "");
                 ApplyAppSettings(buildSettings);
-                DebugConsole.Log(Debug.LogLevel.Debug, $"Build Directory Set @ : {appSettings.configurations.buildLocation}");
+                DebugConsole.Log(Debug.LogLevel.Debug, $"Build Directory Set @ : {buildSettings.configurations.buildLocation}");
             }
 
             #region Saving Editor Data
@@ -506,20 +52,20 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #endregion
 
-            if (!string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) && Directory.Exists(buildSettings.configurations.targetBuildDirectory) == true)
+            if (!string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) && Storage.Directory.FolderExist(buildSettings.configurations.targetBuildDirectory) == true)
             {
                 BuildCompilerScript.BuildCompiler(buildSettings, (results, resultsData) =>
                 {
-                   if(results.error)
-                   {
+                    if (results.error)
+                    {
                         DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
                         return;
-                   }
+                    }
 
-                   if(results.success)
-                   {
+                    if (results.success)
+                    {
                         DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                   }
+                    }
                 });
             }
         }
@@ -532,30 +78,32 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// Used by the App Build Manager To Update Build Settings Window.
         /// </summary>
         /// <returns></returns>
-        public static BuildSettings GetBuildSettings()
+        public static BuildSettings GetCurrentBuildSettings()
         {
+            BuildSettingsData settings = new BuildSettingsData();
+
             Storage.Directory.DataPathExists(GetDefaultStorageInfo(), (resultsData, results) =>
             {
-                if(results.error == true)
+                if (results.error == true)
                 {
-                    GetDefaultBuildSettings(out appSettings);
+                    settings = GetDefaultBuildSettings();
                     DebugConsole.Log(Debug.LogLevel.Warning, $"Build data not found @ : {GetDefaultStorageInfo().filePath}. - Getting default build settings.");
                 }
 
-                if(results.success == true)
+                if (results.success == true)
                 {
-                    appSettings = GetBuildSettings(GetDefaultStorageInfo()).ToInstance();
+                    settings = GetBuildSettings(GetDefaultStorageInfo());
                     DebugConsole.Log(Debug.LogLevel.Success, $"Build data loaded successfully @ : {GetDefaultStorageInfo().filePath}.");
                 }
 
             });
 
-            return appSettings;
+            return settings.ToInstance();
         }
 
-        private static void GetDefaultBuildSettings(out BuildSettings buildSettings)
+        private static BuildSettingsData GetDefaultBuildSettings()
         {
-            buildSettings = CreateInstance<BuildSettings>();
+            BuildSettingsData buildSettings = new BuildSettingsData();
 
             #region App Info
 
@@ -567,13 +115,13 @@ namespace Bridge.Core.UnityEditor.App.Manager
             BuildTarget platform = EditorUserBuildSettings.activeBuildTarget;
 
             var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(platform));
-            
+
             if (GetIcons(nameBuild, IconKind.Application).Length > 0)
             {
                 buildSettings.appInfo.appIcon = GetIcons(nameBuild, IconKind.Application)[0];
             }
 
-            if(PlayerSettings.SplashScreen.logos.Length > 0)
+            if (PlayerSettings.SplashScreen.logos.Length > 0)
             {
                 buildSettings.appInfo.splashScreens.screens = GetSplashScreenLogoData(PlayerSettings.SplashScreen.logos);
             }
@@ -598,12 +146,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region Build Scenes
 
-            buildSettings.buildScenes = new SceneAsset[AppBuildConfig.GetBuildScenes().Length];
-
-            for (int i = 0; i < buildSettings.buildScenes.Length; i++)
-            {
-                buildSettings.buildScenes[i] = AssetDatabase.LoadAssetAtPath<SceneAsset>(AppBuildConfig.GetBuildScenes()[i]);
-            }
+            buildSettings.buildScenes = AppBuildConfig.GetBuildScenes();
 
             #endregion
 
@@ -614,6 +157,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
             buildSettings.configurations.developmentBuild = EditorUserBuildSettings.development;
 
             #endregion
+
+            return buildSettings;
         }
 
         /// <summary>
@@ -623,7 +168,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <returns></returns>
         private static SplashScreenLogoData[] GetSplashScreenLogoData(SplashScreenLogo[] splashScreenLogos)
         {
-            if(splashScreenLogos.Length <= 0)
+            if (splashScreenLogos.Length <= 0)
             {
                 DebugConsole.Log(Debug.LogLevel.Warning, "There are no splash screen logos found/assigned.");
                 return null;
@@ -707,7 +252,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             return directoryInfo;
         }
 
-        private static Texture2D[] GetPlatformIconList(Texture2D icon)
+        public static Texture2D[] GetPlatformIconList(Texture2D icon)
         {
             int minIconsCount = 8;
             Texture2D[] icons = new Texture2D[minIconsCount];
@@ -724,29 +269,29 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// This method create build settings for the selected platform.
         /// </summary>
         /// <param name="buildSettings"></param>
-        private static void ApplyAppSettings(BuildSettingsData buildSettings)
+        public static void ApplyAppSettings(BuildSettingsData buildSettings)
         {
             ApplyAppInfo(buildSettings, (callbackResults, resultsData) =>
-            { 
-                if(callbackResults.error)
+            {
+                if (callbackResults.error)
                 {
                     DebugConsole.Log(Debug.LogLevel.Error, $"Failed to apply app info with results : {callbackResults.errorValue}.");
                     return;
                 }
 
-                if(callbackResults.success)
+                if (callbackResults.success)
                 {
                     buildSettings.appInfo = resultsData;
 
                     ApplyBuildSettings(buildSettings, (callbackResults, resultsData) =>
-                    { 
-                        if(callbackResults.error)
+                    {
+                        if (callbackResults.error)
                         {
                             DebugConsole.Log(Debug.LogLevel.Error, $"Failed to apply build settings with results : {callbackResults.errorValue}.");
                             return;
                         }
 
-                        if(callbackResults.success)
+                        if (callbackResults.success)
                         {
                             Storage.JsonData.Save(GetDefaultStorageInfo(), buildSettings, (infoData, saveResults) =>
                             {
@@ -794,15 +339,15 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     return;
                 }
 
-                PlayerSettings.companyName = (string.IsNullOrEmpty(buildSettingsData.appInfo.companyName)) ? PlayerSettings.companyName : buildSettingsData.appInfo.companyName;
-                PlayerSettings.productName = (string.IsNullOrEmpty(buildSettingsData.appInfo.appName)) ? PlayerSettings.productName : buildSettingsData.appInfo.appName;
-                PlayerSettings.bundleVersion = (string.IsNullOrEmpty(buildSettingsData.appInfo.appVersion)) ? PlayerSettings.bundleVersion : buildSettingsData.appInfo.appVersion;
+                companyName = (string.IsNullOrEmpty(buildSettingsData.appInfo.companyName)) ? companyName : buildSettingsData.appInfo.companyName;
+                productName = (string.IsNullOrEmpty(buildSettingsData.appInfo.appName)) ? productName : buildSettingsData.appInfo.appName;
+                bundleVersion = (string.IsNullOrEmpty(buildSettingsData.appInfo.appVersion)) ? bundleVersion : buildSettingsData.appInfo.appVersion;
 
-                string companyName = buildSettingsData.appInfo.companyName;
+                string appCompanyName = buildSettingsData.appInfo.companyName;
 
-                if (companyName.Contains(" "))
+                if (appCompanyName.Contains(" "))
                 {
-                    companyName = companyName.Replace(" ", "");
+                    appCompanyName = appCompanyName.Replace(" ", "");
                 }
 
                 string appName = buildSettingsData.appInfo.appName;
@@ -828,7 +373,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     SetIconsForTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform), GetPlatformIconList(buildSettingsData.appInfo.appIcon));
                 }
 
-                buildSettingsData.appInfo.appIdentifier = $"com.{companyName}.{appName}";
+                buildSettingsData.appInfo.appIdentifier = $"com.{appCompanyName}.{appName}";
 
                 callBackResults.success = true;
                 callback.Invoke(callBackResults, buildSettingsData.appInfo);
@@ -846,7 +391,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// </summary>
         /// <param name="buildSettings"></param>
         /// <param name="callback"></param>
-        private static void ApplyBuildSettings(BuildSettingsData buildSettings, Action<AppEventsData.CallBackResults, BuildSettingsData> callback = null)
+        public static void ApplyBuildSettings(BuildSettingsData buildSettings, Action<AppEventsData.CallBackResults, BuildSettingsData> callback = null)
         {
             AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
 
@@ -854,17 +399,17 @@ namespace Bridge.Core.UnityEditor.App.Manager
             {
                 SwitchBuildTarget(buildSettings.configurations, switchResults =>
                 {
-                    if(switchResults.error)
+                    if (switchResults.error)
                     {
                         DebugConsole.Log(Debug.LogLevel.Warning, switchResults.errorValue);
                         return;
                     }
 
-                    if(switchResults.success)
+                    if (switchResults.success)
                     {
                         DebugConsole.Log(Debug.LogLevel.Success, $"Applied build settings for : {buildSettings.configurations.platform}");
 
-                        if (appSettings.configurations.platform == BuildTarget.Android || appSettings.configurations.platform == BuildTarget.iOS)
+                        if (buildSettings.configurations.platform == BuildTarget.Android || buildSettings.configurations.platform == BuildTarget.iOS)
                         {
                             switch (buildSettings.mobileDisplaySettings.allowedOrientation)
                             {
@@ -928,7 +473,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                                 break;
 
                             case BuildTarget.StandaloneWindows:
-                       
+
                                 PlayerSettings.SetScriptingBackend(GetBuildTargetGroup(buildSettings.configurations.platform), buildSettings.standaloneBuildSettings.otherSettings.scriptingBackend);
 
                                 break;
@@ -956,28 +501,28 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// </summary>
         /// <param name="config"></param>
         /// <param name="callback"></param>
-        private static void SwitchBuildTarget(BuildConfig config, Action<AppEventsData.CallBackResults> callback = null)
+        public static void SwitchBuildTarget(BuildConfig config, Action<AppEventsData.CallBackResults> callback = null)
         {
             AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
 
             try
             {
-                IsPlatformSupported(config.platform, supportResults => 
+                IsPlatformSupported(config.platform, supportResults =>
                 {
-                    if(supportResults.error)
+                    if (supportResults.error)
                     {
                         DebugConsole.Log(Debug.LogLevel.Warning, supportResults.errorValue);
                         EditorUtility.DisplayDialog("3ridge Build Settings", supportResults.errorValue, "Cancel");
                         return;
                     }
 
-                    if(supportResults.success)
+                    if (supportResults.success)
                     {
                         DebugConsole.Log(Debug.LogLevel.Success, $"Config Success : {supportResults.successValue}");
                         if (config.platform == EditorUserBuildSettings.activeBuildTarget)
                         {
                             results.success = true;
-                            results.successValue = $"Applied build settings for : {config.platform.ToString()}";          
+                            results.successValue = $"Applied build settings for : {config.platform.ToString()}";
                         }
                         else
                         {
@@ -1004,7 +549,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// </summary>
         /// <param name="buildTarget"></param>
         /// <param name="callback"></param>
-        private static void IsPlatformSupported(BuildTarget buildTarget, Action<AppEventsData.CallBackResults> callback = null)
+        public static void IsPlatformSupported(BuildTarget buildTarget, Action<AppEventsData.CallBackResults> callback = null)
         {
             AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
 
@@ -1016,7 +561,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 results.success = (bool)isPlatformSupportLoaded.Invoke(null, new object[] { (string)getTargetStringFromBuildTarget.Invoke(null, new object[] { buildTarget }) });
 
-                if(results.success == true)
+                if (results.success == true)
                 {
                     results.successValue = $"Build platform for {buildTarget.ToString()} is supported.";
                 }
@@ -1028,7 +573,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 callback.Invoke(results);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 results.error = true;
                 results.errorValue = exception.Message;
@@ -1041,18 +586,18 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// </summary>
         /// <param name="platform"></param>
         /// <returns>Return a build target group for the assigned platform</returns>
-        private static BuildTargetGroup GetBuildTargetGroup(BuildTarget platform)
+        public static BuildTargetGroup GetBuildTargetGroup(BuildTarget platform)
         {
             bool standalone = platform == BuildTarget.StandaloneWindows || platform == BuildTarget.StandaloneWindows64 || platform == BuildTarget.StandaloneOSX || platform == BuildTarget.StandaloneLinux64;
             BuildTargetGroup group = new BuildTargetGroup();
 
-            if(standalone)
+            if (standalone)
             {
                 group = BuildTargetGroup.Standalone;
             }
             else
             {
-                switch(platform)
+                switch (platform)
                 {
                     case BuildTarget.Android:
 
@@ -1143,19 +688,12 @@ namespace Bridge.Core.UnityEditor.App.Manager
                         group = BuildTargetGroup.XboxOne;
 
                         break;
-                   ;
+                        ;
 
                 }
             }
 
             return group;
-        }
-
-        #endregion
-
-        private void OnInspectorUpdate()
-        {
-            Repaint();
         }
 
         #endregion

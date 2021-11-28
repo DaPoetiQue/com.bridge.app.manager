@@ -1,15 +1,19 @@
 using System;
-using System.Collections.Generic;
 using UnityEditor;
 // using Bridge.Core.App.Data.Storage;
 using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.SceneManagement;
-using static UnityEditor.PlayerSettings;
+using Bridge.Core.App.Data.Storage;
+using Bridge.Core.UnityEditor.Debugger;
+using Bridge.Core.App.Events;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Bridge.Core.App.Manager
 {
-    #region App Info
+    #region Data
+
+    #region Options
 
     public enum RuntimePlatform : byte
     {
@@ -52,14 +56,38 @@ namespace Bridge.Core.App.Manager
         Web
     }
 
+    #endregion
+
+    #region Info
+
+    /// <summary>
+    /// Information about the app.
+    /// </summary>
     [Serializable]
-    public struct AppResolution
+    public struct AppInfo
     {
-        public int width;
+        [Space(5)]
+        public string companyName;
 
         [Space(5)]
-        public int height;
+        public string appName;
+
+        [Space(5)]
+        public string appVersion;
+
+        [Space(5)]
+        public Texture2D appIcon;
+
+        [Space(5)]
+        public SplashScreen splashScreens;
+
+        [HideInInspector]
+        public string appIdentifier;
     }
+
+    #endregion
+
+    #region Build Settings
 
     /// <summary>
     /// This class contains the app build settings.
@@ -70,7 +98,6 @@ namespace Bridge.Core.App.Manager
         public AppInfo appInfo;
 
         [Space(5)]
-        [NonReorderable]
         public SceneAsset[] buildScenes;
 
         [Space(5)]
@@ -115,10 +142,30 @@ namespace Bridge.Core.App.Manager
 
        public BuildSettingsData ToSerializable()
         {
+            List<string> scenes = new List<string>();
+
+            Action<string[], AppEventsData.CallBackResults> callBack = (Data, results) =>
+            {
+                if(results.error == true)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    return;
+                }
+
+                if(results.success == true)
+                {
+                    scenes = Data.ToList();
+                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                }
+            };
+
+            Storage.Directory.GetAssetsPaths(buildScenes, callBack);
+
             return new BuildSettingsData
             {
                 appInfo = this.appInfo,
-                buildScenes = this.buildScenes,
+
+                buildScenes = scenes.ToArray(),
                 configurations = this.configurations,
                 consoleDisplaySettings = this.consoleDisplaySettings,
                 mobileDisplaySettings = this.mobileDisplaySettings,
@@ -146,7 +193,7 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         [NonReorderable]
-        public SceneAsset[] buildScenes;
+        public string[] buildScenes;
 
         [Space(5)]
         public BuildConfig configurations;
@@ -191,7 +238,23 @@ namespace Bridge.Core.App.Manager
             BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
 
             buildSettings.appInfo = this.appInfo;
-            buildSettings.buildScenes = this.buildScenes;
+
+            Action<SceneAsset[], AppEventsData.CallBackResults> callBack = (data, results) =>
+            {
+                if(results.error == true)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    return;
+                }
+
+                if(results.success == true)
+                {
+                    buildSettings.buildScenes = data;
+                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                }
+            };
+            Storage.AssetData.LoadAssets(buildScenes, callBack);
+
             buildSettings.configurations = this.configurations;
             buildSettings.consoleDisplaySettings = this.consoleDisplaySettings;
             buildSettings.mobileDisplaySettings = this.mobileDisplaySettings;
@@ -207,30 +270,9 @@ namespace Bridge.Core.App.Manager
         }
     }
 
-    /// <summary>
-    /// Information about the app.
-    /// </summary>
-    [Serializable]
-    public struct AppInfo
-    {
-        [Space(5)]
-        public string companyName;
+    #endregion
 
-        [Space(5)]
-        public string appName;
-
-        [Space(5)]
-        public string appVersion;
-
-        [Space(5)]
-        public Texture2D appIcon;
-
-        [Space(5)]
-        public SplashScreen splashScreens;
-
-        [HideInInspector]
-        public string appIdentifier;
-    }
+    #region Splash Screen Data
 
     [Serializable]
     public struct SplashScreen
@@ -274,37 +316,36 @@ namespace Bridge.Core.App.Manager
         public float duration;
     }
 
+    #endregion
+
+    #region Other Data
+
     [Serializable]
-    public class SceneData
+    public partial class SceneData
     {
         [Space(5)]
-        [SerializeField]
+        [NonReorderable]
         public SceneAsset[] sceneList;
     }
 
-    /// <summary>
-    /// App build settings.
-    /// </summary>
-    [Serializable]
-    public struct BuildConfig
+    public partial class SceneData
     {
-        [Space(5)]
-        public BuildTarget platform;
-
-        [Space(5)]
-        public bool allowDebugging;
-
-        [Space(5)]
-        public bool developmentBuild;
-
         [HideInInspector]
-        public string buildLocation;
-
-        [HideInInspector]
-        public string targetBuildDirectory;
+        public string[] sceneListGUID;
     }
 
+    #endregion
+
     #region Display Data
+
+    [Serializable]
+    public struct AppResolution
+    {
+        public int width;
+
+        [Space(5)]
+        public int height;
+    }
 
     [Serializable]
     public struct ConsoleDisplaySettings
@@ -347,7 +388,12 @@ namespace Bridge.Core.App.Manager
 
     #endregion
 
-    public static class AppDataSettings
+    #region Platform Specific Data
+
+    /// <summary>
+    /// This class contains platform related data.
+    /// </summary>
+    public static class PlatformSpecificData
     {
         public static RuntimeOS GetRuntimeOS(BuildSettings buildSettings)
         {
@@ -379,10 +425,7 @@ namespace Bridge.Core.App.Manager
 
             return RuntimeOS.None;
         }
-    }
 
-    public static class PlatformSpecificData
-    {
         public static BuildFileExtension GetFileExtension(BuildTarget platform)
         {
             BuildFileExtension output = BuildFileExtension.none;
@@ -523,6 +566,34 @@ namespace Bridge.Core.App.Manager
     {
 
     }
+
+    #endregion
+
+    #region Build Config Data
+
+    /// <summary>
+    /// App build settings.
+    /// </summary>
+    [Serializable]
+    public struct BuildConfig
+    {
+        [Space(5)]
+        public BuildTarget platform;
+
+        [Space(5)]
+        public bool allowDebugging;
+
+        [Space(5)]
+        public bool developmentBuild;
+
+        [HideInInspector]
+        public string buildLocation;
+
+        [HideInInspector]
+        public string targetBuildDirectory;
+    }
+
+    #endregion
 
     #endregion
 }

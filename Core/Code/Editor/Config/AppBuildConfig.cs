@@ -13,7 +13,7 @@ public static class AppBuildConfig
     {
         try
         {
-            BuildSettingsData settings = AppBuildManagerEditor.GetBuildSettings(AppBuildManagerEditor.GetDefaultStorageInfo());
+            BuildSettingsData settings = BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo());
             BuildApplication(settings, GetBuildScenes(), settings.buildAndRun);
         }
         catch (Exception exception)
@@ -71,7 +71,7 @@ public static class AppBuildConfig
 
                 if (summary.result == BuildResult.Succeeded)
                 {
-                    EditorWindow.FocusWindowIfItsOpen<AppBuildManagerEditor>();
+                    EditorWindow.FocusWindowIfItsOpen<BuildManagerWindow>();
                     DebugConsole.Log(Bridge.Core.Debug.LogLevel.Success, "App build completed successfully.");
                 }
 
