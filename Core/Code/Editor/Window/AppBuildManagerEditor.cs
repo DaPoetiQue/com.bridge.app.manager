@@ -532,7 +532,11 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <returns></returns>
         public static BuildSettings GetBuildSettings()
         {
-            appSettings = GetBuildSettings(GetDefaultStorageInfo()).ToInstance();
+            if(File.Exists(GetDefaultStorageInfo().fileDirectory))
+            {
+                appSettings = GetBuildSettings(GetDefaultStorageInfo()).ToInstance();
+            }
+
             return appSettings;
         }
 
