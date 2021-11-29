@@ -436,11 +436,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
             GUILayout.EndArea();
         }
 
-        private void OnInspectorUpdate()
-        {
-            Repaint();
-        }
-
         #endregion
     }
 }
