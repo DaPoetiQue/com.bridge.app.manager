@@ -522,14 +522,15 @@ namespace Bridge.Core.UnityEditor.App.Manager
                         if (config.platform == EditorUserBuildSettings.activeBuildTarget)
                         {
                             results.success = true;
-                            results.successValue = $"Applied build settings for : {config.platform.ToString()}";
+                            results.successValue = $"Applied build settings for : {config.platform}";
                         }
                         else
                         {
-                            EditorUserBuildSettings.SwitchActiveBuildTargetAsync(GetBuildTargetGroup(config.platform), config.platform);
-
-                            results.success = true;
-                            results.successValue = $"Current build target has been successfully switched to : {config.platform}";
+                           if(EditorUserBuildSettings.SwitchActiveBuildTargetAsync(GetBuildTargetGroup(config.platform), config.platform))
+                            {
+                                results.success = true;
+                                results.successValue = $"Current build target has been successfully switched to : {config.platform}";
+                            }
                         }
 
                         callback.Invoke(results);
