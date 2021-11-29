@@ -111,14 +111,19 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region Build Scenes
 
-            buildSettings.buildScenes = new string[1];
-            //buildSettings.buildScenes = AppBuildConfig.GetBuildScenes();
+            buildSettings.buildScenes = AppBuildConfig.GetBuildScenes();
 
             #endregion
 
             #region Build Config
 
             buildSettings.configurations = GetDefaultBuildConfigurations();
+
+            #endregion
+
+            #region Standalone Settings
+
+            //buildSettings.standaloneBuildSettings = GetDefaultBuildStandaloneBuildSettings();
 
             #endregion
 
@@ -189,6 +194,50 @@ namespace Bridge.Core.UnityEditor.App.Manager
             buildConfig.developmentBuild = EditorUserBuildSettings.development;
 
             return buildConfig;
+        }
+
+        public static StandaloneBuildSettings GetDefaultBuildStandaloneBuildSettings()
+        {
+            StandaloneBuildSettings settings = new StandaloneBuildSettings();
+
+            #region Mac OSX
+
+            settings.mac.colorSpace = colorSpace;
+            settings.mac.graphicsApi = GetGraphicsAPIs(BuildTarget.StandaloneOSX);
+
+            #endregion
+
+            #region Windows
+
+            settings.windows.colorSpace = colorSpace;
+
+            if(GetDefaultBuildSettings().configurations.platform == BuildTarget.StandaloneWindows)
+            {
+                settings.windows.graphicsApi = GetGraphicsAPIs(BuildTarget.StandaloneWindows);
+            }
+
+            if (GetDefaultBuildSettings().configurations.platform == BuildTarget.StandaloneWindows64)
+            {
+                settings.windows.graphicsApi = GetGraphicsAPIs(BuildTarget.StandaloneWindows64);
+            }
+
+            #endregion
+
+            #region Linux
+
+            settings.linux.colorSpace = colorSpace;
+            settings.linux.graphicsApi = GetGraphicsAPIs(BuildTarget.StandaloneLinux64);
+
+            #endregion
+
+            #region Other Settings
+
+            settings.otherSettings.apiCompatibility = GetApiCompatibilityLevel(GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget));
+            settings.otherSettings.scriptingBackend = GetScriptingBackend(GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget));
+
+            #endregion
+
+            return settings;
         }
 
         #endregion

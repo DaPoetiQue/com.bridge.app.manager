@@ -188,7 +188,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         {
             if (window == null)
             {
-                appSettings.appInfo = BuildManager.GetCurrentBuildSettings().appInfo;
+                appSettings = BuildManager.GetCurrentBuildSettings();
 
                 window = GetWindow<BuildManagerWindow>();
                 DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");

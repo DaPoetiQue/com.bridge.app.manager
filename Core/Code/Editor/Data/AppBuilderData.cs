@@ -506,7 +506,7 @@ namespace Bridge.Core.App.Manager
             {
                 if(results.error == true)
                 {
-                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
                     return;
                 }
 
@@ -600,7 +600,7 @@ namespace Bridge.Core.App.Manager
             {
                 if(results.error == true)
                 {
-                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
                     return;
                 }
 
@@ -809,6 +809,13 @@ namespace Bridge.Core.App.Manager
     public struct OSXBuildSettings
     {
         [Space(5)]
+        public ColorSpace colorSpace;
+
+        [Space(5)]
+        [NonReorderable]
+        public GraphicsDeviceType[] graphicsApi;
+
+        [Space(5)]
         public int build;
 
         [Space(5)]
@@ -851,7 +858,8 @@ namespace Bridge.Core.App.Manager
         public ColorSpace colorSpace;
 
         [Space(5)]
-        public GraphicsDeviceType graphicsApi;
+        [NonReorderable]
+        public GraphicsDeviceType[] graphicsApi;
     }
 
     [Serializable]
@@ -861,7 +869,8 @@ namespace Bridge.Core.App.Manager
         public ColorSpace colorSpace;
 
         [Space(5)]
-        public GraphicsDeviceType graphicsApi;
+        [NonReorderable]
+        public GraphicsDeviceType[] graphicsApi;
     }
 
     [Serializable]
