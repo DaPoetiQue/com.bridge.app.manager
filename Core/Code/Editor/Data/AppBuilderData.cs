@@ -113,7 +113,7 @@ namespace Bridge.Core.App.Manager
                 }
             });
 
-            appInfo.splashScreens = this.splashScreens;
+            appInfo.splashScreens = this.splashScreens.ToSerializable();
             appInfo.appIdentifier = this.appIdentifier;
 
             return appInfo;
@@ -143,7 +143,7 @@ namespace Bridge.Core.App.Manager
         public string appIcon;
 
         [Space(5)]
-        public SplashScreen splashScreens;
+        public SplashScreenData splashScreens;
 
         [HideInInspector]
         public string appIdentifier;
@@ -174,7 +174,7 @@ namespace Bridge.Core.App.Manager
                 }
 
             });
-            appInfo.splashScreens = this.splashScreens;
+            appInfo.splashScreens = this.splashScreens.ToInstance();
             appInfo.appIdentifier = this.appIdentifier;
 
             return appInfo;
@@ -262,7 +262,7 @@ namespace Bridge.Core.App.Manager
 
             return new BuildSettingsData
             {
-                appInfo = this.appInfo,
+                appInfo = this.appInfo.ToSerializable(),
                 buildScenes = scenes.ToArray(),
                 configurations = this.configurations,
                 consoleDisplaySettings = this.consoleDisplaySettings,
@@ -287,7 +287,7 @@ namespace Bridge.Core.App.Manager
     public class BuildSettingsData
     {
         [Space(5)]
-        public AppInfo appInfo;
+        public AppInfoDataObject appInfo;
 
         [Space(5)]
         [NonReorderable]
@@ -335,7 +335,7 @@ namespace Bridge.Core.App.Manager
         {
             BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
 
-            buildSettings.appInfo = this.appInfo;
+            buildSettings.appInfo = this.appInfo.ToInstance();
 
             Action<SceneAsset[], AppEventsData.CallBackResults> callBack = (data, results) =>
             {
@@ -409,13 +409,13 @@ namespace Bridge.Core.App.Manager
 
         #region Data Conversions
 
-        public SplashScreenObjectData ToSerializable()
+        public SplashScreenData ToSerializable()
         {
-            SplashScreenObjectData splashScreen = new SplashScreenObjectData();
+            SplashScreenData splashScreen = new SplashScreenData();
 
             if(this.screens.Length > 0)
             {
-                splashScreen.screens = new SplashScreenLogoDataObject[this.screens.Length];
+                splashScreen.screens = new SplashScreenLogoData[this.screens.Length];
 
                 for (int i = 0; i < this.screens.Length; i++)
                 {
@@ -455,13 +455,13 @@ namespace Bridge.Core.App.Manager
     /// Contains serializable splash screen data.
     /// </summary>
     [Serializable]
-    public struct SplashScreenObjectData
+    public struct SplashScreenData
     {
         #region Components
 
         [Space(5)]
         [NonReorderable]
-        public SplashScreenLogoDataObject[] screens;
+        public SplashScreenLogoData[] screens;
 
         [Space(5)]
         public string background;
@@ -548,9 +548,9 @@ namespace Bridge.Core.App.Manager
 
         #region Data Conversions
 
-        public SplashScreenLogoDataObject ToSerializable()
+        public SplashScreenLogoData ToSerializable()
         {
-            SplashScreenLogoDataObject splashScreenLogo = new SplashScreenLogoDataObject();
+            SplashScreenLogoData splashScreenLogo = new SplashScreenLogoData();
             splashScreenLogo.name = this.name;
             Storage.Directory.GetAssetPath(logo, (logoPath, results) => 
             {
@@ -575,7 +575,7 @@ namespace Bridge.Core.App.Manager
     }
 
     [Serializable]
-    public struct SplashScreenLogoDataObject
+    public struct SplashScreenLogoData
     {
         #region Components
 

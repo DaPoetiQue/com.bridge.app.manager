@@ -10,8 +10,6 @@ using UnityEngine.SceneManagement;
 using UnityEditor.Build;
 using static UnityEditor.PlayerSettings;
 using Bridge.Core.App.Data.Storage;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
@@ -107,59 +105,97 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region App Info
 
-            buildSettings.appInfo.companyName = companyName;
-            buildSettings.appInfo.appName = productName;
-            buildSettings.appInfo.appVersion = bundleVersion;
-            buildSettings.appInfo.appIdentifier = applicationIdentifier;
-
-            BuildTarget platform = EditorUserBuildSettings.activeBuildTarget;
-
-            var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(platform));
-
-            if (GetIcons(nameBuild, IconKind.Application).Length > 0)
-            {
-                buildSettings.appInfo.appIcon = GetIcons(nameBuild, IconKind.Application)[0];
-            }
-
-            if (PlayerSettings.SplashScreen.logos.Length > 0)
-            {
-                buildSettings.appInfo.splashScreens.screens = GetSplashScreenLogoData(PlayerSettings.SplashScreen.logos);
-            }
-
-            if (PlayerSettings.SplashScreen.background != null)
-            {
-                buildSettings.appInfo.splashScreens.background = PlayerSettings.SplashScreen.background;
-                buildSettings.appInfo.splashScreens.backgroundColor = PlayerSettings.SplashScreen.backgroundColor;
-            }
-            else
-            {
-                buildSettings.appInfo.splashScreens.backgroundColor = Color.black;
-            }
-
-            buildSettings.appInfo.splashScreens.unityLogoStyle = PlayerSettings.SplashScreen.unityLogoStyle;
-            buildSettings.appInfo.splashScreens.animationMode = PlayerSettings.SplashScreen.animationMode;
-            buildSettings.appInfo.splashScreens.logoDrawMode = PlayerSettings.SplashScreen.drawMode;
-            buildSettings.appInfo.splashScreens.showSplashScreen = PlayerSettings.SplashScreen.show;
-            buildSettings.appInfo.splashScreens.showUnityLogo = PlayerSettings.SplashScreen.showUnityLogo;
+            buildSettings.appInfo = GetDefaultAppInfo().ToSerializable();
 
             #endregion
 
             #region Build Scenes
 
-            buildSettings.buildScenes = AppBuildConfig.GetBuildScenes();
+            buildSettings.buildScenes = new string[1];
+            //buildSettings.buildScenes = AppBuildConfig.GetBuildScenes();
 
             #endregion
 
             #region Build Config
 
-            buildSettings.configurations.platform = platform;
-            buildSettings.configurations.allowDebugging = EditorUserBuildSettings.allowDebugging;
-            buildSettings.configurations.developmentBuild = EditorUserBuildSettings.development;
+            buildSettings.configurations = GetDefaultBuildConfigurations();
 
             #endregion
 
             return buildSettings;
         }
+
+        #region Get Default Settings
+
+        public static AppInfo GetDefaultAppInfo()
+        {
+            AppInfo appInfo = new AppInfo();
+
+            #region Info
+
+            appInfo.companyName = companyName;
+            appInfo.appName = productName;
+            appInfo.appVersion = bundleVersion;
+            appInfo.appIdentifier = applicationIdentifier;
+
+            #endregion
+
+            #region App Icon
+
+            BuildTarget platform = EditorUserBuildSettings.activeBuildTarget;
+            var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(platform));
+
+            if (GetIcons(nameBuild, IconKind.Application).Length > 0)
+            {
+                appInfo.appIcon = GetIcons(nameBuild, IconKind.Application)[0];
+            }
+
+            #endregion
+
+            #region Splash Screen
+
+            if (PlayerSettings.SplashScreen.logos.Length > 0)
+            {
+                appInfo.splashScreens.screens = GetSplashScreenLogoData(PlayerSettings.SplashScreen.logos);
+            }
+
+            if (PlayerSettings.SplashScreen.background != null)
+            {
+                appInfo.splashScreens.background = PlayerSettings.SplashScreen.background;
+                appInfo.splashScreens.backgroundColor = PlayerSettings.SplashScreen.backgroundColor;
+            }
+            else
+            {
+                appInfo.splashScreens.backgroundColor = Color.black;
+            }
+
+            appInfo.splashScreens.unityLogoStyle = PlayerSettings.SplashScreen.unityLogoStyle;
+            appInfo.splashScreens.animationMode = PlayerSettings.SplashScreen.animationMode;
+            appInfo.splashScreens.logoDrawMode = PlayerSettings.SplashScreen.drawMode;
+            appInfo.splashScreens.showSplashScreen = PlayerSettings.SplashScreen.show;
+            appInfo.splashScreens.showUnityLogo = PlayerSettings.SplashScreen.showUnityLogo;
+
+            #endregion
+
+            return appInfo;
+        }
+
+        public static BuildConfig GetDefaultBuildConfigurations()
+        {
+            BuildConfig buildConfig = new BuildConfig();
+
+            buildConfig.platform = EditorUserBuildSettings.activeBuildTarget;
+            buildConfig.allowDebugging = EditorUserBuildSettings.allowDebugging;
+            buildConfig.developmentBuild = EditorUserBuildSettings.development;
+
+            return buildConfig;
+        }
+
+        #endregion
+
+        #region Get Serialized Settings
+
+        #endregion
 
         /// <summary>
         /// Converts Unity splash screen logos array to bridge splash screen logo data array.
@@ -281,7 +317,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 if (callbackResults.success)
                 {
-                    buildSettings.appInfo = resultsData;
+                    buildSettings.appInfo = resultsData.ToSerializable();
 
                     ApplyBuildSettings(buildSettings, (callbackResults, resultsData) =>
                     {
@@ -357,9 +393,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     appName = appName.Replace(" ", "");
                 }
 
-                PlayerSettings.SplashScreen.logos = GetSplashScreenLogos(buildSettingsData.appInfo.splashScreens.screens);
-                PlayerSettings.SplashScreen.background = buildSettingsData.appInfo.splashScreens.background;
-                PlayerSettings.SplashScreen.backgroundColor = buildSettingsData.appInfo.splashScreens.backgroundColor;
+                //PlayerSettings.SplashScreen.logos = GetSplashScreenLogos(buildSettingsData.appInfo.splashScreens.screens);
+                //PlayerSettings.SplashScreen.background = buildSettingsData.appInfo.splashScreens.background;
+                //PlayerSettings.SplashScreen.backgroundColor = buildSettingsData.appInfo.splashScreens.backgroundColor;
 
 
                 PlayerSettings.SplashScreen.unityLogoStyle = buildSettingsData.appInfo.splashScreens.unityLogoStyle;
@@ -370,19 +406,19 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 if (buildSettingsData.appInfo.appIcon != null)
                 {
-                    SetIconsForTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform), GetPlatformIconList(buildSettingsData.appInfo.appIcon));
+                    //SetIconsForTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform), GetPlatformIconList(buildSettingsData.appInfo.appIcon));
                 }
 
                 buildSettingsData.appInfo.appIdentifier = $"com.{appCompanyName}.{appName}";
 
                 callBackResults.success = true;
-                callback.Invoke(callBackResults, buildSettingsData.appInfo);
+                callback.Invoke(callBackResults, buildSettingsData.appInfo.ToInstance());
             }
             catch (Exception exception)
             {
                 callBackResults.error = true;
                 callBackResults.errorValue = exception.Message;
-                callback.Invoke(callBackResults, buildSettingsData.appInfo);
+                callback.Invoke(callBackResults, buildSettingsData.appInfo.ToInstance());
             }
         }
 
@@ -415,31 +451,31 @@ namespace Bridge.Core.UnityEditor.App.Manager
                             {
                                 case UIOrientation.AutoRotation:
 
-                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
+                                    defaultInterfaceOrientation = UIOrientation.AutoRotation;
 
                                     break;
 
                                 case UIOrientation.Portrait:
 
-                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+                                    defaultInterfaceOrientation = UIOrientation.Portrait;
 
                                     break;
 
                                 case UIOrientation.PortraitUpsideDown:
 
-                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.PortraitUpsideDown; ;
+                                    defaultInterfaceOrientation = UIOrientation.PortraitUpsideDown; ;
 
                                     break;
 
                                 case UIOrientation.LandscapeLeft:
 
-                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
+                                    defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
 
                                     break;
 
                                 case UIOrientation.LandscapeRight:
 
-                                    PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeRight;
+                                    defaultInterfaceOrientation = UIOrientation.LandscapeRight;
 
                                     break;
                             }
@@ -449,18 +485,18 @@ namespace Bridge.Core.UnityEditor.App.Manager
                         {
                             case BuildTarget.Android:
 
-                                PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, buildSettings.appInfo.appIdentifier);
+                                SetApplicationIdentifier(BuildTargetGroup.Android, buildSettings.appInfo.appIdentifier);
 
                                 GraphicsDeviceType[] graphicsDeviceType = new GraphicsDeviceType[1];
                                 graphicsDeviceType[0] = GraphicsDeviceType.OpenGLES3;
-                                PlayerSettings.SetGraphicsAPIs(buildSettings.configurations.platform, graphicsDeviceType);
+                                SetGraphicsAPIs(buildSettings.configurations.platform, graphicsDeviceType);
 
-                                PlayerSettings.SetMobileMTRendering(BuildTargetGroup.Android, false);
+                                SetMobileMTRendering(BuildTargetGroup.Android, false);
 
-                                PlayerSettings.Android.minSdkVersion = buildSettings.androidBuildSettings.sdkVersion;
-                                PlayerSettings.Android.androidTVCompatibility = false;
-                                PlayerSettings.Android.preferredInstallLocation = buildSettings.androidBuildSettings.installLocation;
-                                PlayerSettings.Android.ARCoreEnabled = true;
+                                Android.minSdkVersion = buildSettings.androidBuildSettings.sdkVersion;
+                                Android.androidTVCompatibility = false;
+                                Android.preferredInstallLocation = buildSettings.androidBuildSettings.installLocation;
+                                Android.ARCoreEnabled = true;
 
                                 EditorUserBuildSettings.buildAppBundle = buildSettings.androidBuildSettings.buildAppBundle;
 
@@ -468,13 +504,13 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                             case BuildTarget.iOS:
 
-                                PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS, buildSettings.appInfo.appIdentifier);
+                                SetApplicationIdentifier(BuildTargetGroup.iOS, buildSettings.appInfo.appIdentifier);
 
                                 break;
 
                             case BuildTarget.StandaloneWindows:
 
-                                PlayerSettings.SetScriptingBackend(GetBuildTargetGroup(buildSettings.configurations.platform), buildSettings.standaloneBuildSettings.otherSettings.scriptingBackend);
+                                SetScriptingBackend(GetBuildTargetGroup(buildSettings.configurations.platform), buildSettings.standaloneBuildSettings.otherSettings.scriptingBackend);
 
                                 break;
                         }
