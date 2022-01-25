@@ -1,8 +1,6 @@
 using Bridge.Core.App.Manager;
 using System;
-using System.Diagnostics;
 using System.IO;
-using UnityEngine;
 using Bridge.Core.App.Data.Storage;
 using Bridge.Core.App.Events;
 using Bridge.Core.UnityEditor.Debugger;
@@ -20,7 +18,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 #region Defining Build Batch File Data
 
                 BatchFileData buildCompilerBatchFileData = GetBatchFileData(GetBuildCompilerBatchFileName(), GetBuildScriptFolderName());
+
                 BatchFileData compilerBatchFileData = GetBatchFileData(GetCompilerBatchFileName(), GetBuildScriptFolderName());
+
                 BatchFileData buildCleanerBatchFileData = GetBatchFileData(GetBuildCleanerBatchFileName(), GetBuildScriptFolderName());
 
                 #endregion
@@ -35,85 +35,49 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 {
                     UnityEngine.Debug.Log($"--> Creating Temp Build Project Directory @ : <color=cyan>{Storage.Directory.GetProjectTempDirectory()}</color>");
                     Directory.CreateDirectory(Storage.Directory.GetProjectTempDirectory());
-                }        
-
-                // Build Command
-                string rootPath = "C:/Program Files/";
-                string unityVersion = Application.unityVersion;
-                string path = "/Editor/Unity.exe";
-                string pathCombined = "\"" + rootPath + unityVersion + path + "\"";
-                string compilerDirectory = $"\"{Storage.Directory.GetProjectTempDirectory().Replace("\\", "/")}{GetBuildScriptFolderName()}\"";
-                string targetDirectory = $"\"{Storage.Directory.GetProjectTempDirectory().Replace("\\", "/")}\"";
-                string changeToBuildDirectoryCommand = "chdir /d " + compilerDirectory;
-                string changeToProjectDirectoryCommand = "chdir /d " + buildCompilerBatchFileData.fileRootPath + GetBuildScriptFolderName();
-                string buildMethodName = "AppBuildConfig.BuildApp";
-                string buildCommand = pathCombined + $" -quit -batchMode -projectPath .. -executeMethod {buildMethodName}";
-
-                UnityEngine.Debug.Log($"-->Change To Temp Compiler Directory : {changeToBuildDirectoryCommand}");
-
-                string projectDir = "chdir /d " + Storage.Directory.GetProjectTempDirectory();
-
-                string openBuildFolderPath = $"Start \"\" \"{buildSettings.configurations.targetBuildDirectory}\"";
-
-                string buildDir = $"{Storage.Directory.GetProjectTempDirectory()}\\Builds";
-
-                UnityEngine.Debug.Log($"-->Change To Build Compiler Directory : {projectDir}");
-
-                #region Remove Content Command
-
-                #endregion
-
-                #region Editor Log
-
-                string logDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string editorLogDir = $"{logDir}\\Unity\\Editor\\Editor.log";
-                string logEditorCommand = $"Type {editorLogDir}";
-                UnityEngine.Debug.Log($"-->Data Directory : {editorLogDir}");
-
-                #endregion
+                }
 
                 #region Constucted Batch File Data
 
-                Compiler compiler = new Compiler
+                BuildScriptCompiler compiler = new BuildScriptCompiler
                 {
-                    echoOff = "@echo off",
-                    echoInitializeBuild = "echo Initializing Project Build...",
-                    editorLogBuildStarted = logEditorCommand,
-                    startBuildCommand = buildCommand,
-                    moveBuildCommand = Storage.BatchCommands.CopyFilesAndSubFoldersAndRemoveSource(buildDir, buildSettings.configurations.targetBuildDirectory),
-                    openBuildFolderPath = openBuildFolderPath,
-                    editorLogBuildEnded = logEditorCommand,
-                    echoBuildCompleted = "echo Build Completed...",
-                    pause = "@pause"
+                    echoOff = BatchCommands.GetBatchFileAttribute().echoOff,
+                    echoInitializeBuild = BatchCommands.GetBatchFileAttribute().echoInitializeBuild,
+                    editorLogBuildStartedCommand = BatchCommands.GetUnityEditorLogFile(),
+                    startBuildCommand = BatchCommands.BuildProject(),
+                    moveBuildCommand = BatchCommands.CopyFilesAndSubFoldersAndRemoveSource(Storage.Directory.GetUnityEditorProjectInfoData(GetBuildScriptFolderName()).projectBuildDirectory, buildSettings.configurations.targetBuildDirectory),
+                    openBuildFolderPathCommand = BatchCommands.OpenFolderLocation(buildSettings.configurations.targetBuildDirectory),
+                    editorLogBuildEndedCommand = BatchCommands.GetUnityEditorLogFile(),
+                    echoBuildCompleted = BatchCommands.GetBatchFileAttribute().echoBuildCompleted,
+                    pause = BatchCommands.GetBatchFileAttribute().pause
                 };
 
                 BuildCompiler buildCompiler = new BuildCompiler
                 {
-                    echoOff = "@echo off",
-                    echoPrepareBuild = "echo Preparing Build...",
-                    removeDirectoryCommand = Storage.BatchCommands.RemoveDirectory(Storage.Directory.GetProjectTempDirectory()),
-                    echoCopy = "echo Copying Build Files...",
-                    copyContentCommand = Storage.BatchCommands.CopyFiles(buildCompilerBatchFileData.projectRootPath, Storage.Directory.GetProjectTempDirectory(), Storage.BatchCommands.UnityExcludedFolders(), Storage.BatchCommands.UnityExcludedFiles()),
-                    changeToBuildDirectory = changeToBuildDirectoryCommand,
-                    echoCompile = "echo Compiling Build Scripts...",
+                    echoOffAttribute = BatchCommands.GetBatchFileAttribute().echoOff,
+                    echoPrepareBuildAttribute = BatchCommands.GetBatchFileAttribute().prepareBuild,
+                    removeDirectoryCommand = BatchCommands.RemoveDirectory(Storage.Directory.GetProjectTempDirectory()),
+                    echoCopy = BatchCommands.GetBatchFileAttribute().echoCopy,
+                    copyContentCommand = BatchCommands.CopyFiles(buildCompilerBatchFileData.projectRootPath, Storage.Directory.GetProjectTempDirectory(), BatchCommands.UnityExcludedFolders(), BatchCommands.UnityExcludedFiles()),
+                    changeToBuildDirectory = BatchCommands.ChangeToDirectory(Storage.Directory.GetProjectTempDirectory() + GetBuildScriptFolderName()),
+                    echoCompile = BatchCommands.GetBatchFileAttribute().echoBuildCompile,
                     compilerBuildCommand = compilerBatchFileData.batchFile,
-                    pause = "@pause"
+                    pause = BatchCommands.GetBatchFileAttribute().pause
                 };
 
-                BuildCleaner buildCleaner = new BuildCleaner
+                BuildScriptDisposer buildCleaner = new BuildScriptDisposer
                 {
-                    echoOff = "@echo off",
-                    echoCleaningBuild = "echo Cleaning Build Project...",
-                    editorLogCleanStarted = logEditorCommand,
-                    cleanBuildPathCommand = Storage.BatchCommands.RemoveDirectory(Storage.Directory.GetProjectTempDirectory()),
-                    editorLogCleanEnded = logEditorCommand,
+                    echoOffAttribute = BatchCommands.GetBatchFileAttribute().echoOff,
+                    echoCleaningBuildProjectAttribute = BatchCommands.GetBatchFileAttribute().echoCleaningBuildProjectAttribute,
+                    editorLogCleanStarted = BatchCommands.GetUnityEditorLogFile(),
+                    cleanBuildPathCommand = BatchCommands.RemoveDirectory(Storage.Directory.GetProjectTempDirectory()),
+                    editorLogCleanEnded = BatchCommands.GetUnityEditorLogFile()
                 };
 
                 #endregion
 
                 #region Create Batch File Data
 
-                // Batch Files
                 CreateBatchFile(compilerBatchFileData.fullbatchFilePath, compiler, results =>
                 {
                     if(results.error)
@@ -158,7 +122,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 if (File.Exists(buildCompilerBatchFileData.fullbatchFilePath))
                 {
                     UnityEngine.Debug.Log($"--> <color=orange>Build Started....</color>");
-                    Storage.BatchCommands.RunBatchCommand(buildCompilerBatchFileData.fullbatchFilePath);
+                    BatchCommands.RunBatchCommand(buildCompilerBatchFileData.fullbatchFilePath);
                 }
 
                 results.success = true;
@@ -174,6 +138,13 @@ namespace Bridge.Core.UnityEditor.App.Manager
             }
         }
 
+        /// <summary>
+        /// This function creates a batch file in the given directory.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path">This function takes a path for storing the created batch file, as well as batch file data.</param>
+        /// <param name="fileData">File data represents the structure of the command file.</param>
+        /// <param name="callback">This function returns a callback when exectuted function completes.</param>
         private static void CreateBatchFile<T>(string path, T fileData, Action<AppEventsData.CallBackResults> callback = null)
         {
             AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
@@ -215,6 +186,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         #endregion
 
+
         private static BatchFileData GetBatchFileData(string fileName = null, string folderName = null)
         {
             var fileInfoData = new FileInfo(fileName);
@@ -248,7 +220,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         public static void ClearProjectCache()
         {
             BatchFileData buildCleanerBatchFileData = GetBatchFileData(GetBuildCleanerBatchFileName(), GetBuildScriptFolderName());
-            Storage.BatchCommands.RunBatchCommand(buildCleanerBatchFileData.fullbatchFilePath);
+            BatchCommands.RunBatchCommand(buildCleanerBatchFileData.fullbatchFilePath);
         }
 
     }

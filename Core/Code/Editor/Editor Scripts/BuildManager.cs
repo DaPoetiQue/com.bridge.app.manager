@@ -37,7 +37,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) ||   Storage.Directory.FolderExist(buildSettings.configurations.targetBuildDirectory) == false)
             {
-                buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "");
+                buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "").Replace(" ", string.Empty);
                 ApplyAppSettings(buildSettings);
                 DebugConsole.Log(Debug.LogLevel.Debug, $"Build Directory Set @ : {buildSettings.configurations.buildLocation}");
             }
@@ -560,6 +560,12 @@ namespace Bridge.Core.UnityEditor.App.Manager
                             case BuildTarget.StandaloneWindows:
 
                                 SetScriptingBackend(GetBuildTargetGroup(buildSettings.configurations.platform), buildSettings.standaloneBuildSettings.otherSettings.scriptingBackend);
+
+                                break;
+
+                            case BuildTarget.WebGL:
+
+                                SetApplicationIdentifier(BuildTargetGroup.WebGL, buildSettings.appInfo.appIdentifier);
 
                                 break;
                         }

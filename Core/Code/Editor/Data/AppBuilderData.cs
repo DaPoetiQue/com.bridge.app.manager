@@ -427,7 +427,7 @@ namespace Bridge.Core.App.Manager
             { 
                 if(results.error == true)
                 {
-                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
                     return;
                 }
 
@@ -556,7 +556,7 @@ namespace Bridge.Core.App.Manager
             {
                 if(results.error == true)
                 {
-                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
                     return;
                 }
 
