@@ -103,7 +103,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
     {
         #region Property Fields
 
-        public string echoOff;
+        public string echoOffAttribute;
         public string echoInitializeBuild;
         public string editorLogBuildStartedCommand;
         public string startBuildCommand;
@@ -116,7 +116,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         public override string ToString()
         {
-            return $"{echoOff}\n" +
+            return $"{echoOffAttribute}\n" +
                    $"{echoInitializeBuild}\n" +
                    $"{editorLogBuildStartedCommand}\n" +
                    $"{startBuildCommand}\n" +
@@ -156,6 +156,31 @@ namespace Bridge.Core.UnityEditor.App.Manager
                    $"{echoBuildCompleted}\n" +
                    $"{openBuildFolderPathCommand}\n" +
                    $"{pause}";
+        }
+    }
+
+    [Serializable]
+    public class CleanBuildCompiler
+    {
+        #region Property Fields
+
+        public string echoOffAttribute;
+        public string echoCleaningBuildProjectAttribute;
+        public string editorLogCleanStarted;
+        public string cleanBuildPathCommand;
+        public string echoProjectBuildCleanedAttribute;
+        public string startNewBuildCommand;
+
+        #endregion
+
+        public override string ToString()
+        {
+            return $"{echoOffAttribute}\n" +
+                   $"{echoCleaningBuildProjectAttribute}\n" +
+                   $"{editorLogCleanStarted}\n" +
+                   $"{cleanBuildPathCommand}\n" +
+                   $"{echoProjectBuildCleanedAttribute}\n" +
+                   $"{startNewBuildCommand}";
         }
     }
 

@@ -5,7 +5,9 @@
     "description": "Manages the app's core functionality.",
     "unity": "2019.1",
     "unityRelease": "0b5",
-    "dependencies": {},
+    "dependencies": {
+      "com.bridge.app.data.storage" : "https://github.com/DaPoetiQue/com.bridge.app.data.storage.git"
+    },
    "keywords": [
       "Bridge",
       "3ridge",

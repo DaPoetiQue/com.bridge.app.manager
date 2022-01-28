@@ -51,7 +51,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 BuildScriptCompiler compiler = new BuildScriptCompiler
                 {
-                    echoOff = BatchCommands.GetBatchFileAttribute().echoOff,
+                    echoOffAttribute = BatchCommands.GetBatchFileAttribute().echoOff,
                     echoInitializeBuild = BatchCommands.GetBatchFileAttribute().echoInitializeBuild,
                     editorLogBuildStartedCommand = BatchCommands.GetFileFromDirectory(Storage.Directory.GetUnityEditorProjectInfoData().unityEditorLogFilePath),
                     startBuildCommand = BatchCommands.BuildProject(),
