@@ -39,39 +39,38 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 #region Constucted Batch File Data
 
+                BuildCompiler buildCompiler = new BuildCompiler
+                {
+                    echoOffAttribute = BatchCommands.GetBatchFileAttribute().echoOff,
+                    echoCopy = BatchCommands.GetBatchFileAttribute().echoCopy,
+                    copyContentCommand = BatchCommands.CopyFiles(buildCompilerBatchFileData.projectRootPath, Storage.Directory.GetProjectTempDirectory(), BatchCommands.UnityExcludedProjectFolders(), BatchCommands.UnityExcludedProjectFiles()),
+                    changeToBuildDirectory = BatchCommands.ChangeToDirectory(Storage.Directory.GetFormatedDirectoryWithRemovedSpacingAndBackwardsSolidus(Storage.Directory.GetProjectTempDirectory() + GetBuildScriptFolderName())),
+                    echoCompile = BatchCommands.GetBatchFileAttribute().echoBuildCompile,
+                    compilerBuildCommand = compilerBatchFileData.batchFile
+                };
+
                 BuildScriptCompiler compiler = new BuildScriptCompiler
                 {
                     echoOff = BatchCommands.GetBatchFileAttribute().echoOff,
                     echoInitializeBuild = BatchCommands.GetBatchFileAttribute().echoInitializeBuild,
-                    editorLogBuildStartedCommand = BatchCommands.GetUnityEditorLogFile(),
+                    editorLogBuildStartedCommand = BatchCommands.GetFileFromDirectory(Storage.Directory.GetUnityEditorProjectInfoData().unityEditorLogFilePath),
                     startBuildCommand = BatchCommands.BuildProject(),
-                    moveBuildCommand = BatchCommands.CopyFilesAndSubFoldersAndRemoveSource(Storage.Directory.GetUnityEditorProjectInfoData(GetBuildScriptFolderName()).projectBuildDirectory, buildSettings.configurations.targetBuildDirectory),
-                    openBuildFolderPathCommand = BatchCommands.OpenFolderLocation(buildSettings.configurations.targetBuildDirectory),
-                    editorLogBuildEndedCommand = BatchCommands.GetUnityEditorLogFile(),
-                    echoBuildCompleted = BatchCommands.GetBatchFileAttribute().echoBuildCompleted,
-                    pause = BatchCommands.GetBatchFileAttribute().pause
-                };
-
-                BuildCompiler buildCompiler = new BuildCompiler
-                {
-                    echoOffAttribute = BatchCommands.GetBatchFileAttribute().echoOff,
-                    echoPrepareBuildAttribute = BatchCommands.GetBatchFileAttribute().prepareBuild,
-                    removeDirectoryCommand = BatchCommands.RemoveDirectory(Storage.Directory.GetProjectTempDirectory()),
-                    echoCopy = BatchCommands.GetBatchFileAttribute().echoCopy,
-                    copyContentCommand = BatchCommands.CopyFiles(buildCompilerBatchFileData.projectRootPath, Storage.Directory.GetProjectTempDirectory(), BatchCommands.UnityExcludedFolders(), BatchCommands.UnityExcludedFiles()),
-                    changeToBuildDirectory = BatchCommands.ChangeToDirectory(Storage.Directory.GetProjectTempDirectory() + GetBuildScriptFolderName()),
-                    echoCompile = BatchCommands.GetBatchFileAttribute().echoBuildCompile,
-                    compilerBuildCommand = compilerBatchFileData.batchFile,
-                    pause = BatchCommands.GetBatchFileAttribute().pause
+                    moveBuildCommand = BatchCommands.CopyFilesAndSubFoldersAndRemoveSource(Storage.Directory.GetUnityEditorProjectInfoData(GetBuildScriptFolderName()).projectBuildDirectory, Storage.Directory.GetStringFormattedDirectory(Storage.Directory.GetFormattedDirectoryWithBackwardsSolidus(buildSettings.configurations.targetBuildDirectory))),
+                    changeToProjectDirectory = BatchCommands.ChangeToDirectory(Storage.Directory.GetStringFormattedDirectory(buildCompilerBatchFileData.projectRootPath + GetBuildScriptFolderName())),
+                    editorLogBuildEndedCommand = BatchCommands.GetFileFromDirectory(Storage.Directory.GetUnityEditorProjectInfoData().unityEditorLogFilePath),
+                    cleanBuildCommand = buildCleanerBatchFileData.batchFile
                 };
 
                 BuildScriptDisposer buildCleaner = new BuildScriptDisposer
                 {
                     echoOffAttribute = BatchCommands.GetBatchFileAttribute().echoOff,
                     echoCleaningBuildProjectAttribute = BatchCommands.GetBatchFileAttribute().echoCleaningBuildProjectAttribute,
-                    editorLogCleanStarted = BatchCommands.GetUnityEditorLogFile(),
+                    editorLogCleanStarted = BatchCommands.GetFileFromDirectory(Storage.Directory.GetUnityEditorProjectInfoData().unityEditorLogFilePath),
                     cleanBuildPathCommand = BatchCommands.RemoveDirectory(Storage.Directory.GetProjectTempDirectory()),
-                    editorLogCleanEnded = BatchCommands.GetUnityEditorLogFile()
+                    editorLogCleanEnded = BatchCommands.GetFileFromDirectory(Storage.Directory.GetUnityEditorProjectInfoData().unityEditorLogFilePath),
+                    echoBuildCompleted = BatchCommands.GetBatchFileAttribute().echoBuildCompleted,
+                    openBuildFolderPathCommand = BatchCommands.OpenFolderLocation(Storage.Directory.GetStringFormattedDirectory(Storage.Directory.GetFormattedDirectoryWithBackwardsSolidus(buildSettings.configurations.targetBuildDirectory))),
+                    pause = BatchCommands.GetBatchFileAttribute().pause
                 };
 
                 #endregion

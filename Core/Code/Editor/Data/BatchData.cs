@@ -76,28 +76,22 @@ namespace Bridge.Core.UnityEditor.App.Manager
         #region Property Fields
 
         public string echoOffAttribute;
-        public string echoPrepareBuildAttribute;
-        public string removeDirectoryCommand;
         public string echoCopy;
         public string copyContentCommand;
         public string changeToBuildDirectory;
         public string echoCompile;
         public string compilerBuildCommand;
-        public string pause;
 
         #endregion
 
         public override string ToString()
         {
-            return $"{echoOffAttribute} \n " +
-                   $"{echoPrepareBuildAttribute} \n " +
-                   $"{removeDirectoryCommand} \n " +
-                   $"{echoCopy} \n " +
-                   $"{copyContentCommand} \n " +
-                   $"{changeToBuildDirectory} \n " +
-                   $"{echoCompile} \n " +
-                   $"{compilerBuildCommand} \n " +
-                   $"{pause} ";
+            return $"{echoOffAttribute}\n" +
+                   $"{echoCopy}\n" +
+                   $"{copyContentCommand}\n" +
+                   $"{changeToBuildDirectory}\n" +
+                   $"{echoCompile}\n" +
+                   $"{compilerBuildCommand}";
         }
     }
 
@@ -114,26 +108,22 @@ namespace Bridge.Core.UnityEditor.App.Manager
         public string editorLogBuildStartedCommand;
         public string startBuildCommand;
         public string moveBuildCommand;
-        public string openBuildFolderPathCommand;
         public string changeToProjectDirectory;
         public string editorLogBuildEndedCommand;
-        public string echoBuildCompleted;
-        public string pause;
+        public string cleanBuildCommand;
 
         #endregion
 
         public override string ToString()
         {
-            return $"{echoOff} \n  " +
-                   $"{echoInitializeBuild} \n  " +
-                   $"{editorLogBuildStartedCommand} \n " +
-                   $"{startBuildCommand} \n " +
-                   $"{moveBuildCommand} \n " +
-                   $"{openBuildFolderPathCommand} \n " +
-                   $"{changeToProjectDirectory} \n " +
-                   $"{editorLogBuildEndedCommand} \n " +
-                   $"{echoBuildCompleted} \n " +
-                   $"{pause}";
+            return $"{echoOff}\n" +
+                   $"{echoInitializeBuild}\n" +
+                   $"{editorLogBuildStartedCommand}\n" +
+                   $"{startBuildCommand}\n" +
+                   $"{moveBuildCommand}\n" +
+                   $"{changeToProjectDirectory}\n" +
+                   $"{editorLogBuildEndedCommand}\n" +
+                   $"{cleanBuildCommand}";
         }
     }
 
@@ -150,16 +140,22 @@ namespace Bridge.Core.UnityEditor.App.Manager
         public string editorLogCleanStarted;
         public string cleanBuildPathCommand;
         public string editorLogCleanEnded;
+        public string echoBuildCompleted;
+        public string openBuildFolderPathCommand;
+        public string pause;
 
         #endregion
 
         public override string ToString()
         {
-            return $"{echoOffAttribute} \n  " +
-                   $"{echoCleaningBuildProjectAttribute} \n  " +
-                   $"{editorLogCleanStarted} \n  " +
-                   $"{cleanBuildPathCommand} \n  " +
-                   $"{editorLogCleanEnded}";
+            return $"{echoOffAttribute}\n" +
+                   $"{echoCleaningBuildProjectAttribute}\n" +
+                   $"{editorLogCleanStarted}\n" +
+                   $"{cleanBuildPathCommand}\n" +
+                   $"{editorLogCleanEnded}\n" +
+                   $"{echoBuildCompleted}\n" +
+                   $"{openBuildFolderPathCommand}\n" +
+                   $"{pause}";
         }
     }
 
@@ -178,33 +174,35 @@ namespace Bridge.Core.UnityEditor.App.Manager
     /// </summary>
     public static class BatchCommands
     {
+        #region Batch File Data 
+
         /// <summary>
-        /// 
+        /// A struct data list of pre-defined attributes used to compile a batch file.
         /// </summary>
         public struct BatchFileAttribute        
         {
             public string echoOff;
             public string pause;
-
             public string echoCopy;
             public string echoBuildCompile;
             public string echoInitializeBuild;
-            public string prepareBuild;
             public string echoBuildCompleted;
-
             public string echoCleaningBuildProjectAttribute;
         }
 
+        /// <summary>
+        /// This function returns a list of pre-defined attributes used to compile a batch file.
+        /// </summary>
+        /// <returns>A struct data list of pre-defined attributes</returns>
         public static BatchFileAttribute GetBatchFileAttribute()
         {
             BatchFileAttribute fileAttribute = new BatchFileAttribute
             {
                 echoOff = "@echo off",
-                prepareBuild = "echo Preparing Build...",
                 echoInitializeBuild = "echo Initializing Project Build...",
                 echoBuildCompleted = "echo Build Completed...",
                 echoCopy = "echo Copying Build Files...",
-                echoBuildCompile = "",
+                echoBuildCompile = "echo Build Started...",
                 echoCleaningBuildProjectAttribute = "echo Cleaning Build Project...",
                 pause = "@pause"
             };
@@ -212,52 +210,116 @@ namespace Bridge.Core.UnityEditor.App.Manager
             return fileAttribute;
         }
 
-        public static string GetUnityEditorLogFile()
-        {
-            return $"Type {Storage.Directory.GetUnityEditorProjectInfoData().unityEditorLogFilePath}";
-        }
+        #endregion
 
+        #region Batch File Commands 
+
+        /// <summary>
+        /// This batch command function is used for executing a headless Unity build.
+        /// </summary>
+        /// <returns>Batch command for building a Unity project.</returns>
         public static string BuildProject()
         {
             return Storage.Directory.GetUnityEditorProjectInfoData().editorApplicationRelativeDirectory + $" -quit -batchMode -projectPath .. -executeMethod {ProjectInfoData.buildMethodName}";
         }
 
+        /// <summary>
+        /// This batch command function is used for accessing Unity's Editor log file.
+        /// </summary>
+        /// <returns>Batch command for accesing/getting the Unity editor log file.</returns>
+        public static string GetFileFromDirectory(string directory)
+        {
+            return $"Type {directory}";
+        }
+
+        /// <summary>
+        /// This batch command function is used for opening a folder from a given directory/location.
+        /// </summary>
+        /// <param name="directory">Target directory of the folder to be opened.</param>
+        /// <returns>Batch command for opening folder from a source directory.</returns>
         public static string OpenFolderLocation(string directory)
         {
-            return $"Start \"\" \"{directory}\"";
+            return $"Start \"\" {directory}";
         }
 
-        public static string CopyFiles(string fromDirectory, string toDirectory, string excludeFiles = null, string excludeFolders = null)
+        /// <summary>
+        /// This batch command function is used for copying files from a given directory to a target directory.
+        /// Optional parameters are used to set a list of excluded files and folders to be copied.
+        /// </summary>
+        /// <param name="fromDirectory">A source directory to copy the files/folders from.</param>
+        /// <param name="toDirectory">A target directory to copy the files/folders to.</param>
+        /// <param name="excludedFileExtensions">A list of file extensions to be excluded during copying.</param>
+        /// <param name="excludedFolders">List of folders to be excluded during copying.</param>
+        /// <returns>Batch command for copying files from a source directory to the target directory with options to exclude files and folders</returns>
+        public static string CopyFiles(string fromDirectory, string toDirectory, string excludedFileExtensions = null, string excludedFolders = null)
         {
-            return $"robocopy {fromDirectory} {toDirectory} {excludeFolders} {excludeFiles}";
+            return $"robocopy {fromDirectory} {toDirectory} {excludedFolders} {excludedFileExtensions}";
         }
 
-        public static string CopyFilesAndSubFolders(string fromDirectory, string toDirectory, string excludeFiles = null, string excludeFolders = null)
+        /// <summary>
+        /// This batch command function is used for copying files and sub-folders from a given directory to a target directory.
+        /// Optional parameters are used to set a list of excluded files and folders to be copied.
+        /// </summary>
+        /// <param name="fromDirectory">A source directory to copy the files/folders from.</param>
+        /// <param name="toDirectory">A target directory to copy the files/folders to.</param>
+        /// <param name="excludedFileExtensions">A list of file extensions to be excluded during copying.</param>
+        /// <param name="excludedFolders">List of folders to be excluded during copying.</param>
+        /// <returns>Batch command for copying files and sub-folders from a source directory to the target directory with an options to exclude files and folders.</returns>
+        public static string CopyFilesAndSubFolders(string fromDirectory, string toDirectory, string excludedFileExtensions = null, string excludedFolders = null)
         {
-            return $"robocopy /S {fromDirectory} {toDirectory} {excludeFolders} {excludeFiles}";
+            return $"robocopy /S {fromDirectory} {toDirectory} {excludedFolders} {excludedFileExtensions}";
         }
 
-        public static string CopyFilesAndSubFoldersAndRemoveSource(string fromDirectory, string toDirectory, string excludeFiles = null, string excludeFolders = null)
+        /// <summary>
+        /// This batch command function is used for copying files and sub-folders from a given directory to a target directory and remove the source files/folders on completion.
+        /// Optional parameters are used to set a list of excluded files and folders to be copied.
+        /// </summary>
+        /// <param name="fromDirectory">A source directory to copy the files/folders from.</param>
+        /// <param name="toDirectory">A target directory to copy the files/folders to.</param>
+        /// <param name="excludedFileExtensions">A list of file extensions to be excluded during copying.</param>
+        /// <param name="excludedFolders">List of folders to be excluded during copying.</param>
+        /// <returns>Batch command for copying files and sub-folders from a source directory to the target directory and remove source files/folders on completion with an options to exclude files and folders.</returns>
+        public static string CopyFilesAndSubFoldersAndRemoveSource(string fromDirectory, string toDirectory, string excludedFileExtensions = null, string excludedFolders = null)
         {
-            return $"robocopy /MOVE /S /E {fromDirectory} {toDirectory} {excludeFolders} {excludeFiles}";
+            return $"robocopy /MOVE /S /E {fromDirectory} {toDirectory} {excludedFolders} {excludedFileExtensions}";
         }
 
+        /// <summary>
+        /// This batch command function is used for moving files/folder and sub-folders from a given directory to a target directory.
+        /// </summary>
+        /// <param name="fromDirectory">A source directory to copy the files/folders from.</param>
+        /// <param name="toDirectory">Target directory to copy the files/folders to.</param>
+        /// <returns>Batch command for moving files/folder and sub-folders from a given directory to a target directory.</returns>
         public static string Move(string fromDirectory, string toDirectory)
         {
-            return $"move {fromDirectory}\\*.* {toDirectory.Replace("/", "\\")}";
+            return $"move {fromDirectory}\\*.* {toDirectory}";
         }
 
-        public static string RemoveDirectory(string directory)
+        /// <summary>
+        /// This batch command function is used for moving files/folder and sub-folders from a given directory.
+        /// </summary>
+        /// <param name="directoryToRemove">Target directory to remove the files/folders from.</param>
+        /// <returns>Batch command for removing files/folder and sub-folders from a given target directory.</returns>
+        public static string RemoveDirectory(string directoryToRemove)
         {
-            return $"rmdir /s/q {directory.Replace("/", "\\")}";
+            return $"rmdir /s/q {directoryToRemove}";
         }
 
+        /// <summary>
+        /// This batch command function is used for changing from a source directory to a target directory.
+        /// </summary>
+        /// <param name="targetDirectory">Target directory to change to.</param>
+        /// <returns>Batch command for changing directory.</returns>
         public static string ChangeToDirectory(string targetDirectory)
         {
-            return $"chdir /d {targetDirectory.Replace(" ", string.Empty).Replace("/", "\\")}";
+            return $"chdir /d {targetDirectory}";
         }
 
-        public static string UnityExcludedFiles()
+        /// <summary>
+        /// This batch command function is used to get a list of pre-defined Unity file extensions to exclude.
+        /// </summary>
+        /// <returns>Batch command for excluding pre-defined Unity file extension.</returns>
+        public static string UnityExcludedProjectFiles()
         {
             string builds = "*.apk *.exe *.aab *.unitypackage";
             string autoGenerated = "*.csproj *.unityproj *.sln *.suo *.tmp *.user *.userprefs *.pidb *.booproj *.svd *.pdb *.mdb *.opendb *.VC.db";
@@ -266,15 +328,29 @@ namespace Bridge.Core.UnityEditor.App.Manager
             return excludeFiles;
         }
 
-        public static string UnityExcludedFolders()
+        /// <summary>
+        /// This batch command function is used to get a list of Unity project folders to exclude.
+        /// </summary>
+        /// <returns>Batch command for excluding pre-defined Unity project folders.</returns>
+        public static string UnityExcludedProjectFolders()
         {
             return "/E /xd Library Temp Build Builds Obj Logs UserSettings MemoryCaptures";
         }
 
+        #endregion
+
+        #region Main
+
+        /// <summary>
+        /// This function is used to run a batch file with a given command.
+        /// </summary>
+        /// <param name="command">Command to run.</param>
         public static void RunBatchCommand(string command)
         {
             Process.Start(command);
         }
+
+        #endregion
     }
 
     #endregion
