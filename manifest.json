@@ -1,0 +1,5 @@
+{
+    "dependencies" : {
+        "com.bridge.app.data.storage" : "https://github.com/DaPoetiQue/com.bridge.app.data.storage.git"
+    }
+}
