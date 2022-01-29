@@ -1,7 +1,0 @@
-{
-    "dependencies" : {
-        "com.bridge.app.data.storage" : "git+https://github.com/DaPoetiQue/com.bridge.app.data.storage.git",
-        "com.bridge.events.manager" : "git+https://github.com/DaPoetiQue/com.bridge.events.manager.git",
-        "com.bridge.debugger" : "git+https://github.com/DaPoetiQue/com.bridge.debugger.git"
-    }
-}
