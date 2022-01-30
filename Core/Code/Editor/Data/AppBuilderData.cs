@@ -78,7 +78,8 @@ namespace Bridge.Core.App.Manager
         public string appVersion;
 
         [Space(5)]
-        public Texture2D appIcon;
+        [NonReorderable]
+        public AppIcon[] appIcons;
 
         [Space(5)]
         public SplashScreen splashScreens;
@@ -90,33 +91,32 @@ namespace Bridge.Core.App.Manager
 
         #region Data Conversion
 
+        /// <summary>
+        /// This function converts the App Info to a serializable data struct.
+        /// </summary>
+        /// <returns>Serializable version of the App Info Struct.</returns>
         public AppInfoDataObject ToSerializable()
         {
-            AppInfoDataObject appInfo = new AppInfoDataObject();
+            AppInfoDataObject appInfoData = new AppInfoDataObject();
 
-            appInfo.companyName = this.companyName;
-            appInfo.appName = this.appName;
-            appInfo.appVersion = this.appVersion;
+            appInfoData.companyName = this.companyName;
+            appInfoData.appName = this.appName;
+            appInfoData.appVersion = this.appVersion;
 
-            Storage.Directory.GetAssetPath(appIcon, (icon, results) => 
-            {
-                if(results.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
-                    return;
-                }
+            //if (appIcons.Length > 0)
+            //{
+            //    appInfoData.appIconData = new AppIconData[appIcons.Length];
 
-                if(results.success == true)
-                {
-                    appInfo.appIcon = icon;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            });
+            //    for (int i = 0; i < appIcons.Length; i++)
+            //    {
+            //        appInfoData.appIconData[i] = this.appIcons[i].ToSerializable();
+            //    }
+            //}
 
-            appInfo.splashScreens = this.splashScreens.ToSerializable();
-            appInfo.appIdentifier = this.appIdentifier;
+            appInfoData.splashScreens = this.splashScreens.ToSerializable();
+            appInfoData.appIdentifier = this.appIdentifier;
 
-            return appInfo;
+            return appInfoData;
         }
 
         #endregion
@@ -140,7 +140,7 @@ namespace Bridge.Core.App.Manager
         public string appVersion;
 
         [Space(5)]
-        public string appIcon;
+        public AppIconData[] appIconData;
 
         [Space(5)]
         public SplashScreenData splashScreens;
@@ -159,21 +159,17 @@ namespace Bridge.Core.App.Manager
             appInfo.companyName = this.companyName;
             appInfo.appName = this.appName;
             appInfo.appVersion = this.appVersion;
-            Storage.AssetData.LoadAsset<Texture2D>(appIcon, (icon, resuts) => 
+
+            if (this.appIconData.Length > 0)
             {
-                if(resuts.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, resuts.errorValue);
-                    return;
-                }
+                appInfo.appIcons = new AppIcon[this.appIconData.Length];
 
-                if(resuts.success == true)
+                for (int i = 0; i < this.appIconData.Length; i++)
                 {
-                    appInfo.appIcon = icon;
-                    DebugConsole.Log(Debug.LogLevel.Success, resuts.successValue);
+                    appInfo.appIcons[i] = this.appIconData[i].ToInstance();
                 }
+            }
 
-            });
             appInfo.splashScreens = this.splashScreens.ToInstance();
             appInfo.appIdentifier = this.appIdentifier;
 
@@ -241,29 +237,10 @@ namespace Bridge.Core.App.Manager
 
        public BuildSettingsData ToSerializable()
         {
-            List<string> scenes = new List<string>();
-
-            Action<string[], AppEventsData.CallBackResults> callBack = (Data, results) =>
-            {
-                if(results.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
-                    return;
-                }
-
-                if(results.success == true)
-                {
-                    scenes = Data.ToList();
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            };
-
-            Storage.Directory.GetAssetsPaths(buildScenes, callBack);
-
             return new BuildSettingsData
             {
                 appInfo = this.appInfo.ToSerializable(),
-                buildScenes = scenes.ToArray(),
+                buildScenes = GetBuildScenes(),
                 configurations = this.configurations,
                 consoleDisplaySettings = this.consoleDisplaySettings,
                 mobileDisplaySettings = this.mobileDisplaySettings,
@@ -277,7 +254,81 @@ namespace Bridge.Core.App.Manager
             };
         }
 
+        public string[] GetBuildScenes()
+        {
+            try
+            {
+                string[] buildScenesToStringArray = new string[buildScenes.Length];
+
+                if (buildScenesToStringArray.Length > 0)
+                {
+                    Storage.Directory.GetAssetsPaths(buildScenes, (callBackData, callBackResults) =>
+                    {
+                        if (callBackResults.error == true)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
+                        }
+
+                        if (callBackResults.success == true)
+                        {
+                            buildScenesToStringArray = callBackData;
+                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
+                        }
+
+                    });
+                }
+
+                return buildScenesToStringArray;
+            }
+            catch(Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, $"Failed With Exception : {exception.Message}");
+                throw exception;
+            }
+        }
+
         #endregion
+    }
+
+    public static class AppDataBuilder
+    {
+        public static void CreateNewBuildSettingsInstance(out BuildSettings settings)
+        {
+            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+
+            settings = buildSettings;
+        }
+
+        public static BuildSettings CreateNewBuildSettingsInstance()
+        {
+            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+
+            return buildSettings;
+        }
+
+        public static BuildSettings CreateNewBuildSettingsInstance(BuildSettingsData buildSettingsData)
+        {
+            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+
+            buildSettings.appInfo = new AppInfo
+            {
+                appName = buildSettingsData.appInfo.appName,
+                companyName = buildSettings.appInfo.companyName,
+                appVersion = buildSettings.appInfo.appVersion,
+                appIdentifier = buildSettings.appInfo.appIdentifier,
+                appIcons = buildSettings.appInfo.appIcons
+            };
+
+            buildSettings.configurations = buildSettingsData.configurations;
+            buildSettings.buildScenes = buildSettingsData.GetBuildScenes();
+            buildSettings.buildAndRun = buildSettingsData.buildAndRun;
+
+            buildSettings.androidBuildSettings = buildSettingsData.androidBuildSettings;
+            buildSettings.standaloneBuildSettings = buildSettingsData.standaloneBuildSettings;
+
+
+            return buildSettings;
+        }
     }
 
     /// <summary>
@@ -331,6 +382,13 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public bool buildAndRun;
 
+        public void CreateInstance(out BuildSettings settings)
+        {
+            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+
+            settings = buildSettings;
+        }
+
         public BuildSettings ToInstance()
         {
             BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
@@ -366,6 +424,168 @@ namespace Bridge.Core.App.Manager
 
             return buildSettings;
         }
+
+        public SceneAsset[] GetBuildScenes()
+        {
+            try
+            {
+                SceneAsset[] buildScenesToAssetArray = new SceneAsset[buildScenes.Length];
+
+                if (buildScenesToAssetArray.Length > 0)
+                {
+                    Storage.AssetData.LoadAssets<SceneAsset>(buildScenes, (callBackData, callBackResults) =>
+                    {
+                        if (callBackResults.error == true)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
+                        }
+
+                        if (callBackResults.success == true)
+                        {
+                            buildScenesToAssetArray = callBackData;
+                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
+                        }
+
+                    });
+                }
+
+                return buildScenesToAssetArray;
+            }
+            catch (Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, $"Failed With Exception : {exception.Message}");
+                throw exception;
+            }
+        }
+    }
+
+    #endregion
+
+    #region Icons Data
+
+    [Serializable]
+    public class AppIcon
+    {
+        #region Components
+
+        public string name;
+
+        [NonReorderable]
+        public Texture2D[] icons;
+
+        [Space(5)]
+        public IconKind type;
+
+        #endregion
+
+        #region Data Conversion
+
+        public AppIconData ToSerializable()
+        {
+            try
+            {
+                AppIconData iconData = new AppIconData();
+
+                if (icons.Length > 0)
+                {
+                    iconData.iconDirectoryList = new string[icons.Length];
+
+                    for (int i = 0; i < icons.Length; i++)
+                    {
+                        Storage.Directory.GetAssetPath(icons[i], (resultsData, callbackResults) =>
+                        {
+                            if (callbackResults.error == true)
+                            {
+                                DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
+                                return;
+                            }
+
+                            if (callbackResults.success == true)
+                            {
+                                iconData.iconDirectoryList[i] = resultsData;
+                                DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
+                            }
+
+                        });
+                    }
+                }
+
+                return iconData;
+            }
+            catch(Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, $"Failed To Load App Icons With Exception : {exception.Message}");
+                throw exception;
+            }
+        }
+
+        #endregion
+    }
+
+
+    /// <summary>
+    /// This struct contains a serializable version of App Icon.
+    /// </summary>
+    [Serializable]
+    public struct AppIconData
+    {
+        #region Components
+
+        public string name;
+
+        [NonReorderable]
+        public string[] iconDirectoryList;
+
+        [Space(5)]
+        public IconKind type;
+
+        #endregion
+
+        #region Data Conversion
+
+        public AppIcon ToInstance()
+        {
+            try
+            {
+                AppIcon appIcons = new AppIcon();
+
+                if (iconDirectoryList.Length > 0)
+                {
+                    appIcons.icons = new Texture2D[iconDirectoryList.Length];
+
+                    for (int i = 0; i < iconDirectoryList.Length; i++)
+                    {
+                        Storage.AssetData.LoadAsset<Texture2D>(iconDirectoryList[i], (resultsData, callbackResults) =>
+                        {
+                            if (callbackResults.error == true)
+                            {
+                                DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
+                                return;
+                            }
+
+                            if (callbackResults.success == true)
+                            {
+                                appIcons.icons[i] = resultsData;
+                                DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, "Failed to load App Icons List.");
+                }
+
+                return appIcons;
+            }
+            catch(Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, $"Failed To Load App Icons Data With Exception : {exception.Message}");
+                throw exception;
+            }
+        }
+
+        #endregion
     }
 
     #endregion

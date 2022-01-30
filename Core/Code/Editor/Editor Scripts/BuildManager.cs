@@ -30,7 +30,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         [MenuItem("3ridge/Config/Build App #B")]
         public static void Build()
         {
-            BuildSettingsData buildSettings = GetBuildSettings(GetDefaultStorageInfo());
+            BuildSettings buildSettings = AppDataBuilder.CreateNewBuildSettingsInstance(GetBuildSettings(GetDefaultStorageInfo()));
 
             string fileFullPath = buildSettings.configurations.buildLocation;
             buildSettings.configurations.buildLocation = fileFullPath;
@@ -52,19 +52,19 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             if (!string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) && Storage.Directory.FolderExist(buildSettings.configurations.targetBuildDirectory) == true)
             {
-                BuildCompilerScript.BuildCompiler(buildSettings, (results, resultsData) =>
-                {
-                    if (results.error)
-                    {
-                        DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
-                        return;
-                    }
+                //BuildCompilerScript.BuildCompiler(buildSettings, (results, resultsData) =>
+                //{
+                //    if (results.error)
+                //    {
+                //        DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                //        return;
+                //    }
 
-                    if (results.success)
-                    {
-                        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                    }
-                });
+                //    if (results.success)
+                //    {
+                //        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                //    }
+                //});
             }
         }
 
@@ -76,27 +76,29 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// Used by the App Build Manager To Update Build Settings Window.
         /// </summary>
         /// <returns></returns>
-        public static BuildSettings GetCurrentBuildSettings()
+        public static BuildSettingsData GetCurrentBuildSettings()
         {
-            BuildSettingsData settings = new BuildSettingsData();
+            BuildSettingsData buildSettingsData = new BuildSettingsData();
+
+            DebugConsole.Log(Debug.LogLevel.Warning, $"Build data not found @ : {GetDefaultStorageInfo().filePath}. - Getting default build settings.");
 
             Storage.Directory.DataPathExists(GetDefaultStorageInfo(), (resultsData, results) =>
             {
                 if (results.error == true)
                 {
-                    settings = GetDefaultBuildSettings();
+                    buildSettingsData = GetDefaultBuildSettings();
                     DebugConsole.Log(Debug.LogLevel.Warning, $"Build data not found @ : {GetDefaultStorageInfo().filePath}. - Getting default build settings.");
                 }
 
                 if (results.success == true)
                 {
-                    settings = GetBuildSettings(GetDefaultStorageInfo());
+                    buildSettingsData = GetBuildSettings(GetDefaultStorageInfo());
                     DebugConsole.Log(Debug.LogLevel.Success, $"Build data loaded successfully @ : {GetDefaultStorageInfo().filePath}.");
                 }
 
             });
 
-            return settings.ToInstance();
+            return buildSettingsData;
         }
 
         private static BuildSettingsData GetDefaultBuildSettings()
@@ -152,7 +154,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             if (GetIcons(nameBuild, IconKind.Application).Length > 0)
             {
-                appInfo.appIcon = GetIcons(nameBuild, IconKind.Application)[0];
+                //appInfo.appIcon = GetIcons(nameBuild, IconKind.Application)[0];
             }
 
             #endregion
@@ -300,7 +302,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <returns>Returns A Serializable Version Of The Build Settings Data</returns>
         public static BuildSettingsData GetBuildSettings(StorageData.DirectoryInfoData directoryInfo)
         {
-            BuildSettingsData settings = new BuildSettingsData();
+            BuildSettingsData buildSettingsData = new BuildSettingsData();
 
             Storage.JsonData.Load<BuildSettingsData>(directoryInfo, (loadedResults, loadStatus) =>
             {
@@ -312,13 +314,13 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 if (loadStatus.success)
                 {
-                    settings = loadedResults;
+                    buildSettingsData = loadedResults;
 
                     DebugConsole.Log(Debug.LogLevel.Success, $"Load Completed With Results : {loadStatus.successValue}");
                 }
             });
 
-            return settings;
+            return buildSettingsData;
         }
 
         /// <summary>
@@ -354,7 +356,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// This method create build settings for the selected platform.
         /// </summary>
         /// <param name="buildSettings"></param>
-        public static void ApplyAppSettings(BuildSettingsData buildSettings)
+        public static void ApplyAppSettings(BuildSettings buildSettings)
         {
             ApplyAppInfo(buildSettings, (callbackResults, resultsData) =>
             {
@@ -366,7 +368,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 if (callbackResults.success)
                 {
-                    buildSettings.appInfo = resultsData.ToSerializable();
+                    buildSettings.appInfo = resultsData;
 
                     ApplyBuildSettings(buildSettings, (callbackResults, resultsData) =>
                     {
@@ -400,6 +402,92 @@ namespace Bridge.Core.UnityEditor.App.Manager
         #endregion
 
         #region Settings
+
+        #region Test
+
+        /// <summary>
+        /// Applies the app info for the current project.
+        /// </summary>
+        /// <param name="buildSettings"></param>
+        /// <param name="callback"></param>
+        private static void ApplyAppInfo(BuildSettings buildSettings, Action<AppEventsData.CallBackResults, AppInfo> callback = null)
+        {
+            AppEventsData.CallBackResults callBackResults = new AppEventsData.CallBackResults();
+
+            try
+            {
+                if (string.IsNullOrEmpty(buildSettings.appInfo.companyName))
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, "App info's company name field is empty. Please assign company name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(buildSettings.appInfo.appName))
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, "App info's app name field is empty. Please assign app name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
+                    return;
+                }
+
+                companyName = (string.IsNullOrEmpty(buildSettings.appInfo.companyName)) ? companyName : buildSettings.appInfo.companyName;
+                productName = (string.IsNullOrEmpty(buildSettings.appInfo.appName)) ? productName : buildSettings.appInfo.appName;
+                bundleVersion = (string.IsNullOrEmpty(buildSettings.appInfo.appVersion)) ? bundleVersion : buildSettings.appInfo.appVersion;
+
+                string appCompanyName = buildSettings.appInfo.companyName;
+
+                if (appCompanyName.Contains(" "))
+                {
+                    appCompanyName = appCompanyName.Replace(" ", "");
+                }
+
+                string appName = buildSettings.appInfo.appName;
+
+                if (appName.Contains(" "))
+                {
+                    appName = appName.Replace(" ", "");
+                }
+
+                //PlayerSettings.SplashScreen.logos = GetSplashScreenLogos(buildSettingsData.appInfo.splashScreens.screens);
+                //PlayerSettings.SplashScreen.background = buildSettingsData.appInfo.splashScreens.background;
+                //PlayerSettings.SplashScreen.backgroundColor = buildSettingsData.appInfo.splashScreens.backgroundColor;
+
+
+                PlayerSettings.SplashScreen.unityLogoStyle = buildSettings.appInfo.splashScreens.unityLogoStyle;
+                PlayerSettings.SplashScreen.animationMode = buildSettings.appInfo.splashScreens.animationMode;
+                PlayerSettings.SplashScreen.drawMode = buildSettings.appInfo.splashScreens.logoDrawMode;
+                PlayerSettings.SplashScreen.showUnityLogo = buildSettings.appInfo.splashScreens.showUnityLogo;
+                PlayerSettings.SplashScreen.show = buildSettings.appInfo.splashScreens.showSplashScreen;
+
+                if (buildSettings.appInfo.appIcons.Length > 0)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Debug, $"Loaded {buildSettings.appInfo.appIcons.Length} Icons Data");
+
+                    for (int i = 0; i < buildSettings.appInfo.appIcons.Length; i++)
+                    {
+                        if (buildSettings.appInfo.appIcons[i].icons.Length > 0)
+                        {
+                            for (int j = 0; j < buildSettings.appInfo.appIcons[i].icons.Length; j++)
+                            {
+                                var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(buildSettings.configurations.platform));
+                                SetIcons(nameBuild, GetAppIcons(buildSettings.appInfo.appIcons[i]), buildSettings.appInfo.appIcons[i].type);
+                            }
+                        }
+                    }
+                }
+
+                buildSettings.appInfo.appIdentifier = $"com.{appCompanyName}.{appName}";
+
+                callBackResults.success = true;
+                callback.Invoke(callBackResults, buildSettings.appInfo);
+            }
+            catch (Exception exception)
+            {
+                callBackResults.error = true;
+                callBackResults.errorValue = exception.Message;
+                callback.Invoke(callBackResults, buildSettings.appInfo);
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// Applies the app info for the current project.
@@ -453,9 +541,21 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 PlayerSettings.SplashScreen.showUnityLogo = buildSettingsData.appInfo.splashScreens.showUnityLogo;
                 PlayerSettings.SplashScreen.show = buildSettingsData.appInfo.splashScreens.showSplashScreen;
 
-                if (buildSettingsData.appInfo.appIcon != null)
+                if (buildSettingsData.appInfo.appIconData.Length > 0)
                 {
-                    //SetIconsForTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform), GetPlatformIconList(buildSettingsData.appInfo.appIcon));
+                    DebugConsole.Log(Debug.LogLevel.Debug, $"Loaded {buildSettingsData.appInfo.appIconData.Length} Icons Data");
+
+                    for (int i = 0; i < buildSettingsData.appInfo.appIconData.Length; i++)
+                    {
+                        if(buildSettingsData.appInfo.appIconData[i].iconDirectoryList.Length > 0)
+                        {
+                            for (int j = 0; j < buildSettingsData.appInfo.appIconData[i].iconDirectoryList.Length; j++)
+                            {
+                                var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform));
+                                SetIcons(nameBuild, GetAppIcons(buildSettingsData.appInfo.appIconData[i].ToInstance()), buildSettingsData.appInfo.appIconData[i].type);
+                            }
+                        }
+                    }
                 }
 
                 buildSettingsData.appInfo.appIdentifier = $"com.{appCompanyName}.{appName}";
@@ -471,12 +571,24 @@ namespace Bridge.Core.UnityEditor.App.Manager
             }
         }
 
+        public static Texture2D[] GetAppIcons(AppIcon iconData)
+        {
+            Texture2D[] icons = new Texture2D[iconData.icons.Length];
+
+            for (int i = 0; i < iconData.icons.Length; i++)
+            {
+                icons[i] = iconData.icons[i];
+            }
+
+            return icons;
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="buildSettings"></param>
         /// <param name="callback"></param>
-        public static void ApplyBuildSettings(BuildSettingsData buildSettings, Action<AppEventsData.CallBackResults, BuildSettingsData> callback = null)
+        public static void ApplyBuildSettings(BuildSettings buildSettings, Action<AppEventsData.CallBackResults, BuildSettings> callback = null)
         {
             AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
 
@@ -583,7 +695,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             {
                 results.error = true;
                 results.errorValue = exception.Message;
-                callback.Invoke(results, new BuildSettingsData());
+                callback.Invoke(results, new BuildSettings());
             }
         }
 

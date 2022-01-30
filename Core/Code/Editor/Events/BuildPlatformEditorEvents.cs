@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEditor.Build;
 using Bridge.Core.UnityEditor.Debugger;
+using Bridge.Core.App.Manager;
 
 namespace Bridge.Core.UnityEditor.App.Manager
 {
@@ -16,7 +17,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         public void OnActiveBuildTargetChanged(BuildTarget previousTarget, BuildTarget newTarget)
         {
-            BuildManager.ApplyBuildSettings(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()), (results, data) => 
+            BuildManager.ApplyBuildSettings(AppDataBuilder.CreateNewBuildSettingsInstance(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo())), (results, data) => 
             {
                 if(results.error == true)
                 {

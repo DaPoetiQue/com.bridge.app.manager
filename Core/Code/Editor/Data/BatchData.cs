@@ -159,31 +159,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
         }
     }
 
-    [Serializable]
-    public class CleanBuildCompiler
-    {
-        #region Property Fields
-
-        public string echoOffAttribute;
-        public string echoCleaningBuildProjectAttribute;
-        public string editorLogCleanStarted;
-        public string cleanBuildPathCommand;
-        public string echoProjectBuildCleanedAttribute;
-        public string startNewBuildCommand;
-
-        #endregion
-
-        public override string ToString()
-        {
-            return $"{echoOffAttribute}\n" +
-                   $"{echoCleaningBuildProjectAttribute}\n" +
-                   $"{editorLogCleanStarted}\n" +
-                   $"{cleanBuildPathCommand}\n" +
-                   $"{echoProjectBuildCleanedAttribute}\n" +
-                   $"{startNewBuildCommand}";
-        }
-    }
-
     /// <summary>
     /// This static class contains project info data.
     /// </summary>

@@ -80,7 +80,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         #region Settings
 
-        private static BuildSettings appSettings;
+        private static BuildSettings appBuildSettings;
         private static bool RunAppOnCompletion;
         private static AndroidPreferredInstallLocation installLocation;
 
@@ -169,12 +169,12 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         private void InitializeContentData()
         {
-            appSettings = CreateInstance<BuildSettings>();
+            appBuildSettings = CreateInstance<BuildSettings>();
 
             // If config not loaded. set default settings.
-            appSettings.appInfo.appVersion = "1.0";
-            appSettings.configurations.platform = BuildTarget.Android; // This will be loaded from a json file called buildSettings.json
-            appSettings.androidBuildSettings.sdkVersion = AndroidSdkVersions.AndroidApiLevel24;
+            appBuildSettings.appInfo.appVersion = "1.0";
+            appBuildSettings.configurations.platform = BuildTarget.Android; // This will be loaded from a json file called buildSettings.json
+            appBuildSettings.androidBuildSettings.sdkVersion = AndroidSdkVersions.AndroidApiLevel24;
         }
 
         #endregion
@@ -188,7 +188,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         {
             if (window == null)
             {
-                appSettings = BuildManager.GetCurrentBuildSettings();
+                appBuildSettings = AppDataBuilder.CreateNewBuildSettingsInstance(BuildManager.GetCurrentBuildSettings());
 
                 window = GetWindow<BuildManagerWindow>();
                 DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
@@ -260,7 +260,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region Menu Content and Style Update
 
-            if (appSettings == null)
+            if (appBuildSettings == null)
             {
                 InitializeContentData();
             }
@@ -281,95 +281,95 @@ namespace Bridge.Core.UnityEditor.App.Manager
             #region App Info & Configurations
 
             GUILayout.Space(10);
-            SerializedObject appInfoSerializedObject = new SerializedObject(appSettings);
+            SerializedObject appInfoSerializedObject = new SerializedObject(appBuildSettings);
             SerializedProperty appInfoSerializedObjectProperty = appInfoSerializedObject.FindProperty("appInfo");
             EditorGUILayout.PropertyField(appInfoSerializedObjectProperty, true);
             appInfoSerializedObject.ApplyModifiedProperties();
 
             GUILayout.Space(10);
-            SerializedObject sceneDataSerializedObject = new SerializedObject(appSettings);
+            SerializedObject sceneDataSerializedObject = new SerializedObject(appBuildSettings);
             sceneDataSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
             SerializedProperty sceneDataSerializedObjectProperty = sceneDataSerializedObject.FindProperty("buildScenes");
             EditorGUILayout.PropertyField(sceneDataSerializedObjectProperty, true);
             sceneDataSerializedObject.ApplyModifiedProperties();
 
             GUILayout.Space(10);
-            SerializedObject appConfigSerializedObject = new SerializedObject(appSettings);
+            SerializedObject appConfigSerializedObject = new SerializedObject(appBuildSettings);
             SerializedProperty appConfigSerializedObjectProperty = appConfigSerializedObject.FindProperty("configurations");
             EditorGUILayout.PropertyField(appConfigSerializedObjectProperty, true);
             appConfigSerializedObject.ApplyModifiedProperties();
 
-            if (PlatformSpecificData.GetRuntimeOS(appSettings) == RuntimeOS.Console)
+            if (PlatformSpecificData.GetRuntimeOS(appBuildSettings) == RuntimeOS.Console)
             {
                 GUILayout.Space(10);
 
-                SerializedObject appDisplayObject = new SerializedObject(appSettings);
+                SerializedObject appDisplayObject = new SerializedObject(appBuildSettings);
                 SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("consoleDisplaySettings");
                 EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
                 appDisplayObject.ApplyModifiedProperties();
             }
 
-            if (PlatformSpecificData.GetRuntimeOS(appSettings) == RuntimeOS.Mobile)
+            if (PlatformSpecificData.GetRuntimeOS(appBuildSettings) == RuntimeOS.Mobile)
             {
                 GUILayout.Space(10);
 
-                SerializedObject appDisplayObject = new SerializedObject(appSettings);
+                SerializedObject appDisplayObject = new SerializedObject(appBuildSettings);
                 SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("mobileDisplaySettings");
                 EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
                 appDisplayObject.ApplyModifiedProperties();
 
-                if (appSettings.configurations.platform == BuildTarget.Android)
+                if (appBuildSettings.configurations.platform == BuildTarget.Android)
                 {
                     GUILayout.Space(10);
 
-                    SerializedObject androidConfigSerializedObject = new SerializedObject(appSettings);
+                    SerializedObject androidConfigSerializedObject = new SerializedObject(appBuildSettings);
                     SerializedProperty androidConfigSerializedObjectProperty = androidConfigSerializedObject.FindProperty("androidBuildSettings");
                     EditorGUILayout.PropertyField(androidConfigSerializedObjectProperty, true);
                     androidConfigSerializedObject.ApplyModifiedProperties();
                 }
 
-                if (appSettings.configurations.platform == BuildTarget.iOS)
+                if (appBuildSettings.configurations.platform == BuildTarget.iOS)
                 {
                     GUILayout.Space(10);
 
-                    SerializedObject androidConfigSerializedObject = new SerializedObject(appSettings);
+                    SerializedObject androidConfigSerializedObject = new SerializedObject(appBuildSettings);
                     SerializedProperty androidConfigSerializedObjectProperty = androidConfigSerializedObject.FindProperty("iOSBuildSettings");
                     EditorGUILayout.PropertyField(androidConfigSerializedObjectProperty, true);
                     androidConfigSerializedObject.ApplyModifiedProperties();
                 }
             }
 
-            if (PlatformSpecificData.GetRuntimeOS(appSettings) == RuntimeOS.Standalone)
+            if (PlatformSpecificData.GetRuntimeOS(appBuildSettings) == RuntimeOS.Standalone)
             {
                 GUILayout.Space(10);
 
-                SerializedObject appDisplayObject = new SerializedObject(appSettings);
+                SerializedObject appDisplayObject = new SerializedObject(appBuildSettings);
                 SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("standaloneDisplaySettings");
                 EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
                 appDisplayObject.ApplyModifiedProperties();
 
                 GUILayout.Space(10);
 
-                SerializedObject buildSettingsObject = new SerializedObject(appSettings);
+                SerializedObject buildSettingsObject = new SerializedObject(appBuildSettings);
                 SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("standaloneBuildSettings");
                 EditorGUILayout.PropertyField(buildSettingsProperty, true);
                 buildSettingsObject.ApplyModifiedProperties();    
             }
 
-            if (PlatformSpecificData.GetRuntimeOS(appSettings) == RuntimeOS.Web)
+            if (PlatformSpecificData.GetRuntimeOS(appBuildSettings) == RuntimeOS.Web)
             {
                 GUILayout.Space(10);
 
-                SerializedObject appDisplayObject = new SerializedObject(appSettings);
+                SerializedObject appDisplayObject = new SerializedObject(appBuildSettings);
                 SerializedProperty appDisplayObjectProperty = appDisplayObject.FindProperty("webDisplaySettings");
                 EditorGUILayout.PropertyField(appDisplayObjectProperty, true);
                 appDisplayObject.ApplyModifiedProperties();
 
-                if (appSettings.configurations.platform == BuildTarget.WebGL)
+                if (appBuildSettings.configurations.platform == BuildTarget.WebGL)
                 {
                     GUILayout.Space(10);
 
-                    SerializedObject buildSettingsObject = new SerializedObject(appSettings);
+                    SerializedObject buildSettingsObject = new SerializedObject(appBuildSettings);
                     SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("webGLBuildSettings");
                     EditorGUILayout.PropertyField(buildSettingsProperty, true);
                     buildSettingsObject.ApplyModifiedProperties();
@@ -386,26 +386,16 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             if (GUILayout.Button("Apply Settings", GUILayout.Height(45)))
             {
-                BuildManager.ApplyAppSettings(appSettings.ToSerializable());
+                BuildManager.ApplyAppSettings(appBuildSettings);
             }
 
-            if (Directory.Exists(appSettings.configurations.targetBuildDirectory) == true)
+            if (Directory.Exists(appBuildSettings.configurations.targetBuildDirectory) == true)
             {
                 GUILayout.Space(2);
 
                 if (GUILayout.Button("Open Build Folder", GUILayout.Height(45)))
                 {
                     Storage.Directory.OpenFolder(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()).configurations.targetBuildDirectory);
-                }
-            }
-
-            if (Directory.Exists(Storage.Directory.GetProjectTempDirectory()))
-            {
-                GUILayout.Space(2);
-
-                if (GUILayout.Button("Clear Project Cache", GUILayout.Height(45)))
-                {
-                    BuildCompilerScript.ClearProjectCache();
                 }
             }
 
@@ -420,7 +410,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             GUILayout.Space(10);
 
-            SerializedObject buildSerializedObject = new SerializedObject(appSettings);
+            SerializedObject buildSerializedObject = new SerializedObject(appBuildSettings);
             SerializedProperty buildSerializedObjectProperty = buildSerializedObject.FindProperty("buildAndRun");
             EditorGUILayout.PropertyField(buildSerializedObjectProperty, true);
             buildSerializedObject.ApplyModifiedProperties();

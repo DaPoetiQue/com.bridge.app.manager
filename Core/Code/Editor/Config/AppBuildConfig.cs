@@ -13,8 +13,8 @@ public static class AppBuildConfig
     {
         try
         {
-            BuildSettingsData settings = BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo());
-            BuildApplication(settings, GetBuildScenes(), settings.buildAndRun);
+            BuildSettings settings = AppDataBuilder.CreateNewBuildSettingsInstance(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()));
+            BuildApplication(settings.ToSerializable(), GetBuildScenes(), settings.buildAndRun);
         }
         catch (Exception exception)
         {
