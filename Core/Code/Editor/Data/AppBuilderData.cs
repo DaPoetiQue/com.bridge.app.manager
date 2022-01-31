@@ -103,15 +103,15 @@ namespace Bridge.Core.App.Manager
             appInfoData.appName = this.appName;
             appInfoData.appVersion = this.appVersion;
 
-            //if (appIcons.Length > 0)
-            //{
-            //    appInfoData.appIconData = new AppIconData[appIcons.Length];
+            if (appIcons.Length > 0)
+            {
+                appInfoData.appIconData = new AppIconData[appIcons.Length];
 
-            //    for (int i = 0; i < appIcons.Length; i++)
-            //    {
-            //        appInfoData.appIconData[i] = this.appIcons[i].ToSerializable();
-            //    }
-            //}
+                //for (int i = 0; i < appIcons.Length; i++)
+                //{
+                //    appInfoData.appIconData[i] = this.appIcons[i].ToSerializable();
+                //}
+            }
 
             appInfoData.splashScreens = this.splashScreens.ToSerializable();
             appInfoData.appIdentifier = this.appIdentifier;
@@ -154,24 +154,24 @@ namespace Bridge.Core.App.Manager
 
         public AppInfo ToInstance()
         {
-            AppInfo appInfo = new AppInfo();
-
-            appInfo.companyName = this.companyName;
-            appInfo.appName = this.appName;
-            appInfo.appVersion = this.appVersion;
-
-            if (this.appIconData.Length > 0)
+            AppInfo appInfo = new AppInfo
             {
-                appInfo.appIcons = new AppIcon[this.appIconData.Length];
+                appName = this.appName,
+                companyName = this.companyName,
+                appVersion = this.appVersion,
+                appIdentifier = this.appIdentifier,
+                splashScreens = this.splashScreens.ToInstance()
+            };
 
-                for (int i = 0; i < this.appIconData.Length; i++)
-                {
-                    appInfo.appIcons[i] = this.appIconData[i].ToInstance();
-                }
-            }
+            //if (this.appIconData.Length > 0)
+            //{
+            //    appInfo.appIcons = new AppIcon[this.appIconData.Length];
 
-            appInfo.splashScreens = this.splashScreens.ToInstance();
-            appInfo.appIdentifier = this.appIdentifier;
+            //    //for (int i = 0; i < this.appIconData.Length; i++)
+            //    //{
+            //    //    appInfo.appIcons[i] = this.appIconData[i].ToInstance();
+            //    //}
+            //}
 
             return appInfo;
         }
@@ -299,36 +299,36 @@ namespace Bridge.Core.App.Manager
             settings = buildSettings;
         }
 
-        public static BuildSettings CreateNewBuildSettingsInstance()
-        {
-            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+        //public static BuildSettings CreateNewBuildSettingsInstance()
+        //{
+        //    BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
 
-            return buildSettings;
-        }
+        //    return buildSettings;
+        //}
 
-        public static BuildSettings CreateNewBuildSettingsInstance(BuildSettingsData buildSettingsData)
-        {
-            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+        //public static BuildSettings CreateNewBuildSettingsInstance(BuildSettingsData buildSettingsData)
+        //{
+        //    BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
 
-            buildSettings.appInfo = new AppInfo
-            {
-                appName = buildSettingsData.appInfo.appName,
-                companyName = buildSettings.appInfo.companyName,
-                appVersion = buildSettings.appInfo.appVersion,
-                appIdentifier = buildSettings.appInfo.appIdentifier,
-                appIcons = buildSettings.appInfo.appIcons
-            };
+        //    buildSettings.appInfo = new AppInfo
+        //    {
+        //        appName = buildSettingsData.appInfo.appName,
+        //        companyName = buildSettings.appInfo.companyName,
+        //        appVersion = buildSettings.appInfo.appVersion,
+        //        appIdentifier = buildSettings.appInfo.appIdentifier,
+        //        appIcons = buildSettings.appInfo.appIcons
+        //    };
 
-            buildSettings.configurations = buildSettingsData.configurations;
-            buildSettings.buildScenes = buildSettingsData.GetBuildScenes();
-            buildSettings.buildAndRun = buildSettingsData.buildAndRun;
+        //    buildSettings.configurations = buildSettingsData.configurations;
+        //    buildSettings.buildScenes = buildSettingsData.GetBuildScenes();
+        //    buildSettings.buildAndRun = buildSettingsData.buildAndRun;
 
-            buildSettings.androidBuildSettings = buildSettingsData.androidBuildSettings;
-            buildSettings.standaloneBuildSettings = buildSettingsData.standaloneBuildSettings;
+        //    buildSettings.androidBuildSettings = buildSettingsData.androidBuildSettings;
+        //    buildSettings.standaloneBuildSettings = buildSettingsData.standaloneBuildSettings;
 
 
-            return buildSettings;
-        }
+        //    return buildSettings;
+        // }
     }
 
     /// <summary>
@@ -464,7 +464,7 @@ namespace Bridge.Core.App.Manager
     #region Icons Data
 
     [Serializable]
-    public class AppIcon
+    public struct AppIcon
     {
         #region Components
 

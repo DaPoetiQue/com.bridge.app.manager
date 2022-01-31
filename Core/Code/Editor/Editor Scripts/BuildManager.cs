@@ -30,7 +30,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         [MenuItem("3ridge/Config/Build App #B")]
         public static void Build()
         {
-            BuildSettings buildSettings = AppDataBuilder.CreateNewBuildSettingsInstance(GetBuildSettings(GetDefaultStorageInfo()));
+            BuildSettings buildSettings = GetBuildSettings(GetDefaultStorageInfo()).ToInstance();
 
             string fileFullPath = buildSettings.configurations.buildLocation;
             buildSettings.configurations.buildLocation = fileFullPath;
@@ -76,11 +76,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// Used by the App Build Manager To Update Build Settings Window.
         /// </summary>
         /// <returns></returns>
-        public static BuildSettingsData GetCurrentBuildSettings()
+        public static BuildSettings GetCurrentBuildSettings()
         {
             BuildSettingsData buildSettingsData = new BuildSettingsData();
-
-            DebugConsole.Log(Debug.LogLevel.Warning, $"Build data not found @ : {GetDefaultStorageInfo().filePath}. - Getting default build settings.");
 
             Storage.Directory.DataPathExists(GetDefaultStorageInfo(), (resultsData, results) =>
             {
@@ -98,7 +96,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             });
 
-            return buildSettingsData;
+            DebugConsole.Log(Debug.LogLevel.Debug, $"Returning Current Settings : {GetDefaultStorageInfo().filePath}.");
+
+            return buildSettingsData.ToInstance();
         }
 
         private static BuildSettingsData GetDefaultBuildSettings()
