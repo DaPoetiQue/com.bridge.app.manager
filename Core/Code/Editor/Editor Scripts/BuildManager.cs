@@ -1077,19 +1077,19 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             platformIcons.icons = new Texture2D[iconsResolutions.Length];
 
-            //if(appIconInfo.icon.isReadable == false)
-            //{
-            //    string assetPath = AssetDatabase.GetAssetPath(appIconInfo.icon);
-            //    var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (appIconInfo.icon.isReadable == false)
+            {
+                string assetPath = AssetDatabase.GetAssetPath(appIconInfo.icon);
+                var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
 
-            //    if(importer != null)
-            //    {
-            //        importer.textureType = TextureImporterType.Default;
-            //        importer.isReadable = true;
-            //        AssetDatabase.ImportAsset(assetPath);
-            //        AssetDatabase.Refresh();
-            //    }
-            //}
+                if (importer != null)
+                {
+                    importer.textureType = TextureImporterType.Default;
+                    importer.isReadable = true;
+                    AssetDatabase.ImportAsset(assetPath);
+                    AssetDatabase.Refresh();
+                }
+            }
 
             if (iconsResolutions.Length > 0)
             {
