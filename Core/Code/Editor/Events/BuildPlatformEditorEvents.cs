@@ -17,7 +17,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         public void OnActiveBuildTargetChanged(BuildTarget previousTarget, BuildTarget newTarget)
         {
-            BuildManager.ApplyBuildSettings(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()), (results, data) => 
+            BuildManager.ApplyBuildSettings(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()).ToInstance(), (results, data) => 
             {
                 if(results.error == true)
                 {

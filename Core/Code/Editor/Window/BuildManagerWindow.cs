@@ -386,7 +386,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             if (GUILayout.Button("Apply Settings", GUILayout.Height(45)))
             {
-                BuildManager.ApplyAppSettings(appBuildSettings.ToSerializable());
+                BuildManager.ApplyAppSettings(appBuildSettings);
             }
 
             if (Directory.Exists(appBuildSettings.configurations.targetBuildDirectory) == true)

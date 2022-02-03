@@ -1,12 +1,10 @@
 using System;
 using UnityEditor;
-// using Bridge.Core.App.Data.Storage;
+using UnityEditor.Android;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Bridge.Core.App.Data.Storage;
 using Bridge.Core.UnityEditor.Debugger;
-using Bridge.Core.App.Events;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Bridge.Core.App.Manager
@@ -83,9 +81,6 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public SplashScreen splashScreens;
 
-        [HideInInspector]
-        public string appIdentifier;
-
         #endregion
 
         #region Data Conversion
@@ -101,7 +96,6 @@ namespace Bridge.Core.App.Manager
                 appName = this.appName,
                 companyName = this.companyName,
                 appVersion = this.appVersion,
-                appIdentifier = this.appIdentifier,
                 appIconInfoData = appIconInfo.ToSerializable(),
                 splashScreens = this.splashScreens.ToSerializable()
             };
@@ -135,9 +129,6 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public SplashScreenData splashScreens;
 
-        [HideInInspector]
-        public string appIdentifier;
-
         #endregion
 
         #region Data Conversion
@@ -149,7 +140,6 @@ namespace Bridge.Core.App.Manager
                 appName = this.appName,
                 companyName = this.companyName,
                 appVersion = this.appVersion,
-                appIdentifier = this.appIdentifier,
                 appIconInfo = appIconInfoData.ToInstance(),
                 splashScreens = this.splashScreens.ToInstance()
             };
@@ -244,6 +234,11 @@ namespace Bridge.Core.App.Manager
         {
             try
             {
+                if(buildScenes == null)
+                {
+                    return new string[0];
+                }
+
                 string[] buildScenesToStringArray = new string[buildScenes.Length];
 
                 if (buildScenesToStringArray.Length > 0)
@@ -385,21 +380,23 @@ namespace Bridge.Core.App.Manager
 
             buildSettings.appInfo = this.appInfo.ToInstance();
 
-            Action<SceneAsset[], AppEventsData.CallBackResults> callBack = (data, results) =>
+            if(buildScenes != null && buildScenes.Length > 0)
             {
-                if(results.error == true)
+                Storage.AssetData.LoadAssets<SceneAsset>(buildScenes, (loadedScenesResults, callbackResults) =>
                 {
-                    DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
-                    return;
-                }
+                    if (callbackResults.error == true)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
+                        return;
+                    }
 
-                if(results.success == true)
-                {
-                    buildSettings.buildScenes = data;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            };
-            Storage.AssetData.LoadAssets(buildScenes, callBack);
+                    if (callbackResults.success == true)
+                    {
+                        buildSettings.buildScenes = loadedScenesResults;
+                        DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
+                    }
+                });
+            }
 
             buildSettings.configurations = this.configurations;
             buildSettings.consoleDisplaySettings = this.consoleDisplaySettings;
@@ -453,11 +450,27 @@ namespace Bridge.Core.App.Manager
 
     #region Icons Data
 
+    #region Platform Options
+
+    public enum AppIconKind
+    {
+        None,
+        Adaptive,
+        Legacy,
+        Round
+    }
+
+    #endregion
+
     [Serializable]
     public struct AppIconInfo
     {
         #region Components
 
+        [Space(5)]
+        public bool overideStandalone;
+
+        [Space(5)]
         [NonReorderable]
         public AppIcon[] iconList;
 
@@ -469,6 +482,7 @@ namespace Bridge.Core.App.Manager
         {
             AppIconInfoData infoData = new AppIconInfoData
             {
+                overideStandalone = overideStandalone,
                 iconDataList = GetAppIconsDirectories()
             };
 
@@ -479,7 +493,7 @@ namespace Bridge.Core.App.Manager
         {
             try
             {
-                if (iconList != null)
+                if (iconList != null && iconList.Length > 0)
                 {
                     AppIconData[] iconData = new AppIconData[iconList.Length];
 
@@ -492,7 +506,6 @@ namespace Bridge.Core.App.Manager
                 }
                 else
                 {
-                    DebugConsole.Log(Debug.LogLevel.Error, "Failed To Load App Icons List.");
                     return new AppIconData[0];
                 }
             }
@@ -516,6 +529,10 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public Texture2D icon;
 
+        [Tooltip("Android Support Only")]
+        [Space(5)]
+        public AppIconKind iconKind;
+
         [Space(5)]
         public IconKind type;
 
@@ -531,6 +548,7 @@ namespace Bridge.Core.App.Manager
                 {
                     name = name,
                     iconAssetDirectory = GetAppIconAssetDirectory(),
+                    iconKind = iconKind,
                     type = type
 
                 };
@@ -577,6 +595,7 @@ namespace Bridge.Core.App.Manager
     {
         #region Components
 
+        public bool overideStandalone;
         public AppIconData[] iconDataList;
 
         #endregion
@@ -585,8 +604,17 @@ namespace Bridge.Core.App.Manager
 
         public AppIconInfo ToInstance()
         {
+            if(iconDataList == null)
+            {
+                return new AppIconInfo
+                {
+                    iconList = new AppIcon[0]
+                };
+            }
+
             AppIconInfo iconInfo = new AppIconInfo
             {
+                overideStandalone = overideStandalone,
                 iconList = GetAppIconsList()
             };
 
@@ -636,10 +664,8 @@ namespace Bridge.Core.App.Manager
         #region Components
 
         public string name;
-
         public string iconAssetDirectory;
-
-        [Space(5)]
+        public AppIconKind iconKind; // Android Support Only.
         public IconKind type;
 
         #endregion
@@ -654,6 +680,7 @@ namespace Bridge.Core.App.Manager
                 { 
                     name = name,
                     icon = GetAppIconAsset(),
+                    iconKind = iconKind,
                     type = type
                 };
 
@@ -686,6 +713,51 @@ namespace Bridge.Core.App.Manager
             });
 
             return appIconAsset;
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// This struct contains data for plaform specific Icons.
+    /// </summary>
+    public struct PlatformAppIcons
+    {
+        #region Components
+
+        public Texture2D[] icons;
+        public IconKind type;
+
+        #endregion
+
+        #region Platform Icons
+
+        public static PlatformIconKind GetPlatformIconKind(AppIconKind iconType)
+        {
+            PlatformIconKind iconKind = AndroidPlatformIconKind.Adaptive;
+
+            switch(iconType)
+            {
+                case AppIconKind.Adaptive:
+
+                    iconKind = AndroidPlatformIconKind.Adaptive;
+
+                    break;
+
+                case AppIconKind.Legacy:
+
+                    iconKind = AndroidPlatformIconKind.Adaptive;
+
+                    break;
+
+                case AppIconKind.Round:
+
+                    iconKind = AndroidPlatformIconKind.Adaptive;
+
+                    break;
+            }
+
+            return iconKind;
         }
 
         #endregion
@@ -813,9 +885,14 @@ namespace Bridge.Core.App.Manager
 
         public SplashScreen ToInstance()
         {
+            if(screens == null)
+            {
+                return new SplashScreen();
+            }
+
             SplashScreen splashScreen = new SplashScreen();
 
-            if (this.screens.Length > 0)
+            if (screens.Length > 0)
             {
                 splashScreen.screens = new SplashScreenLogo[this.screens.Length];
 
@@ -1089,6 +1166,9 @@ namespace Bridge.Core.App.Manager
     public struct AndroidBuildSettings
     {
         [Space(5)]
+        public string packageName;
+
+        [Space(5)]
         public AndroidPreferredInstallLocation installLocation;
 
         [Space(5)]
@@ -1101,6 +1181,9 @@ namespace Bridge.Core.App.Manager
     [Serializable]
     public struct iOSBuildSettings
     {
+        [Space(5)]
+        public string bundleIdentifier;
+
         [Space(5)]
         public string cameraUsageDescription;
 
@@ -1139,6 +1222,9 @@ namespace Bridge.Core.App.Manager
         public GraphicsDeviceType[] graphicsApi;
 
         [Space(5)]
+        public string bundleIdentifier;
+
+        [Space(5)]
         public int build;
 
         [Space(5)]
@@ -1154,6 +1240,9 @@ namespace Bridge.Core.App.Manager
     [Serializable]
     public struct OtherSettings
     {
+        [Space(5)]
+        public string appIdentifier;
+
         [Space(5)]
         public ScriptingImplementation scriptingBackend;
 
