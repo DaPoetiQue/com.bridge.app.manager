@@ -76,7 +76,7 @@ namespace Bridge.Core.App.Manager
         public string appVersion;
 
         [Space(5)]
-        public AppIconInfo appIconInfo;
+        public AppIconInfo appIcons;
 
         [Space(5)]
         public SplashScreen splashScreens;
@@ -96,7 +96,7 @@ namespace Bridge.Core.App.Manager
                 appName = this.appName,
                 companyName = this.companyName,
                 appVersion = this.appVersion,
-                appIconInfoData = appIconInfo.ToSerializable(),
+                appIconInfoData = appIcons.ToSerializable(),
                 splashScreens = this.splashScreens.ToSerializable()
             };
 
@@ -140,13 +140,13 @@ namespace Bridge.Core.App.Manager
                 appName = this.appName,
                 companyName = this.companyName,
                 appVersion = this.appVersion,
-                appIconInfo = appIconInfoData.ToInstance(),
+                appIcons = appIconInfoData.ToInstance(),
                 splashScreens = this.splashScreens.ToInstance()
             };
 
-            appInfo.appIconInfo = new AppIconInfo
+            appInfo.appIcons = new AppIconInfo
             {
-                iconList = appIconInfoData.ToInstance().iconList
+                iconsList = appIconInfoData.ToInstance().iconsList
             };
 
             return appInfo;
@@ -450,29 +450,14 @@ namespace Bridge.Core.App.Manager
 
     #region Icons Data
 
-    #region Platform Options
-
-    public enum AppIconKind
-    {
-        None,
-        Adaptive,
-        Legacy,
-        Round
-    }
-
-    #endregion
-
     [Serializable]
     public struct AppIconInfo
     {
         #region Components
 
         [Space(5)]
-        public bool overideStandalone;
-
-        [Space(5)]
         [NonReorderable]
-        public AppIcon[] iconList;
+        public AppIcon[] iconsList;
 
         #endregion
 
@@ -482,7 +467,6 @@ namespace Bridge.Core.App.Manager
         {
             AppIconInfoData infoData = new AppIconInfoData
             {
-                overideStandalone = overideStandalone,
                 iconDataList = GetAppIconsDirectories()
             };
 
@@ -493,13 +477,13 @@ namespace Bridge.Core.App.Manager
         {
             try
             {
-                if (iconList != null && iconList.Length > 0)
+                if (iconsList != null && iconsList.Length > 0)
                 {
-                    AppIconData[] iconData = new AppIconData[iconList.Length];
+                    AppIconData[] iconData = new AppIconData[iconsList.Length];
 
-                    for (int i = 0; i < iconList.Length; i++)
+                    for (int i = 0; i < iconsList.Length; i++)
                     {
-                        iconData[i] = iconList[i].ToSerializable();
+                        iconData[i] = iconsList[i].ToSerializable();
                     }
 
                     return iconData;
@@ -524,14 +508,11 @@ namespace Bridge.Core.App.Manager
     {
         #region Components
 
+        [Space(5)]
         public string name;
 
         [Space(5)]
         public Texture2D icon;
-
-        [Tooltip("Android Support Only")]
-        [Space(5)]
-        public AppIconKind iconKind;
 
         [Space(5)]
         public IconKind type;
@@ -548,7 +529,6 @@ namespace Bridge.Core.App.Manager
                 {
                     name = name,
                     iconAssetDirectory = GetAppIconAssetDirectory(),
-                    iconKind = iconKind,
                     type = type
 
                 };
@@ -595,7 +575,6 @@ namespace Bridge.Core.App.Manager
     {
         #region Components
 
-        public bool overideStandalone;
         public AppIconData[] iconDataList;
 
         #endregion
@@ -608,14 +587,13 @@ namespace Bridge.Core.App.Manager
             {
                 return new AppIconInfo
                 {
-                    iconList = new AppIcon[0]
+                    iconsList = new AppIcon[0]
                 };
             }
 
             AppIconInfo iconInfo = new AppIconInfo
             {
-                overideStandalone = overideStandalone,
-                iconList = GetAppIconsList()
+                iconsList = GetAppIconsList()
             };
 
             return iconInfo;
@@ -665,7 +643,6 @@ namespace Bridge.Core.App.Manager
 
         public string name;
         public string iconAssetDirectory;
-        public AppIconKind iconKind; // Android Support Only.
         public IconKind type;
 
         #endregion
@@ -680,7 +657,6 @@ namespace Bridge.Core.App.Manager
                 { 
                     name = name,
                     icon = GetAppIconAsset(),
-                    iconKind = iconKind,
                     type = type
                 };
 
@@ -732,27 +708,32 @@ namespace Bridge.Core.App.Manager
 
         #region Platform Icons
 
-        public static PlatformIconKind GetPlatformIconKind(AppIconKind iconType)
+        /// <summary>
+        /// This function gets the platform icon for the specified target build.
+        /// </summary>
+        /// <param name="buildTarget"></param>
+        /// <returns>Platform icon Kind</returns>
+        public static PlatformIconKind GetPlatformIconKind(BuildTarget buildTarget)
         {
             PlatformIconKind iconKind = AndroidPlatformIconKind.Adaptive;
 
-            switch(iconType)
+            switch(buildTarget)
             {
-                case AppIconKind.Adaptive:
+                case BuildTarget.Android:
 
                     iconKind = AndroidPlatformIconKind.Adaptive;
 
                     break;
 
-                case AppIconKind.Legacy:
+                case  BuildTarget.iOS:
 
-                    iconKind = AndroidPlatformIconKind.Adaptive;
+                    // Not Implemented Yet.
 
                     break;
 
-                case AppIconKind.Round:
+                case BuildTarget.tvOS:
 
-                    iconKind = AndroidPlatformIconKind.Adaptive;
+                    // Not Implemented Yet.
 
                     break;
             }
@@ -1210,7 +1191,6 @@ namespace Bridge.Core.App.Manager
         public OtherSettings otherSettings;
     }
 
-
     [Serializable]
     public struct OSXBuildSettings
     {
@@ -1240,9 +1220,6 @@ namespace Bridge.Core.App.Manager
     [Serializable]
     public struct OtherSettings
     {
-        [Space(5)]
-        public string appIdentifier;
-
         [Space(5)]
         public ScriptingImplementation scriptingBackend;
 
@@ -1315,6 +1292,16 @@ namespace Bridge.Core.App.Manager
 
         [HideInInspector]
         public string targetBuildDirectory;
+    }
+
+    [Serializable]
+    public struct CompressionData
+    {
+        [Space(5)]
+        public TextureFormat textureCompressionFormat;
+
+        [Space(5)]
+        public bool hasMipMap;
     }
 
     #endregion

@@ -38,7 +38,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) ||   Storage.Directory.FolderExist(buildSettings.configurations.targetBuildDirectory) == false)
             {
                 buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "").Replace(" ", string.Empty);
-                ApplyAppSettings(buildSettings.ToInstance());
+                ApplyAppSettings(buildSettings);
                 DebugConsole.Log(Debug.LogLevel.Debug, $"Build Directory Set @ : {buildSettings.configurations.buildLocation}");
             }
 
@@ -697,7 +697,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// This method create build settings for the selected platform.
         /// </summary>
         /// <param name="buildSettingsData"></param>
-        public static void ApplyAppSettings(BuildSettings buildSettingsData)
+        public static void ApplyAppSettings(BuildSettingsData buildSettingsData)
         {
             ApplyAppInfo(buildSettingsData, (callbackResults, resultsData) =>
             {
@@ -709,7 +709,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 if (callbackResults.success)
                 {
-                    //buildSettingsData.appInfo = resultsData;
+                    buildSettingsData.appInfo = resultsData;
 
                     ApplyBuildSettings(buildSettingsData, (callbackResults, resultsData) =>
                     {
@@ -743,9 +743,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <summary>
         /// Applies the app info for the current project.
         /// </summary>
-        /// <param name="buildSettings"></param>
+        /// <param name="buildSettingsData"></param>
         /// <param name="callback"></param>
-        private static void ApplyAppInfo(BuildSettings buildSettings, Action<AppEventsData.CallBackResults, AppInfoDataObject> callback = null)
+        private static void ApplyAppInfo(BuildSettingsData buildSettingsData, Action<AppEventsData.CallBackResults, AppInfoDataObject> callback = null)
         {
             AppEventsData.CallBackResults callBackResults = new AppEventsData.CallBackResults();
 
@@ -753,30 +753,30 @@ namespace Bridge.Core.UnityEditor.App.Manager
             {
                 #region App Info
 
-                if (string.IsNullOrEmpty(buildSettings.appInfo.appName))
+                if (string.IsNullOrEmpty(buildSettingsData.appInfo.appName))
                 {
                     DebugConsole.Log(Debug.LogLevel.Warning, "App info's app name field is empty. Please assign app name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
                     return;
                 }
 
-                if (string.IsNullOrEmpty(buildSettings.appInfo.companyName))
+                if (string.IsNullOrEmpty(buildSettingsData.appInfo.companyName))
                 {
                     DebugConsole.Log(Debug.LogLevel.Warning, "App info's company name field is empty. Please assign company name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
                     return;
                 }
 
-                companyName = (string.IsNullOrEmpty(buildSettings.appInfo.companyName)) ? companyName : buildSettings.appInfo.companyName;
-                productName = (string.IsNullOrEmpty(buildSettings.appInfo.appName)) ? productName : buildSettings.appInfo.appName;
-                bundleVersion = (string.IsNullOrEmpty(buildSettings.appInfo.appVersion)) ? bundleVersion : buildSettings.appInfo.appVersion;
+                companyName = (string.IsNullOrEmpty(buildSettingsData.appInfo.companyName)) ? companyName : buildSettingsData.appInfo.companyName;
+                productName = (string.IsNullOrEmpty(buildSettingsData.appInfo.appName)) ? productName : buildSettingsData.appInfo.appName;
+                bundleVersion = (string.IsNullOrEmpty(buildSettingsData.appInfo.appVersion)) ? bundleVersion : buildSettingsData.appInfo.appVersion;
 
-                string appCompanyName = buildSettings.appInfo.companyName;
+                string appCompanyName = buildSettingsData.appInfo.companyName;
 
                 if (appCompanyName.Contains(" "))
                 {
                     appCompanyName = appCompanyName.Replace(" ", "");
                 }
 
-                string appName = buildSettings.appInfo.appName;
+                string appName = buildSettingsData.appInfo.appName;
 
                 if (appName.Contains(" "))
                 {
@@ -787,65 +787,95 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 #region App Icons
 
-                if (buildSettings.appInfo.appIconInfo.iconList.Length > 0 && AppIconsSupported(buildSettings) == false)
+                BuildSettings buildSettings = buildSettingsData.ToInstance();
+
+                if (buildSettings.appInfo.appIcons.iconsList.Length > 0 && AppIconsSupported(buildSettings) == false)
                 {
-                    DebugConsole.Log(Debug.LogLevel.Warning, $"Defined app icons can not be used, because [{buildSettings.configurations.platform.ToString()}] platform doesn't support App Icons.");
+                    DebugConsole.Log(Debug.LogLevel.Warning, $"Defined app icons can not be used, because [{buildSettingsData.configurations.platform.ToString()}] platform doesn't support App Icons.");
                 }
 
-                if (buildSettings.appInfo.appIconInfo.iconList.Length > 0 && AppIconsSupported(buildSettings))
+                if (buildSettings.appInfo.appIcons.iconsList.Length > 0 && AppIconsSupported(buildSettings))
                 {
-                    var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(buildSettings.configurations.platform));
-
-                    int[] iconsResolutions = GetIconSizesForTargetGroup(GetBuildTargetGroup(buildSettings.configurations.platform));
-
-                    for (int i = 0; i < buildSettings.appInfo.appIconInfo.iconList.Length; i++)
+                    IsPlatformSupported(buildSettingsData.configurations.platform, callBackResults =>
                     {
-                        if(buildSettings.appInfo.appIconInfo.iconList[i].icon != null)
+                        if(callBackResults.error == true)
                         {
-                            PlatformAppIcons appIcons = GetAppIcons(buildSettings.appInfo.appIconInfo.iconList[i], iconsResolutions);
+                            DebugConsole.Log(Debug.LogLevel.Warning, callBackResults.errorValue);
+                            return;
+                        }
 
-                            #region Mobile Icons
+                        if (callBackResults.success == true)
+                        {
+                            var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform));
+                            int[] iconsResolutions = GetIconSizesForTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform));
 
-                            #region Android Icons Settings
-
-                            if (buildSettings.configurations.platform == BuildTarget.Android && appIcons.type == IconKind.Application && buildSettings.appInfo.appIconInfo.iconList[i].iconKind != AppIconKind.None)
+                            for (int i = 0; i < buildSettings.appInfo.appIcons.iconsList.Length; i++)
                             {
-                                PlatformIconKind platformIconKind = PlatformAppIcons.GetPlatformIconKind(buildSettings.appInfo.appIconInfo.iconList[i].iconKind);
-
-                                var getPlatformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettings.configurations.platform), platformIconKind);
-
-                                for (int j = 0; j < getPlatformIcons.Length; j++)
+                                if (buildSettings.appInfo.appIcons.iconsList[i].icon != null)
                                 {
-                                    getPlatformIcons[j].SetTextures(appIcons.icons);
+                                    PlatformAppIcons appIcons = GetAppIcons(buildSettings.appInfo.appIcons.iconsList[i], iconsResolutions);
+                                    PlatformIconKind platformIconKind = PlatformAppIcons.GetPlatformIconKind(buildSettingsData.configurations.platform);
+                                    var platformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+
+                                    if (appIcons.type == IconKind.Application)
+                                    {
+                                        #region Standalone Icons
+
+                                        if (GetBuildTargetGroup(buildSettingsData.configurations.platform) == BuildTargetGroup.Standalone)
+                                        {
+                                            SetIcons(nameBuild, appIcons.icons, appIcons.type);
+                                            break;
+                                        }
+
+                                        #endregion
+
+                                        #region Mobile Icons
+
+                                        #region Android
+
+                                        if (GetBuildTargetGroup(buildSettingsData.configurations.platform) == BuildTargetGroup.Android)
+                                        {
+                                            for (int j = 0; j < platformIcons.Length; j++)
+                                            {
+                                                platformIcons[j].SetTextures(appIcons.icons[j]);
+                                            }
+
+                                            SetPlatformIcons(nameBuild, platformIconKind, platformIcons);
+                                        }
+
+                                        #endregion
+
+                                        #region iOS & tvOS
+
+                                        if (GetBuildTargetGroup(buildSettingsData.configurations.platform) == BuildTargetGroup.iOS || GetBuildTargetGroup(buildSettingsData.configurations.platform) == BuildTargetGroup.tvOS)
+                                        {
+                                            for (int j = 0; j < platformIcons.Length; j++)
+                                            {
+                                                platformIcons[j].SetTextures(appIcons.icons[0]);
+                                            }
+
+                                            SetPlatformIcons(nameBuild, platformIconKind, platformIcons);
+                                        }
+
+                                        #endregion
+
+                                        #endregion
+                                    }
+                                    else
+                                    {
+                                        SetIcons(nameBuild, appIcons.icons, appIcons.type);
+                                    }
                                 }
-
-                                SetPlatformIcons(nameBuild, platformIconKind, getPlatformIcons);
-                            }
-                          
-                            if(buildSettings.configurations.platform == BuildTarget.Android && appIcons.type != IconKind.Application)
-                            {
-                                SetIcons(nameBuild, appIcons.icons, appIcons.type);
+                                else
+                                {
+                                    string errorValue = (string.IsNullOrEmpty(buildSettings.appInfo.appIcons.iconsList[i].name) == false) ? buildSettings.appInfo.appIcons.iconsList[i].name : $"@ index : {i}";
+                                    DebugConsole.Log(Debug.LogLevel.Error, $"Failed to assign app icon : {errorValue}. Icon missing/not assigned");
+                                }
                             }
 
-                            #endregion
-
-                            #endregion
-
-                            #region Standalone
-
-                            if (buildSettings.configurations.platform == BuildTarget.StandaloneWindows || buildSettings.configurations.platform == BuildTarget.StandaloneWindows64 || buildSettings.configurations.platform == BuildTarget.StandaloneLinux64 || buildSettings.configurations.platform == BuildTarget.StandaloneOSX)
-                            {
-                                SetIcons(nameBuild, appIcons.icons, appIcons.type);
-                            }
-
-                            #endregion
+                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
                         }
-                        else
-                        {
-                            string errorValue = (string.IsNullOrEmpty(buildSettings.appInfo.appIconInfo.iconList[i].name) == false) ? buildSettings.appInfo.appIconInfo.iconList[i].name : $"@ index {i}. Icon texture missing/not assigned in the app builder window.";
-                            DebugConsole.Log(Debug.LogLevel.Error, $"Failed to set app icon : {errorValue}");
-                        }
-                    }
+                    });
                 }
 
                 #endregion
@@ -887,7 +917,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 #region Results
 
                 callBackResults.success = true;
-                callback.Invoke(callBackResults, buildSettings.appInfo.ToSerializable());
+                callback.Invoke(callBackResults, buildSettingsData.appInfo);
 
                 #endregion
             }
@@ -895,22 +925,22 @@ namespace Bridge.Core.UnityEditor.App.Manager
             {
                 callBackResults.error = true;
                 callBackResults.errorValue = exception.Message;
-                callback.Invoke(callBackResults, buildSettings.appInfo.ToSerializable());
+                callback.Invoke(callBackResults, buildSettingsData.appInfo);
             }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="buildSettings"></param>
+        /// <param name="buildSettingsData"></param>
         /// <param name="callback"></param>
-        public static void ApplyBuildSettings(BuildSettings buildSettings, Action<AppEventsData.CallBackResults, BuildSettingsData> callback = null)
+        public static void ApplyBuildSettings(BuildSettingsData buildSettingsData, Action<AppEventsData.CallBackResults, BuildSettingsData> callback = null)
         {
             AppEventsData.CallBackResults results = new AppEventsData.CallBackResults();
 
             try
             {
-                SwitchBuildTarget(buildSettings.configurations, switchResults =>
+                SwitchBuildTarget(buildSettingsData.configurations, switchResults =>
                 {
                     if (switchResults.error)
                     {
@@ -920,11 +950,11 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                     if (switchResults.success)
                     {
-                        DebugConsole.Log(Debug.LogLevel.Success, $"Applied build settings for : {buildSettings.configurations.platform}");
+                        DebugConsole.Log(Debug.LogLevel.Success, $"Applied build settings for : {buildSettingsData.configurations.platform}");
 
-                        if (buildSettings.configurations.platform == BuildTarget.Android || buildSettings.configurations.platform == BuildTarget.iOS)
+                        if (buildSettingsData.configurations.platform == BuildTarget.Android || buildSettingsData.configurations.platform == BuildTarget.iOS)
                         {
-                            switch (buildSettings.mobileDisplaySettings.allowedOrientation)
+                            switch (buildSettingsData.mobileDisplaySettings.allowedOrientation)
                             {
                                 case UIOrientation.AutoRotation:
 
@@ -962,48 +992,48 @@ namespace Bridge.Core.UnityEditor.App.Manager
                         {
                             case BuildTarget.Android:
 
-                                SetApplicationIdentifier(BuildTargetGroup.Android, buildSettings.androidBuildSettings.packageName);
+                                SetApplicationIdentifier(BuildTargetGroup.Android, buildSettingsData.androidBuildSettings.packageName);
 
                                 GraphicsDeviceType[] graphicsDeviceType = new GraphicsDeviceType[1];
                                 graphicsDeviceType[0] = GraphicsDeviceType.OpenGLES3;
-                                SetGraphicsAPIs(buildSettings.configurations.platform, graphicsDeviceType);
+                                SetGraphicsAPIs(buildSettingsData.configurations.platform, graphicsDeviceType);
 
                                 SetMobileMTRendering(BuildTargetGroup.Android, false);
 
-                                Android.minSdkVersion = buildSettings.androidBuildSettings.sdkVersion;
+                                Android.minSdkVersion = buildSettingsData.androidBuildSettings.sdkVersion;
                                 Android.androidTVCompatibility = false;
-                                Android.preferredInstallLocation = buildSettings.androidBuildSettings.installLocation;
+                                Android.preferredInstallLocation = buildSettingsData.androidBuildSettings.installLocation;
                                 Android.ARCoreEnabled = true;
 
-                                EditorUserBuildSettings.buildAppBundle = buildSettings.androidBuildSettings.buildAppBundle;
+                                EditorUserBuildSettings.buildAppBundle = buildSettingsData.androidBuildSettings.buildAppBundle;
 
                                 break;
 
                             case BuildTarget.iOS:
 
-                                SetApplicationIdentifier(BuildTargetGroup.iOS, buildSettings.iOSBuildSettings.bundleIdentifier);
+                                SetApplicationIdentifier(BuildTargetGroup.iOS, buildSettingsData.iOSBuildSettings.bundleIdentifier);
 
                                 break;
 
                             case BuildTarget.StandaloneWindows:
 
-                                SetScriptingBackend(GetBuildTargetGroup(buildSettings.configurations.platform), buildSettings.standaloneBuildSettings.otherSettings.scriptingBackend);
+                                SetScriptingBackend(GetBuildTargetGroup(buildSettingsData.configurations.platform), buildSettingsData.standaloneBuildSettings.otherSettings.scriptingBackend);
 
                                 break;
 
                             case BuildTarget.StandaloneOSX:
 
-                                SetApplicationIdentifier(BuildTargetGroup.Standalone, buildSettings.standaloneBuildSettings.mac.bundleIdentifier);
+                                SetApplicationIdentifier(BuildTargetGroup.Standalone, buildSettingsData.standaloneBuildSettings.mac.bundleIdentifier);
 
                                 break;
                         }
 
-                        EditorUserBuildSettings.allowDebugging = buildSettings.configurations.allowDebugging;
-                        EditorUserBuildSettings.development = buildSettings.configurations.developmentBuild;
-                        EditorUserBuildSettings.SetBuildLocation(buildSettings.configurations.platform, buildSettings.configurations.buildLocation);
+                        EditorUserBuildSettings.allowDebugging = buildSettingsData.configurations.allowDebugging;
+                        EditorUserBuildSettings.development = buildSettingsData.configurations.developmentBuild;
+                        EditorUserBuildSettings.SetBuildLocation(buildSettingsData.configurations.platform, buildSettingsData.configurations.buildLocation);
 
                         results.success = true;
-                        callback.Invoke(results, buildSettings.ToSerializable());
+                        callback.Invoke(results, buildSettingsData);
                     }
                 });
             }
@@ -1019,16 +1049,19 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         #region App Icons Data
 
+        /// <summary>
+        /// This function checks if the current build target supports app icons.
+        /// </summary>
+        /// <param name="buildSettings"></param>
+        /// <returns></returns>
         private static bool AppIconsSupported(BuildSettings buildSettings)
         {
-            if (buildSettings.configurations.platform == BuildTarget.WebGL)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            bool isSupported = GetBuildTargetGroup(buildSettings.configurations.platform) == BuildTargetGroup.Standalone ||
+                GetBuildTargetGroup(buildSettings.configurations.platform) == BuildTargetGroup.Android ||
+                GetBuildTargetGroup(buildSettings.configurations.platform) == BuildTargetGroup.iOS ||
+                GetBuildTargetGroup(buildSettings.configurations.platform) == BuildTargetGroup.tvOS;
+
+            return isSupported;
         }
 
         /// <summary>
@@ -1044,13 +1077,33 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             platformIcons.icons = new Texture2D[iconsResolutions.Length];
 
+            //if(appIconInfo.icon.isReadable == false)
+            //{
+            //    string assetPath = AssetDatabase.GetAssetPath(appIconInfo.icon);
+            //    var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+
+            //    if(importer != null)
+            //    {
+            //        importer.textureType = TextureImporterType.Default;
+            //        importer.isReadable = true;
+            //        AssetDatabase.ImportAsset(assetPath);
+            //        AssetDatabase.Refresh();
+            //    }
+            //}
+
             if (iconsResolutions.Length > 0)
             {
                 for (int i = 0; i < iconsResolutions.Length; i++)
                 {
-                    platformIcons.icons[i] = appIconInfo.icon;
-                    platformIcons.icons[i].Reinitialize(iconsResolutions[i], iconsResolutions[i]);
-                    platformIcons.icons[i].Apply();
+                    Texture2D generatedAppIcon = new Texture2D(iconsResolutions[i], iconsResolutions[i]);
+                    byte[] iconImageData = appIconInfo.icon.GetRawTextureData();
+
+                    generatedAppIcon.name = appIconInfo.name;
+                    generatedAppIcon.SetPixelData(iconImageData, appIconInfo.icon.mipmapCount, 0);
+                    generatedAppIcon.Compress(true);
+                    generatedAppIcon.Apply();
+
+                    platformIcons.icons[i] = generatedAppIcon;
                 }
             }
 
