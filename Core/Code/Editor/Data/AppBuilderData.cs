@@ -67,16 +67,16 @@ namespace Bridge.Core.App.Manager
         #region Components
 
         [Space(5)]
+        public string displayName;
+
+        [Space(5)]
         public string companyName;
 
         [Space(5)]
-        public string appName;
+        public string version;
 
         [Space(5)]
-        public string appVersion;
-
-        [Space(5)]
-        public AppIconInfo appIcons;
+        public Texture2D appIcon;
 
         [Space(5)]
         public SplashScreen splashScreens;
@@ -93,14 +93,35 @@ namespace Bridge.Core.App.Manager
         {
             AppInfoDataObject appInfoData = new AppInfoDataObject
             {
-                appName = this.appName,
+                displayName = this.displayName,
                 companyName = this.companyName,
-                appVersion = this.appVersion,
-                appIconInfoData = appIcons.ToSerializable(),
+                version = this.version,
+                appIcon = GetAppIconDirectory(),
                 splashScreens = this.splashScreens.ToSerializable()
             };
 
             return appInfoData;
+        }
+
+        private string GetAppIconDirectory()
+        {
+            string directory = string.Empty;
+
+            Storage.Directory.GetAssetPath(this.appIcon, (loadedDirectoryResults, callbackResults) => 
+            {
+                if(callbackResults.error == true)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
+                }
+
+                if (callbackResults.success == true)
+                {
+                    directory = loadedDirectoryResults;
+                    DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
+                }
+            });
+
+            return directory;
         }
 
         #endregion
@@ -115,16 +136,16 @@ namespace Bridge.Core.App.Manager
         #region Components
 
         [Space(5)]
+        public string displayName;
+
+        [Space(5)]
         public string companyName;
 
         [Space(5)]
-        public string appName;
+        public string version;
 
         [Space(5)]
-        public string appVersion;
-
-        [Space(5)]
-        public AppIconInfoData appIconInfoData;
+        public string appIcon;
 
         [Space(5)]
         public SplashScreenData splashScreens;
@@ -137,19 +158,365 @@ namespace Bridge.Core.App.Manager
         {
             AppInfo appInfo = new AppInfo
             {
-                appName = this.appName,
+                displayName = this.displayName,
                 companyName = this.companyName,
-                appVersion = this.appVersion,
-                appIcons = appIconInfoData.ToInstance(),
+                version = this.version,
+                appIcon = GetAppIcon(),
                 splashScreens = this.splashScreens.ToInstance()
             };
 
-            appInfo.appIcons = new AppIconInfo
-            {
-                iconsList = appIconInfoData.ToInstance().iconsList
-            };
-
             return appInfo;
+        }
+
+        private Texture2D GetAppIcon()
+        {
+            Texture2D loadedAppIcon = null;
+
+            Storage.AssetData.LoadAsset<Texture2D>(this.appIcon, (loadedAppIconResults, callbackResults) => 
+            { 
+                if(callbackResults.error == true)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
+                }
+
+                if (callbackResults.success == true)
+                {
+                    loadedAppIcon = loadedAppIconResults;
+                    DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
+                }
+            });
+
+            return loadedAppIcon;
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region Platform Specific App Icons Data
+
+    #region Android Icon Data
+
+    [Serializable]
+    public struct AndroidAppInfoIcon
+    {
+        [Space(5)]
+        public AndroidIconKind androidIconKind;
+    }
+
+    [Serializable]
+    public struct AndroidAdaptiveAppIcon
+    {
+        [Space(5)]
+        public Texture2D foreground;
+
+        [Space(5)]
+        public Texture2D background;
+    }
+
+    [Serializable]
+    public struct AppDefaultAppIcon
+    {
+        [Space(5)]
+        public Texture2D defaultIcon;
+    }
+
+    #endregion
+
+    public enum AndroidIconKind : int
+    {
+        Adaptive = 0,
+        Round = 1,
+        Legacy = 2
+    }
+
+    public struct AppPlatformIconData
+    {
+        #region Platform Specific Data
+
+        public static PlatformIconKind GetAndroindPlatformIconKind(AndroidIconKind iconKind)
+        {
+            PlatformIconKind platformIcon = AndroidPlatformIconKind.Adaptive;
+
+            switch(iconKind)
+            {
+                case AndroidIconKind.Adaptive:
+
+                    platformIcon = AndroidPlatformIconKind.Adaptive;
+
+                    break;
+
+                case AndroidIconKind.Legacy:
+
+                    platformIcon = AndroidPlatformIconKind.Legacy;
+
+                    break;
+
+                case AndroidIconKind.Round:
+
+                    platformIcon = AndroidPlatformIconKind.Round;
+
+                    break;
+            }
+
+            return platformIcon;
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region Splash Screen Data
+
+    /// <summary>
+    /// Contains splash screen data.
+    /// </summary>
+    [Serializable]
+    public struct SplashScreen
+    {
+        #region Components
+
+        [Space(5)]
+        [NonReorderable]
+        public SplashScreenLogo[] screens;
+
+        [Space(5)]
+        public Sprite background;
+
+        [Space(5)]
+        public Color backgroundColor;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.UnityLogoStyle unityLogoStyle;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.AnimationMode animationMode;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.DrawMode logoDrawMode;
+
+        [Space(5)]
+        public bool showUnityLogo;
+
+        [Space(5)]
+        public bool showSplashScreen;
+
+        #endregion
+
+        #region Data Conversions
+
+        public SplashScreenData ToSerializable()
+        {
+            SplashScreenData splashScreen = new SplashScreenData();
+
+            if (this.screens.Length > 0)
+            {
+                splashScreen.screens = new SplashScreenLogoData[this.screens.Length];
+
+                for (int i = 0; i < this.screens.Length; i++)
+                {
+                    splashScreen.screens[i] = this.screens[i].ToSerializable();
+                }
+            }
+
+            Storage.Directory.GetAssetPath<Sprite>(background, (backgroundPath, results) =>
+            {
+                if (results.error == true)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
+                    return;
+                }
+
+                if (results.success == true)
+                {
+                    splashScreen.background = backgroundPath;
+                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                }
+            });
+
+            splashScreen.backgroundColor = this.backgroundColor;
+            splashScreen.unityLogoStyle = this.unityLogoStyle;
+            splashScreen.animationMode = this.animationMode;
+            splashScreen.logoDrawMode = this.logoDrawMode;
+            splashScreen.showUnityLogo = this.showUnityLogo;
+            splashScreen.showSplashScreen = this.showSplashScreen;
+
+            return splashScreen;
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Contains serializable splash screen data.
+    /// </summary>
+    [Serializable]
+    public struct SplashScreenData
+    {
+        #region Components
+
+        [Space(5)]
+        [NonReorderable]
+        public SplashScreenLogoData[] screens;
+
+        [Space(5)]
+        public string background;
+
+        [Space(5)]
+        public Color backgroundColor;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.UnityLogoStyle unityLogoStyle;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.AnimationMode animationMode;
+
+        [Space(5)]
+        public PlayerSettings.SplashScreen.DrawMode logoDrawMode;
+
+        [Space(5)]
+        public bool showUnityLogo;
+
+        [Space(5)]
+        public bool showSplashScreen;
+
+        #endregion
+
+        #region Data Conversions
+
+        public SplashScreen ToInstance()
+        {
+            if (screens == null)
+            {
+                return new SplashScreen();
+            }
+
+            SplashScreen splashScreen = new SplashScreen();
+
+            if (screens.Length > 0)
+            {
+                splashScreen.screens = new SplashScreenLogo[this.screens.Length];
+
+                for (int i = 0; i < this.screens.Length; i++)
+                {
+                    splashScreen.screens[i] = this.screens[i].ToInstance();
+                }
+            }
+
+            Storage.AssetData.LoadAsset<Sprite>(background, (backgroundImage, results) =>
+            {
+                if (results.error == true)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
+                    return;
+                }
+
+                if (results.success == true)
+                {
+                    splashScreen.background = backgroundImage;
+                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                }
+            });
+
+            splashScreen.backgroundColor = this.backgroundColor;
+            splashScreen.unityLogoStyle = this.unityLogoStyle;
+            splashScreen.animationMode = this.animationMode;
+            splashScreen.logoDrawMode = this.logoDrawMode;
+            splashScreen.showUnityLogo = this.showUnityLogo;
+            splashScreen.showSplashScreen = this.showSplashScreen;
+
+            return splashScreen;
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    public struct SplashScreenLogo
+    {
+        #region Components
+
+        [Space(5)]
+        public string name;
+
+        [Space(5)]
+        public Sprite logo;
+
+        [Space(5)]
+        public float duration;
+
+        #endregion
+
+        #region Data Conversions
+
+        public SplashScreenLogoData ToSerializable()
+        {
+            SplashScreenLogoData splashScreenLogo = new SplashScreenLogoData();
+            splashScreenLogo.name = this.name;
+            Storage.Directory.GetAssetPath(logo, (logoPath, results) =>
+            {
+                if (results.error == true)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
+                    return;
+                }
+
+                if (results.success == true)
+                {
+                    splashScreenLogo.logo = logoPath;
+                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                }
+            });
+            splashScreenLogo.duration = this.duration;
+
+            return splashScreenLogo;
+        }
+
+        #endregion 
+    }
+
+    [Serializable]
+    public struct SplashScreenLogoData
+    {
+        #region Components
+
+        [Space(5)]
+        public string name;
+
+        [Space(5)]
+        public string logo;
+
+        [Space(5)]
+        public float duration;
+
+        #endregion
+
+        #region Data Conversions
+
+        public SplashScreenLogo ToInstance()
+        {
+            SplashScreenLogo splashScreenLogo = new SplashScreenLogo();
+            splashScreenLogo.name = this.name;
+            Storage.AssetData.LoadAsset<Sprite>(this.logo, (logo, results) =>
+            {
+                if (results.error == true)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
+                    return;
+                }
+
+                if (results.success == true)
+                {
+                    splashScreenLogo.logo = logo;
+                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                }
+            });
+
+            splashScreenLogo.duration = this.duration;
+
+            return splashScreenLogo;
         }
 
         #endregion
@@ -166,6 +533,46 @@ namespace Bridge.Core.App.Manager
     {
         [Space(5)]
         public AppInfo appInfo;
+
+        #region App Icons
+
+        #region Standalone
+
+        [Space(5)]
+        public AppDefaultAppIcon standaloneAppIcon;
+
+        #endregion
+
+        #region Android
+
+        [Space(5)]
+        public AndroidAppInfoIcon appIconType;
+
+        [Space(5)]
+        public AndroidAdaptiveAppIcon androidAdaptiveAppIcon;
+
+        [Space(5)]
+        public AppDefaultAppIcon androidRoundAppIcon;
+
+        [Space(5)]
+        public AppDefaultAppIcon androidLegacyAppIcon;
+
+        #endregion
+
+        #region iOS & tvOS
+
+        [Space(5)]
+        public AppDefaultAppIcon iOSAppIcon;
+
+        [Space(5)]
+        public AppDefaultAppIcon tvOSAppIcon;
+
+        #endregion
+
+        [Space(5)]
+        public bool showIconSettings;
+
+        #endregion
 
         [Space(5)]
         [NonReorderable]
@@ -444,560 +851,6 @@ namespace Bridge.Core.App.Manager
                 throw exception;
             }
         }
-    }
-
-    #endregion
-
-    #region Icons Data
-
-    [Serializable]
-    public struct AppIconInfo
-    {
-        #region Components
-
-        [Space(5)]
-        [NonReorderable]
-        public AppIcon[] iconsList;
-
-        #endregion
-
-        #region Data Conversion
-
-        public AppIconInfoData ToSerializable()
-        {
-            AppIconInfoData infoData = new AppIconInfoData
-            {
-                iconDataList = GetAppIconsDirectories()
-            };
-
-            return infoData;
-        }
-
-        public AppIconData[] GetAppIconsDirectories()
-        {
-            try
-            {
-                if (iconsList != null && iconsList.Length > 0)
-                {
-                    AppIconData[] iconData = new AppIconData[iconsList.Length];
-
-                    for (int i = 0; i < iconsList.Length; i++)
-                    {
-                        iconData[i] = iconsList[i].ToSerializable();
-                    }
-
-                    return iconData;
-                }
-                else
-                {
-                    return new AppIconData[0];
-                }
-            }
-            catch(Exception exception)
-            {
-                DebugConsole.Log(Debug.LogLevel.Error, $"Failed To Load App Icons List With Exception : {exception.Message}");
-                throw exception;
-            }
-        }
-
-        #endregion
-    }
-
-    [Serializable]
-    public struct AppIcon
-    {
-        #region Components
-
-        [Space(5)]
-        public string name;
-
-        [Space(5)]
-        public Texture2D icon;
-
-        [Space(5)]
-        public IconKind type;
-
-        #endregion
-
-        #region Data Conversion
-
-        public AppIconData ToSerializable()
-        {
-            try
-            {
-                AppIconData iconData = new AppIconData
-                {
-                    name = name,
-                    iconAssetDirectory = GetAppIconAssetDirectory(),
-                    type = type
-
-                };
-
-                return iconData;
-            }
-            catch(Exception exception)
-            {
-                DebugConsole.Log(Debug.LogLevel.Error, $"Failed To Load App Icons With Exception : {exception.Message}");
-                throw exception;
-            }
-        }
-
-        public string GetAppIconAssetDirectory()
-        {
-            string appIconDirectory = string.Empty;
-
-            Storage.Directory.GetAssetPath(icon, (resultsData, callbackResults) =>
-            {
-                if (callbackResults.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
-                    return;
-                }
-
-                if (callbackResults.success == true)
-                {
-                    appIconDirectory = resultsData;
-                    DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
-                }
-            });
-
-            return appIconDirectory;
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// This struct contains a serializable version of the App Icon Info Object struct.
-    /// </summary>
-    [Serializable]
-    public struct AppIconInfoData
-    {
-        #region Components
-
-        public AppIconData[] iconDataList;
-
-        #endregion
-
-        #region Data Conversion
-
-        public AppIconInfo ToInstance()
-        {
-            if(iconDataList == null)
-            {
-                return new AppIconInfo
-                {
-                    iconsList = new AppIcon[0]
-                };
-            }
-
-            AppIconInfo iconInfo = new AppIconInfo
-            {
-                iconsList = GetAppIconsList()
-            };
-
-            return iconInfo;
-        }
-
-        public AppIcon[] GetAppIconsList()
-        {
-            try
-            {
-                if (iconDataList != null)
-                {
-                    AppIcon[] iconsDataList = new AppIcon[iconDataList.Length];
-
-                    if (iconDataList != null)
-                    {
-                        for (int i = 0; i < iconsDataList.Length; i++)
-                        {
-                            iconsDataList[i] = iconDataList[i].ToInstance();
-                        }
-                    }
-
-                    return iconsDataList.ToArray();
-                }
-                else
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, "Failed To Load App Icons List.");
-                    return new AppIcon[0];
-                }
-            }
-            catch(Exception exception)
-            {
-                DebugConsole.Log(Debug.LogLevel.Error, $"Failed To Load App Icons List With Exception : {exception.Message}");
-                throw exception;
-            }
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// This struct contains a serializable version of App Icon.
-    /// </summary>
-    [Serializable]
-    public struct AppIconData
-    {
-        #region Components
-
-        public string name;
-        public string iconAssetDirectory;
-        public IconKind type;
-
-        #endregion
-
-        #region Data Conversion
-
-        public AppIcon ToInstance()
-        {
-            try
-            {
-                AppIcon appIcons = new AppIcon
-                { 
-                    name = name,
-                    icon = GetAppIconAsset(),
-                    type = type
-                };
-
-                return appIcons;
-            }
-            catch(Exception exception)
-            {
-                DebugConsole.Log(Debug.LogLevel.Error, $"Failed To Load App Icons Data With Exception : {exception.Message}");
-                throw exception;
-            }
-        }
-
-        public Texture2D GetAppIconAsset()
-        {
-            Texture2D appIconAsset = new Texture2D(1,1);
-
-            Storage.AssetData.LoadAsset<Texture2D>(iconAssetDirectory, (resultsData, callbackResults) =>
-            {
-                if (callbackResults.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
-                    return;
-                }
-
-                if (callbackResults.success == true)
-                {
-                    appIconAsset = resultsData;
-                    DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
-                }
-            });
-
-            return appIconAsset;
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// This struct contains data for plaform specific Icons.
-    /// </summary>
-    public struct PlatformAppIcons
-    {
-        #region Components
-
-        public Texture2D[] icons;
-        public IconKind type;
-
-        #endregion
-
-        #region Platform Icons
-
-        /// <summary>
-        /// This function gets the platform icon for the specified target build.
-        /// </summary>
-        /// <param name="buildTarget"></param>
-        /// <returns>Platform icon Kind</returns>
-        public static PlatformIconKind GetPlatformIconKind(BuildTarget buildTarget)
-        {
-            PlatformIconKind iconKind = AndroidPlatformIconKind.Adaptive;
-
-            switch(buildTarget)
-            {
-                case BuildTarget.Android:
-
-                    iconKind = AndroidPlatformIconKind.Adaptive;
-
-                    break;
-
-                case  BuildTarget.iOS:
-
-                    // Not Implemented Yet.
-
-                    break;
-
-                case BuildTarget.tvOS:
-
-                    // Not Implemented Yet.
-
-                    break;
-            }
-
-            return iconKind;
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region Splash Screen Data
-
-    /// <summary>
-    /// Contains splash screen data.
-    /// </summary>
-    [Serializable]
-    public struct SplashScreen
-    {
-        #region Components
-
-        [Space(5)]
-        [NonReorderable]
-        public SplashScreenLogo[] screens;
-
-        [Space(5)]
-        public Sprite background;
-
-        [Space(5)]
-        public Color backgroundColor;
-
-        [Space(5)]
-        public PlayerSettings.SplashScreen.UnityLogoStyle unityLogoStyle;
-
-        [Space(5)]
-        public PlayerSettings.SplashScreen.AnimationMode animationMode;
-
-        [Space(5)]
-        public PlayerSettings.SplashScreen.DrawMode logoDrawMode;
-
-        [Space(5)]
-        public bool showUnityLogo;
-
-        [Space(5)]
-        public bool showSplashScreen;
-
-        #endregion
-
-        #region Data Conversions
-
-        public SplashScreenData ToSerializable()
-        {
-            SplashScreenData splashScreen = new SplashScreenData();
-
-            if(this.screens.Length > 0)
-            {
-                splashScreen.screens = new SplashScreenLogoData[this.screens.Length];
-
-                for (int i = 0; i < this.screens.Length; i++)
-                {
-                    splashScreen.screens[i] = this.screens[i].ToSerializable();
-                }
-            }
-
-            Storage.Directory.GetAssetPath<Sprite>(background, (backgroundPath, results) =>
-            { 
-                if(results.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
-                    return;
-                }
-
-                if (results.success == true)
-                {
-                    splashScreen.background = backgroundPath;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            });
-
-            splashScreen.backgroundColor = this.backgroundColor;
-            splashScreen.unityLogoStyle = this.unityLogoStyle;
-            splashScreen.animationMode = this.animationMode;
-            splashScreen.logoDrawMode = this.logoDrawMode;
-            splashScreen.showUnityLogo = this.showUnityLogo;
-            splashScreen.showSplashScreen = this.showSplashScreen;
-
-            return splashScreen;
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// Contains serializable splash screen data.
-    /// </summary>
-    [Serializable]
-    public struct SplashScreenData
-    {
-        #region Components
-
-        [Space(5)]
-        [NonReorderable]
-        public SplashScreenLogoData[] screens;
-
-        [Space(5)]
-        public string background;
-
-        [Space(5)]
-        public Color backgroundColor;
-
-        [Space(5)]
-        public PlayerSettings.SplashScreen.UnityLogoStyle unityLogoStyle;
-
-        [Space(5)]
-        public PlayerSettings.SplashScreen.AnimationMode animationMode;
-
-        [Space(5)]
-        public PlayerSettings.SplashScreen.DrawMode logoDrawMode;
-
-        [Space(5)]
-        public bool showUnityLogo;
-
-        [Space(5)]
-        public bool showSplashScreen;
-
-        #endregion
-
-        #region Data Conversions
-
-        public SplashScreen ToInstance()
-        {
-            if(screens == null)
-            {
-                return new SplashScreen();
-            }
-
-            SplashScreen splashScreen = new SplashScreen();
-
-            if (screens.Length > 0)
-            {
-                splashScreen.screens = new SplashScreenLogo[this.screens.Length];
-
-                for (int i = 0; i < this.screens.Length; i++)
-                {
-                    splashScreen.screens[i] = this.screens[i].ToInstance();
-                }
-            }
-
-            Storage.AssetData.LoadAsset<Sprite>(background, (backgroundImage, results) => 
-            {
-                if(results.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
-                    return;
-                }
-
-                if (results.success == true)
-                {
-                    splashScreen.background = backgroundImage;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            });
-
-            splashScreen.backgroundColor = this.backgroundColor;
-            splashScreen.unityLogoStyle = this.unityLogoStyle;
-            splashScreen.animationMode = this.animationMode;
-            splashScreen.logoDrawMode = this.logoDrawMode;
-            splashScreen.showUnityLogo = this.showUnityLogo;
-            splashScreen.showSplashScreen = this.showSplashScreen;
-
-            return splashScreen;
-        }
-
-        #endregion
-    }
-
-    [Serializable]
-    public struct SplashScreenLogo
-    {
-        #region Components
-
-        [Space(5)]
-        public string name;
-
-        [Space(5)]
-        public Sprite logo;
-
-        [Space(5)]
-        public float duration;
-
-        #endregion
-
-        #region Data Conversions
-
-        public SplashScreenLogoData ToSerializable()
-        {
-            SplashScreenLogoData splashScreenLogo = new SplashScreenLogoData();
-            splashScreenLogo.name = this.name;
-            Storage.Directory.GetAssetPath(logo, (logoPath, results) => 
-            {
-                if(results.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
-                    return;
-                }
-
-                if (results.success == true)
-                {
-                    splashScreenLogo.logo = logoPath;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            });       
-            splashScreenLogo.duration = this.duration;
-
-            return splashScreenLogo;
-        }
-
-        #endregion 
-    }
-
-    [Serializable]
-    public struct SplashScreenLogoData
-    {
-        #region Components
-
-        [Space(5)]
-        public string name;
-
-        [Space(5)]
-        public string logo;
-
-        [Space(5)]
-        public float duration;
-
-        #endregion
-
-        #region Data Conversions
-
-        public SplashScreenLogo ToInstance()
-        {
-            SplashScreenLogo splashScreenLogo = new SplashScreenLogo();
-            splashScreenLogo.name = this.name;
-            Storage.AssetData.LoadAsset<Sprite>(this.logo, (logo, results) => 
-            {
-                if(results.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
-                    return;
-                }
-
-                if (results.success == true)
-                {
-                    splashScreenLogo.logo = logo;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            });
-
-            splashScreenLogo.duration = this.duration;
-
-            return splashScreenLogo;
-        }
-
-        #endregion
     }
 
     #endregion

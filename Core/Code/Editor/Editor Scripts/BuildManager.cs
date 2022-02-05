@@ -44,9 +44,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region Saving Editor Data
 
-            Scene currentScene = SceneManager.GetActiveScene();
-            EditorSceneManager.SaveScene(currentScene);
-            EditorApplication.ExecuteMenuItem("File/Save Project");
+            SaveProjectScene();
 
             #endregion
 
@@ -355,9 +353,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             AppInfo appInfo = new AppInfo
             {
-                appName = productName,
+                displayName = productName,
                 companyName = companyName,
-                appVersion = bundleVersion
+                version = bundleVersion
             };
 
             #endregion
@@ -366,10 +364,14 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             BuildTarget platform = EditorUserBuildSettings.activeBuildTarget;
             var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(platform));
+            var icons = GetIcons(nameBuild, IconKind.Application);
 
-            if (GetIcons(nameBuild, IconKind.Application).Length > 0)
+            if (icons.Length > 0)
             {
-                //appInfo.appIcon = GetIcons(nameBuild, IconKind.Application)[0];
+                if(icons[0] != null)
+                {
+                    appInfo.appIcon = icons[0];
+                }
             }
 
             #endregion
@@ -560,9 +562,9 @@ namespace Bridge.Core.UnityEditor.App.Manager
         {
             string appID = string.Empty;
 
-            if(string.IsNullOrEmpty(info.companyName) == false && string.IsNullOrEmpty(info.appName) == false)
+            if(string.IsNullOrEmpty(info.companyName) == false && string.IsNullOrEmpty(info.displayName) == false)
             {
-                appID = $"com.{info.companyName.Replace(" ", string.Empty).ToLower()}.{info.appName.Replace(" ", string.Empty).ToLower()}";
+                appID = $"com.{info.companyName.Replace(" ", string.Empty).ToLower()}.{info.displayName.Replace(" ", string.Empty).ToLower()}";
             }
             else
             {
@@ -731,6 +733,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                                 if (saveResults.success)
                                 {
+                                    SaveProjectScene();
                                     DebugConsole.Log(Debug.LogLevel.Success, saveResults.successValue);
                                 }
                             });
@@ -753,7 +756,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             {
                 #region App Info
 
-                if (string.IsNullOrEmpty(buildSettingsData.appInfo.appName))
+                if (string.IsNullOrEmpty(buildSettingsData.appInfo.displayName))
                 {
                     DebugConsole.Log(Debug.LogLevel.Warning, "App info's app name field is empty. Please assign app name in the <color=red>[AR Tool Kit Master]</color> inspector panel.");
                     return;
@@ -766,8 +769,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 }
 
                 companyName = (string.IsNullOrEmpty(buildSettingsData.appInfo.companyName)) ? companyName : buildSettingsData.appInfo.companyName;
-                productName = (string.IsNullOrEmpty(buildSettingsData.appInfo.appName)) ? productName : buildSettingsData.appInfo.appName;
-                bundleVersion = (string.IsNullOrEmpty(buildSettingsData.appInfo.appVersion)) ? bundleVersion : buildSettingsData.appInfo.appVersion;
+                productName = (string.IsNullOrEmpty(buildSettingsData.appInfo.displayName)) ? productName : buildSettingsData.appInfo.displayName;
+                bundleVersion = (string.IsNullOrEmpty(buildSettingsData.appInfo.version)) ? bundleVersion : buildSettingsData.appInfo.version;
 
                 string appCompanyName = buildSettingsData.appInfo.companyName;
 
@@ -776,7 +779,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
                     appCompanyName = appCompanyName.Replace(" ", "");
                 }
 
-                string appName = buildSettingsData.appInfo.appName;
+                string appName = buildSettingsData.appInfo.displayName;
 
                 if (appName.Contains(" "))
                 {
@@ -789,93 +792,68 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 BuildSettings buildSettings = buildSettingsData.ToInstance();
 
-                if (buildSettings.appInfo.appIcons.iconsList.Length > 0 && AppIconsSupported(buildSettings) == false)
+                if (buildSettings.appInfo.appIcon != null && AppIconsSupported(GetBuildTargetGroup(buildSettings.configurations.platform)) == false)
                 {
-                    DebugConsole.Log(Debug.LogLevel.Warning, $"Defined app icons can not be used, because [{buildSettingsData.configurations.platform.ToString()}] platform doesn't support App Icons.");
+                    DebugConsole.Log(Debug.LogLevel.Warning, $"Assigned app icon can not be used, because [{buildSettingsData.configurations.platform.ToString()}] platform doesn't support App Icons.");
                 }
 
-                if (buildSettings.appInfo.appIcons.iconsList.Length > 0 && AppIconsSupported(buildSettings))
+                if (buildSettings.appInfo.appIcon != null && AppIconsSupported(GetBuildTargetGroup(buildSettings.configurations.platform)))
                 {
-                    IsPlatformSupported(buildSettingsData.configurations.platform, callBackResults =>
+                    var targetGroup = GetBuildTargetGroup(buildSettingsData.configurations.platform);
+
+                    #region Standalone Icons
+
+                    if (targetGroup == BuildTargetGroup.Standalone)
                     {
-                        if(callBackResults.error == true)
+                        var buildTarget = GetBuildTargetGroup(buildSettingsData.configurations.platform);
+                        var nameBuild = NamedBuildTarget.FromBuildTargetGroup(buildTarget);
+                        var icons = GetIcons(nameBuild, IconKind.Any);
+
+                        for (int i = 0; i < icons.Length; i++)
                         {
-                            DebugConsole.Log(Debug.LogLevel.Warning, callBackResults.errorValue);
-                            return;
+                            icons[i] = buildSettings.appInfo.appIcon;
                         }
 
-                        if (callBackResults.success == true)
+                        SetIcons(nameBuild, icons, IconKind.Any);
+                    }
+
+                    #endregion
+
+                    #region Mobile Icons
+
+                    #region Android
+
+                    if (targetGroup == BuildTargetGroup.Android)
+                    {
+                        PlatformIconKind platformIconKind = AppPlatformIconData.GetAndroindPlatformIconKind(AndroidIconKind.Adaptive);
+                        var platformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+                        var icons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+                        var getIcons = GetAppIcons(buildSettings.appInfo.appIcon, 2);
+                        Texture2D[][] textures = new Texture2D[icons.Length][];
+
+                        for (int i = 0; i < textures.Length; i++)
                         {
-                            var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform));
-                            int[] iconsResolutions = GetIconSizesForTargetGroup(GetBuildTargetGroup(buildSettingsData.configurations.platform));
+                            textures[i] = getIcons;
+                        }
 
-                            for (int i = 0; i < buildSettings.appInfo.appIcons.iconsList.Length; i++)
+                        if (icons.Length > 0)
+                        {
+                            for (int i = 0; i < textures.Length; i++)
                             {
-                                if (buildSettings.appInfo.appIcons.iconsList[i].icon != null)
-                                {
-                                    PlatformAppIcons appIcons = GetAppIcons(buildSettings.appInfo.appIcons.iconsList[i], iconsResolutions);
-                                    PlatformIconKind platformIconKind = PlatformAppIcons.GetPlatformIconKind(buildSettingsData.configurations.platform);
-                                    var platformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
-
-                                    if (appIcons.type == IconKind.Application)
-                                    {
-                                        #region Standalone Icons
-
-                                        if (GetBuildTargetGroup(buildSettingsData.configurations.platform) == BuildTargetGroup.Standalone)
-                                        {
-                                            SetIcons(nameBuild, appIcons.icons, appIcons.type);
-                                            break;
-                                        }
-
-                                        #endregion
-
-                                        #region Mobile Icons
-
-                                        #region Android
-
-                                        if (GetBuildTargetGroup(buildSettingsData.configurations.platform) == BuildTargetGroup.Android)
-                                        {
-                                            for (int j = 0; j < platformIcons.Length; j++)
-                                            {
-                                                platformIcons[j].SetTextures(appIcons.icons[j]);
-                                            }
-
-                                            SetPlatformIcons(nameBuild, platformIconKind, platformIcons);
-                                        }
-
-                                        #endregion
-
-                                        #region iOS & tvOS
-
-                                        if (GetBuildTargetGroup(buildSettingsData.configurations.platform) == BuildTargetGroup.iOS || GetBuildTargetGroup(buildSettingsData.configurations.platform) == BuildTargetGroup.tvOS)
-                                        {
-                                            for (int j = 0; j < platformIcons.Length; j++)
-                                            {
-                                                platformIcons[j].SetTextures(appIcons.icons[0]);
-                                            }
-
-                                            SetPlatformIcons(nameBuild, platformIconKind, platformIcons);
-                                        }
-
-                                        #endregion
-
-                                        #endregion
-                                    }
-                                    else
-                                    {
-                                        SetIcons(nameBuild, appIcons.icons, appIcons.type);
-                                    }
-                                }
-                                else
-                                {
-                                    string errorValue = (string.IsNullOrEmpty(buildSettings.appInfo.appIcons.iconsList[i].name) == false) ? buildSettings.appInfo.appIcons.iconsList[i].name : $"@ index : {i}";
-                                    DebugConsole.Log(Debug.LogLevel.Error, $"Failed to assign app icon : {errorValue}. Icon missing/not assigned");
-                                }
+                                 icons[i].SetTextures(textures[i]);
                             }
 
-                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
+                            SetPlatformIcons(targetGroup, platformIconKind, icons);
                         }
-                    });
+                        else
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Error, $"Failed to get platform icons for [{GetBuildTargetGroup(buildSettingsData.configurations.platform).ToString()}]");
+                        }
+                    }
+
+                    #endregion
+
+                    #endregion
                 }
 
                 #endregion
@@ -1052,14 +1030,14 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <summary>
         /// This function checks if the current build target supports app icons.
         /// </summary>
-        /// <param name="buildSettings"></param>
+        /// <param name="buildTargetGroup"></param>
         /// <returns></returns>
-        private static bool AppIconsSupported(BuildSettings buildSettings)
+        public static bool AppIconsSupported(BuildTargetGroup buildTargetGroup)
         {
-            bool isSupported = GetBuildTargetGroup(buildSettings.configurations.platform) == BuildTargetGroup.Standalone ||
-                GetBuildTargetGroup(buildSettings.configurations.platform) == BuildTargetGroup.Android ||
-                GetBuildTargetGroup(buildSettings.configurations.platform) == BuildTargetGroup.iOS ||
-                GetBuildTargetGroup(buildSettings.configurations.platform) == BuildTargetGroup.tvOS;
+            bool isSupported = buildTargetGroup == BuildTargetGroup.Standalone ||
+                               buildTargetGroup == BuildTargetGroup.Android ||
+                               buildTargetGroup == BuildTargetGroup.iOS ||
+                               buildTargetGroup == BuildTargetGroup.tvOS;
 
             return isSupported;
         }
@@ -1070,44 +1048,19 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <param name="appIconInfo"></param>
         /// <param name="iconsResolutions"></param>
         /// <returns></returns>
-        public static PlatformAppIcons GetAppIcons(AppIcon appIconInfo, int[] iconsResolutions)
+        public static Texture2D[] GetAppIcons(Texture2D appIcon, int iconCount)
         {
-            PlatformAppIcons platformIcons = new PlatformAppIcons();
-            platformIcons.type = appIconInfo.type;
+            Texture2D[] appIcons = new Texture2D[iconCount];
 
-            platformIcons.icons = new Texture2D[iconsResolutions.Length];
-
-            if (appIconInfo.icon.isReadable == false)
+            if (iconCount > 0)
             {
-                string assetPath = AssetDatabase.GetAssetPath(appIconInfo.icon);
-                var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-
-                if (importer != null)
+                for (int i = 0; i < iconCount; i++)
                 {
-                    importer.textureType = TextureImporterType.Default;
-                    importer.isReadable = true;
-                    AssetDatabase.ImportAsset(assetPath);
-                    AssetDatabase.Refresh();
+                    appIcons[i] = appIcon;
                 }
             }
 
-            if (iconsResolutions.Length > 0)
-            {
-                for (int i = 0; i < iconsResolutions.Length; i++)
-                {
-                    Texture2D generatedAppIcon = new Texture2D(iconsResolutions[i], iconsResolutions[i]);
-                    byte[] iconImageData = appIconInfo.icon.GetRawTextureData();
-
-                    generatedAppIcon.name = appIconInfo.name;
-                    generatedAppIcon.SetPixelData(iconImageData, appIconInfo.icon.mipmapCount, 0);
-                    generatedAppIcon.Compress(true);
-                    generatedAppIcon.Apply();
-
-                    platformIcons.icons[i] = generatedAppIcon;
-                }
-            }
-
-            return platformIcons;
+            return appIcons;
         }
 
         #endregion
@@ -1313,6 +1266,17 @@ namespace Bridge.Core.UnityEditor.App.Manager
             }
 
             return group;
+        }
+
+        #endregion
+
+        #region Editor Settings
+
+        public static void SaveProjectScene()
+        {
+            Scene currentScene = SceneManager.GetActiveScene();
+            EditorSceneManager.SaveScene(currentScene);
+            EditorApplication.ExecuteMenuItem("File/Save Project");
         }
 
         #endregion

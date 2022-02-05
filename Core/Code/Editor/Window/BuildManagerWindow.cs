@@ -97,6 +97,65 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
         #endregion
 
+        #region Updated Objects Settings
+
+        #region Standalone Icon Data
+
+        SerializedObject appIconStandaloneSerializedObject;
+        SerializedProperty appIconStandaloneSerializedObjectProperty;
+
+        #endregion
+
+        #region Android Icons Data
+
+        #region Adaptive Icon Kind
+
+        SerializedObject appIconForegroundSerializedObject;
+        SerializedProperty appIconForegroundSerializedObjectProperty;
+
+        SerializedObject appIconBackgroundSerializedObject;
+        SerializedProperty appIconBackgrounSerializedObjectProperty;
+
+        #endregion
+
+        #region Round Icon Kind
+
+        SerializedObject appIconRoundSerializedObject;
+        SerializedProperty appIconRoundSerializedObjectProperty;
+
+        #endregion
+
+        #region Legacy Icon Kind
+
+        SerializedObject appIconLegacySerializedObject;
+        SerializedProperty appIconLegacySerializedObjectProperty;
+
+        #endregion
+
+        SerializedObject androidIconsInfoSerializedObject;
+
+        #endregion
+
+        #region iOS & tvOS Icons Data
+
+        #region iOS Icon
+
+        SerializedObject appIconIOSSerializedObject;
+        SerializedProperty appIconIOSSerializedObjectProperty;
+
+        #endregion
+
+        #region tvOS Icon
+
+        SerializedObject appIconTVOSSerializedObject;
+        SerializedProperty appIconTVOSSerializedObjectProperty;
+
+        #endregion
+
+        #endregion
+
+        #endregion
+
         #region Unity
 
         private void OnEnable() => Init();
@@ -172,7 +231,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             appBuildSettings = CreateInstance<BuildSettings>();
 
             // If config not loaded. set default settings.
-            appBuildSettings.appInfo.appVersion = "1.0";
+            appBuildSettings.appInfo.version = "1.0";
             appBuildSettings.configurations.platform = BuildTarget.Android; // This will be loaded from a json file called buildSettings.json
             appBuildSettings.androidBuildSettings.sdkVersion = AndroidSdkVersions.AndroidApiLevel24;
         }
@@ -193,6 +252,94 @@ namespace Bridge.Core.UnityEditor.App.Manager
                 window = GetWindow<BuildManagerWindow>();
                 DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
             }
+
+            #region App Icons Settings Update
+
+            #region Standalone Icon
+
+            if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Standalone)
+            { 
+                if(appIconStandaloneSerializedObject != null)
+                {
+                    appIconStandaloneSerializedObject.ApplyModifiedProperties();
+                    appIconStandaloneSerializedObject.Update();
+                }
+            }
+
+            #endregion
+
+            #region Android Icons
+
+            if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Android)
+            {
+                if (androidIconsInfoSerializedObject != null)
+                {
+                    androidIconsInfoSerializedObject.ApplyModifiedProperties();
+                    androidIconsInfoSerializedObject.Update();
+                }
+
+                #region Adaptive Icons
+
+                if (appIconForegroundSerializedObject != null)
+                {
+                    appIconForegroundSerializedObject.ApplyModifiedProperties();
+                    appIconForegroundSerializedObject.Update();
+                }
+
+                if (appIconBackgroundSerializedObject != null)
+                {
+                    appIconBackgroundSerializedObject.ApplyModifiedProperties();
+                    appIconBackgroundSerializedObject.Update();
+                }
+
+                #endregion
+
+                #region Round Icon
+
+                if(appIconRoundSerializedObject != null)
+                {
+                    appIconRoundSerializedObject.ApplyModifiedProperties();
+                    appIconRoundSerializedObject.Update();
+                }
+
+                #endregion
+
+                #region Legacy Icon
+
+                if(appIconLegacySerializedObject != null)
+                {
+                    appIconLegacySerializedObject.ApplyModifiedProperties();
+                    appIconLegacySerializedObject.Update();
+                }
+
+                #endregion
+            }
+
+            #endregion
+
+            #region iOS & tvOS Icons
+
+            if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.iOS)
+            {
+                if(appIconIOSSerializedObject != null)
+                {
+                    appIconIOSSerializedObject.ApplyModifiedProperties();
+                    appIconIOSSerializedObject.Update();
+                }
+            }
+
+            if(EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.tvOS)
+            {
+                if (appIconTVOSSerializedObject != null)
+                {
+                    appIconTVOSSerializedObject.ApplyModifiedProperties();
+                    appIconTVOSSerializedObject.Update();
+                }
+            }
+
+            #endregion
+
+            #endregion
 
             DrawLayouts();
             OnEditorWindowUpdate();
@@ -278,13 +425,161 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region Scroll Area
 
-            #region App Info & Configurations
+            #region Settings Area
+
+            #region App Info Section
+
+            #region Text Formating
+
+            GUIStyleState headerTextState = new GUIStyleState
+            {
+                textColor = Color.white
+            };
+
+            GUIStyle styleHeaderText = new GUIStyle
+            {
+                normal = headerTextState,
+               fontSize = 15,
+               fontStyle = FontStyle.Bold
+            };
+
+            var infoTextFieldsLayout = new GUILayoutOption[3];
+            infoTextFieldsLayout[0] = GUILayout.ExpandWidth(true);
+            infoTextFieldsLayout[1] = GUILayout.MaxWidth(settingsSectionRect.width);
+            infoTextFieldsLayout[2] = GUILayout.Height(25);
+
+            #endregion
+
+            GUILayout.Label("App Information", styleHeaderText);
 
             GUILayout.Space(10);
             SerializedObject appInfoSerializedObject = new SerializedObject(appBuildSettings);
             SerializedProperty appInfoSerializedObjectProperty = appInfoSerializedObject.FindProperty("appInfo");
-            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty, true);
             appInfoSerializedObject.ApplyModifiedProperties();
+
+            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("displayName"), infoTextFieldsLayout);
+            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("companyName"), infoTextFieldsLayout);
+            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("version"), infoTextFieldsLayout);
+
+            #endregion
+
+            #region App Icons
+
+            if(BuildManager.AppIconsSupported(EditorUserBuildSettings.selectedBuildTargetGroup))
+            {
+                #region Icons Settings Header
+
+                GUILayout.Space(15);
+
+                GUILayout.Label("Application Icon", styleHeaderText);
+
+                GUILayout.Space(10);
+
+                SerializedObject showIconsSettingsSerializedObject = new SerializedObject(appBuildSettings);
+                SerializedProperty showIconsSettingsSerializedObjectProperty = showIconsSettingsSerializedObject.FindProperty("showIconSettings");
+                EditorGUILayout.PropertyField(showIconsSettingsSerializedObjectProperty, true);
+                showIconsSettingsSerializedObject.ApplyModifiedProperties();
+
+                #endregion
+
+                if(appBuildSettings.showIconSettings == true && BuildManager.AppIconsSupported(BuildManager.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget)))
+                {
+                    var iconLayout = new GUILayoutOption[2];
+                    iconLayout[0] = GUILayout.Width(256);
+                    iconLayout[1] = GUILayout.Height(100);
+
+                    #region Standalone
+
+                    if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Standalone)
+                    {
+                        appIconStandaloneSerializedObject = new SerializedObject(appBuildSettings);
+                        appIconStandaloneSerializedObjectProperty = appIconStandaloneSerializedObject.FindProperty("standaloneAppIcon");
+                        appIconStandaloneSerializedObject.ApplyModifiedProperties();
+                        EditorGUILayout.ObjectField(appIconStandaloneSerializedObjectProperty.FindPropertyRelative("defaultIcon"), typeof(Texture2D), iconLayout);
+                    }
+
+                    #endregion
+
+                    #region Android
+
+                    GUILayout.Space(10);
+
+                    if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Android)
+                    {
+                        var androidIconKindLayout = new GUILayoutOption[1];
+                        androidIconKindLayout[0] = GUILayout.Width(256);
+
+                        androidIconsInfoSerializedObject = new SerializedObject(appBuildSettings);
+                        SerializedProperty androidIconsInfoSerializedObjectProperty = androidIconsInfoSerializedObject.FindProperty("appIconType");
+                        androidIconsInfoSerializedObject.ApplyModifiedProperties();
+                        EditorGUILayout.PropertyField(androidIconsInfoSerializedObjectProperty.FindPropertyRelative("androidIconKind"), androidIconKindLayout);
+
+                        GUILayout.Space(10);
+
+                        switch (appBuildSettings.appIconType.androidIconKind)
+                        {
+                            case AndroidIconKind.Adaptive:
+
+                                appIconForegroundSerializedObject = new SerializedObject(appBuildSettings);
+                                appIconForegroundSerializedObjectProperty = appIconForegroundSerializedObject.FindProperty("androidAdaptiveAppIcon");
+                                EditorGUILayout.ObjectField(appIconForegroundSerializedObjectProperty.FindPropertyRelative("foreground"), typeof(Texture2D), iconLayout);
+
+                                EditorGUILayout.Separator();
+
+                                appIconBackgroundSerializedObject = new SerializedObject(appBuildSettings);
+                                appIconBackgrounSerializedObjectProperty = appIconBackgroundSerializedObject.FindProperty("androidAdaptiveAppIcon");
+                                EditorGUILayout.ObjectField(appIconBackgrounSerializedObjectProperty.FindPropertyRelative("background"), typeof(Texture2D), iconLayout);
+
+                                break;
+
+                            case AndroidIconKind.Round:
+
+                                appIconRoundSerializedObject = new SerializedObject(appBuildSettings);
+                                appIconRoundSerializedObjectProperty = appIconRoundSerializedObject.FindProperty("androidRoundAppIcon");
+                                EditorGUILayout.ObjectField(appIconRoundSerializedObjectProperty.FindPropertyRelative("defaultIcon"), typeof(Texture2D), iconLayout);
+
+                                break;
+
+                            case AndroidIconKind.Legacy:
+
+                                appIconLegacySerializedObject = new SerializedObject(appBuildSettings);
+                                appIconLegacySerializedObjectProperty = appIconLegacySerializedObject.FindProperty("androidLegacyAppIcon");
+                                EditorGUILayout.ObjectField(appIconLegacySerializedObjectProperty.FindPropertyRelative("defaultIcon"), typeof(Texture2D), iconLayout);
+
+                                break;
+                        }
+
+                    }
+
+                    #endregion
+
+                    #region iOS & tvOS
+
+                    if(EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.iOS)
+                    {
+                        appIconIOSSerializedObject = new SerializedObject(appBuildSettings);
+                        appIconIOSSerializedObjectProperty = appIconIOSSerializedObject.FindProperty("iOSAppIcon");
+                        EditorGUILayout.ObjectField(appIconIOSSerializedObjectProperty.FindPropertyRelative("defaultIcon"), typeof(Texture2D), iconLayout);
+                    }
+
+                    if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.tvOS)
+                    {
+                        appIconTVOSSerializedObject = new SerializedObject(appBuildSettings);
+                        appIconTVOSSerializedObjectProperty = appIconTVOSSerializedObject.FindProperty("tvOSAppIcon");
+                        EditorGUILayout.ObjectField(appIconTVOSSerializedObjectProperty.FindPropertyRelative("defaultIcon"), typeof(Texture2D), iconLayout);
+                    }
+
+                    #endregion
+                }
+            }
+
+            #endregion
+
+            #region Build Scenes Section
+
+            GUILayout.Space(15);
+
+            GUILayout.Label("Included Scenes", styleHeaderText);
 
             GUILayout.Space(10);
             SerializedObject sceneDataSerializedObject = new SerializedObject(appBuildSettings);
@@ -293,11 +588,27 @@ namespace Bridge.Core.UnityEditor.App.Manager
             EditorGUILayout.PropertyField(sceneDataSerializedObjectProperty, true);
             sceneDataSerializedObject.ApplyModifiedProperties();
 
+            #endregion
+
+            #region Configurations Section
+
+            GUILayout.Space(15);
+
+            GUILayout.Label("Configurations", styleHeaderText);
+
             GUILayout.Space(10);
             SerializedObject appConfigSerializedObject = new SerializedObject(appBuildSettings);
             SerializedProperty appConfigSerializedObjectProperty = appConfigSerializedObject.FindProperty("configurations");
             EditorGUILayout.PropertyField(appConfigSerializedObjectProperty, true);
             appConfigSerializedObject.ApplyModifiedProperties();
+
+            #endregion
+
+            #region Platform Specific Settings Section
+
+            GUILayout.Space(15);
+
+            GUILayout.Label("Platform Settings", styleHeaderText);
 
             if (PlatformSpecificData.GetRuntimeOS(appBuildSettings) == RuntimeOS.Console)
             {
@@ -380,6 +691,10 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region App Builder
 
+            GUILayout.Space(15);
+
+            GUILayout.Label("Build Settings", styleHeaderText);
+
             GUILayout.Space(10);
 
             EditorGUILayout.BeginHorizontal();
@@ -424,6 +739,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
             #endregion
 
             GUILayout.EndArea();
+
+            #endregion
         }
 
         #endregion

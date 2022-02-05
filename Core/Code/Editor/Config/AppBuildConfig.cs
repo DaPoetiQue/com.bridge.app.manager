@@ -258,7 +258,7 @@ public static class AppBuildConfig
                 Directory.CreateDirectory(buildDir);
             }
 
-            return Path.Combine(buildDir, buildSettings.appInfo.appName + $".{PlatformSpecificData.GetFileExtension(buildSettings.configurations.platform)}");
+            return Path.Combine(buildDir, buildSettings.appInfo.displayName + $".{PlatformSpecificData.GetFileExtension(buildSettings.configurations.platform)}");
         }
 
     public static string GetBuildFolderPath(BuildSettingsData buildSettings)
