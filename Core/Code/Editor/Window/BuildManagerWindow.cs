@@ -406,6 +406,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         {
             GUILayout.BeginArea(settingsSectionRect);
 
+            var defaultGUIColor = GUI.backgroundColor;
+
             #region Menu Content Area
 
             #region Menu Content and Style Update
@@ -706,12 +708,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             GUILayout.Space(10);
 
-
-            if (GUILayout.Button("Open Build Settings", GUILayout.Height(60)))
-            {
-                GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
-            }
-
             EditorGUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Apply Settings", GUILayout.Height(60)))
@@ -734,10 +730,23 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             EditorGUILayout.EndHorizontal();
 
 
-            if (GUILayout.Button("Build App", GUILayout.Height(60)))
+            if (GUILayout.Button("Open Build Settings", GUILayout.Height(60)))
+            {
+                GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
+            }
+
+
+            GUI.backgroundColor = Color.green;
+            var buttonStyle = new GUIStyle(GUI.skin.button);
+            buttonStyle.normal.textColor = Color.white; 
+
+
+            if (GUILayout.Button("Build App", buttonStyle, GUILayout.Height(60)))
             {
                 BuildManager.Build();
             }
+
+            GUI.backgroundColor = defaultGUIColor;
 
             GUILayout.Space(10);
 
