@@ -3,9 +3,9 @@ using System;
 using System.IO;
 using Bridge.Core.App.Data.Storage;
 using Bridge.Core.App.Events;
-using Bridge.Core.UnityEditor.Debugger;
+using Bridge.Core.UnityCustomEditor.Debugger;
 
-namespace Bridge.Core.UnityEditor.App.Manager
+namespace Bridge.Core.UnityCustomEditor.App.Manager
 {
     public static class BuildCompilerScript
     {

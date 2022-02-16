@@ -1,6 +1,6 @@
 using Bridge.Core.App.Events;
 using Bridge.Core.App.Manager;
-using Bridge.Core.UnityEditor.Debugger;
+using Bridge.Core.UnityCustomEditor.Debugger;
 using System;
 using UnityEditor;
 using UnityEngine;
@@ -11,7 +11,7 @@ using UnityEditor.Build;
 using static UnityEditor.PlayerSettings;
 using Bridge.Core.App.Data.Storage;
 
-namespace Bridge.Core.UnityEditor.App.Manager
+namespace Bridge.Core.UnityCustomEditor.App.Manager
 {
     public static class BuildManager
     {
@@ -1026,6 +1026,24 @@ namespace Bridge.Core.UnityEditor.App.Manager
         #endregion
 
         #region App Icons Data
+
+        /// <summary>
+        /// This function checks if the current build target supports app icons.
+        /// </summary>
+        /// <param name="buildTarget"></param>
+        /// <returns></returns>
+        public static bool AppIconsSupported(BuildTarget buildTarget)
+        {
+            bool isSupported = buildTarget == BuildTarget.StandaloneWindows ||
+                               buildTarget == BuildTarget.StandaloneWindows64 ||
+                               buildTarget == BuildTarget.StandaloneOSX ||
+                               buildTarget == BuildTarget.StandaloneLinux64 ||
+                               buildTarget == BuildTarget.Android ||
+                               buildTarget == BuildTarget.iOS ||
+                               buildTarget == BuildTarget.tvOS;
+
+            return isSupported;
+        }
 
         /// <summary>
         /// This function checks if the current build target supports app icons.

@@ -4,7 +4,7 @@ using UnityEditor.Android;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Bridge.Core.App.Data.Storage;
-using Bridge.Core.UnityEditor.Debugger;
+using Bridge.Core.UnityCustomEditor.Debugger;
 using System.Linq;
 
 namespace Bridge.Core.App.Manager

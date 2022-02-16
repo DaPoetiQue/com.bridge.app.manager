@@ -3,7 +3,7 @@ using System;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace Bridge.Core.UnityEditor.App.Manager
+namespace Bridge.Core.UnityCustomEditor.App.Manager
 {
     #region Enum Data Types
 

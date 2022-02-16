@@ -1,7 +1,7 @@
 using UnityEditor;
 using Bridge.Core.App.Manager;
 
-namespace Bridge.Core.UnityEditor.App.Manager
+namespace Bridge.Core.UnityCustomEditor.App.Manager
 {
     public class AppManagerEditor : Editor
     {

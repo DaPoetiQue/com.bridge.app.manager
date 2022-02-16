@@ -4,8 +4,8 @@ using UnityEngine.SceneManagement;
 using UnityEditor.Build.Reporting;
 using Bridge.Core.App.Manager;
 using System;
-using Bridge.Core.UnityEditor.App.Manager;
-using Bridge.Core.UnityEditor.Debugger;
+using Bridge.Core.UnityCustomEditor.App.Manager;
+using Bridge.Core.UnityCustomEditor.Debugger;
 
 public static class AppBuildConfig
 {

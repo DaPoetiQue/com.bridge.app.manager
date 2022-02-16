@@ -2,10 +2,11 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using Bridge.Core.App.Manager;
-using Bridge.Core.UnityEditor.Debugger;
+using Bridge.Core.UnityCustomEditor.Debugger;
 using Bridge.Core.App.Data.Storage;
+using System;
 
-namespace Bridge.Core.UnityEditor.App.Manager
+namespace Bridge.Core.UnityCustomEditor.App.Manager
 {
     [CanEditMultipleObjects]
     public class BuildManagerWindow : EditorWindow
@@ -243,13 +244,15 @@ namespace Bridge.Core.UnityEditor.App.Manager
         /// <summary>
         /// Draws window layouts.
         /// </summary>
-        private void OnWindowUpdates()
+        public void OnWindowUpdates()
         {
             if (window == null)
             {
                 appBuildSettings = BuildManager.GetCurrentBuildSettings();
 
                 window = GetWindow<BuildManagerWindow>();
+                window.wantsMouseEnterLeaveWindow = false;
+                window.Repaint();
                 DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
             }
 
@@ -465,7 +468,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #region App Icons
 
-            if(BuildManager.AppIconsSupported(EditorUserBuildSettings.selectedBuildTargetGroup))
+            if(BuildManager.AppIconsSupported(EditorUserBuildSettings.activeBuildTarget))
             {
                 #region Icons Settings Header
 
@@ -492,6 +495,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                     if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Standalone)
                     {
+                        GUILayout.Space(10);
+
                         appIconStandaloneSerializedObject = new SerializedObject(appBuildSettings);
                         appIconStandaloneSerializedObjectProperty = appIconStandaloneSerializedObject.FindProperty("standaloneAppIcon");
                         appIconStandaloneSerializedObject.ApplyModifiedProperties();
@@ -502,10 +507,10 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                     #region Android
 
-                    GUILayout.Space(10);
-
                     if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Android)
                     {
+                        GUILayout.Space(10);
+
                         var androidIconKindLayout = new GUILayoutOption[1];
                         androidIconKindLayout[0] = GUILayout.Width(256);
 
@@ -557,6 +562,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                     if(EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.iOS)
                     {
+                        GUILayout.Space(10);
+
                         appIconIOSSerializedObject = new SerializedObject(appBuildSettings);
                         appIconIOSSerializedObjectProperty = appIconIOSSerializedObject.FindProperty("iOSAppIcon");
                         EditorGUILayout.ObjectField(appIconIOSSerializedObjectProperty.FindPropertyRelative("defaultIcon"), typeof(Texture2D), iconLayout);
@@ -564,6 +571,8 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                     if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.tvOS)
                     {
+                        GUILayout.Space(10);
+
                         appIconTVOSSerializedObject = new SerializedObject(appBuildSettings);
                         appIconTVOSSerializedObjectProperty = appIconTVOSSerializedObject.FindProperty("tvOSAppIcon");
                         EditorGUILayout.ObjectField(appIconTVOSSerializedObjectProperty.FindPropertyRelative("defaultIcon"), typeof(Texture2D), iconLayout);
@@ -697,10 +706,18 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             GUILayout.Space(10);
 
+
+            if (GUILayout.Button("Open Build Settings", GUILayout.Height(60)))
+            {
+                GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
+            }
+
             EditorGUILayout.BeginHorizontal();
 
-            if (GUILayout.Button("Apply Settings", GUILayout.Height(45)))
+            if (GUILayout.Button("Apply Settings", GUILayout.Height(60)))
             {
+                window.SaveChanges();
+
                 BuildManager.ApplyAppSettings(appBuildSettings.ToSerializable());
             }
 
@@ -708,7 +725,7 @@ namespace Bridge.Core.UnityEditor.App.Manager
             {
                 GUILayout.Space(2);
 
-                if (GUILayout.Button("Open Build Folder", GUILayout.Height(45)))
+                if (GUILayout.Button("Open Build Folder", GUILayout.Height(60)))
                 {
                     Storage.Directory.OpenFolder(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()).configurations.targetBuildDirectory);
                 }
@@ -716,7 +733,6 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             EditorGUILayout.EndHorizontal();
 
-            GUILayout.Space(5);
 
             if (GUILayout.Button("Build App", GUILayout.Height(60)))
             {
@@ -742,6 +758,38 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
             #endregion
         }
+
+        #region Unity Editor Event
+
+        public static void OnBuildTargetChanged(BuildTarget previousTarget, BuildTarget newTarget)
+        {
+            // 
+
+            //if (window == null)
+            //{
+            //    appBuildSettings = BuildManager.GetCurrentBuildSettings();
+
+            //    window = GetWindow<BuildManagerWindow>();
+
+            //    EditorGUI.BeginChangeCheck();
+            //    window.Repaint();
+            //    EditorGUI.EndChangeCheck();
+            //    DebugConsole.Log(Debug.LogLevel.Debug, "Window Refreshed!.");
+            //    window.Focus();
+            //}
+            //else
+            //{
+            //    appBuildSettings = BuildManager.GetCurrentBuildSettings();
+
+            //    window.Focus();
+            //    window.Repaint();
+            //    DebugConsole.Log(Debug.LogLevel.Debug, "Window Refreshed!.");
+            //}
+
+
+        }
+
+        #endregion
 
         #endregion
     }

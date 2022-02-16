@@ -1,9 +1,8 @@
 using UnityEditor;
 using UnityEditor.Build;
-using Bridge.Core.UnityEditor.Debugger;
-using Bridge.Core.App.Manager;
+using Bridge.Core.UnityCustomEditor.Debugger;
 
-namespace Bridge.Core.UnityEditor.App.Manager
+namespace Bridge.Core.UnityCustomEditor.App.Manager
 {
     public class BuildPlatformEditorEvents : IActiveBuildTargetChanged
     {
@@ -27,9 +26,11 @@ namespace Bridge.Core.UnityEditor.App.Manager
 
                 if (results.success == true)
                 {
+                    BuildManagerWindow.OnBuildTargetChanged(previousTarget, newTarget);
                     DebugConsole.Log(Debug.LogLevel.Success, $"[Build Settings] applied successfullly for target platform : {newTarget}. - with results : {results.successValue}");
                 }
             });
+
             DebugConsole.Log(Debug.LogLevel.Debug, $"Build platform target switch from : {previousTarget} to : {newTarget}");
         }
 

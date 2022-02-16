@@ -1,6 +1,6 @@
 {
-    "name": "Bridge.Core.UnityEditor.App.Manager",
-    "rootNamespace": "Bridge.Core.UnityEditor.App.Manager",
+    "name": "Bridge.Core.UnityCustomEditor.App.Manager",
+    "rootNamespace": "Bridge.Core.UnityCustomEditor.App.Manager",
     "references": [
         "GUID:5ef81270e65190e4babbe8d8e6e466c5",
         "GUID:8e228a56e721fb14fa1b84b0012ff361",
