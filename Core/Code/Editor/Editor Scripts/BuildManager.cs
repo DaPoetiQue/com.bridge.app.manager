@@ -822,19 +822,19 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 productName = (string.IsNullOrEmpty(buildSettingsData.appInfo.displayName)) ? productName : buildSettingsData.appInfo.displayName;
                 bundleVersion = (string.IsNullOrEmpty(buildSettingsData.appInfo.version)) ? bundleVersion : buildSettingsData.appInfo.version;
 
-                string appCompanyName = buildSettingsData.appInfo.companyName;
+                //string appCompanyName = buildSettingsData.appInfo.companyName;
 
-                if (appCompanyName.Contains(" "))
-                {
-                    appCompanyName = appCompanyName.Replace(" ", "");
-                }
+                //if (appCompanyName.Contains(" "))
+                //{
+                //    appCompanyName = appCompanyName.Replace(" ", "");
+                //}
 
-                string appName = buildSettingsData.appInfo.displayName;
+                //string appName = buildSettingsData.appInfo.displayName;
 
-                if (appName.Contains(" "))
-                {
-                    appName = appName.Replace(" ", "");
-                }
+                //if (appName.Contains(" "))
+                //{
+                //    appName = appName.Replace(" ", "");
+                //}
 
                 #endregion
 
