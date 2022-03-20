@@ -840,7 +840,9 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 #region App Icons
 
-                BuildSettings buildSettings = buildSettingsData.ToInstance();
+                // BuildSettings buildSettings = buildSettingsData.ToInstance();
+                BuildSettings buildSettings;
+                AppDataBuilder.CreateNewBuildSettingsInstance(out buildSettings);
 
                 if (AppIconsSupported(GetBuildTargetGroup(buildSettings.configurations.platform)))
                 {
