@@ -6,6 +6,7 @@ using UnityEngine.Rendering;
 using Bridge.Core.App.Data.Storage;
 using Bridge.Core.UnityCustomEditor.Debugger;
 using System.Linq;
+using Bridge.Core.UnityCustomEditor.App.Manager;
 
 namespace Bridge.Core.App.Manager
 {
@@ -76,9 +77,6 @@ namespace Bridge.Core.App.Manager
         public string version;
 
         [Space(5)]
-        public Texture2D appIcon;
-
-        [Space(5)]
         public SplashScreen splashScreens;
 
         #endregion
@@ -96,32 +94,10 @@ namespace Bridge.Core.App.Manager
                 displayName = this.displayName,
                 companyName = this.companyName,
                 version = this.version,
-                appIcon = GetAppIconDirectory(),
                 splashScreens = this.splashScreens.ToSerializable()
             };
 
             return appInfoData;
-        }
-
-        private string GetAppIconDirectory()
-        {
-            string directory = string.Empty;
-
-            Storage.Directory.GetAssetPath(this.appIcon, (loadedDirectoryResults, callbackResults) => 
-            {
-                if(callbackResults.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
-                }
-
-                if (callbackResults.success == true)
-                {
-                    directory = loadedDirectoryResults;
-                    DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
-                }
-            });
-
-            return directory;
         }
 
         #endregion
@@ -145,9 +121,6 @@ namespace Bridge.Core.App.Manager
         public string version;
 
         [Space(5)]
-        public string appIcon;
-
-        [Space(5)]
         public SplashScreenData splashScreens;
 
         #endregion
@@ -161,32 +134,10 @@ namespace Bridge.Core.App.Manager
                 displayName = this.displayName,
                 companyName = this.companyName,
                 version = this.version,
-                appIcon = GetAppIcon(),
                 splashScreens = this.splashScreens.ToInstance()
             };
 
             return appInfo;
-        }
-
-        private Texture2D GetAppIcon()
-        {
-            Texture2D loadedAppIcon = null;
-
-            Storage.AssetData.LoadAsset<Texture2D>(this.appIcon, (loadedAppIconResults, callbackResults) => 
-            { 
-                if(callbackResults.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
-                }
-
-                if (callbackResults.success == true)
-                {
-                    loadedAppIcon = loadedAppIconResults;
-                    DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
-                }
-            });
-
-            return loadedAppIcon;
         }
 
         #endregion
@@ -196,30 +147,255 @@ namespace Bridge.Core.App.Manager
 
     #region Platform Specific App Icons Data
 
+    public static class SerializableInstanceDataConverter
+    {
+        #region 
+
+        public static SceneAsset[] GetBuildScenes(string[] buildScenes)
+        {
+            try
+            {
+                SceneAsset[] buildScenesToAssetArray = new SceneAsset[buildScenes.Length];
+
+                if (buildScenesToAssetArray.Length > 0)
+                {
+                    Storage.AssetData.LoadAssets<SceneAsset>(buildScenes, (callBackData, callBackResults) =>
+                    {
+                        if (callBackResults.error == true)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
+                        }
+
+                        if (callBackResults.success == true)
+                        {
+                            buildScenesToAssetArray = callBackData;
+                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
+                        }
+
+                    });
+                }
+
+                return buildScenesToAssetArray;
+            }
+            catch (Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, $"Failed With Exception : {exception.Message}");
+                throw exception;
+            }
+        }
+
+        public static string[] GetBuildScenesDirectories(SceneAsset[] buildScenes)
+        {
+            try
+            {
+                if (buildScenes == null)
+                {
+                    return new string[0];
+                }
+
+                string[] buildScenesToStringArray = new string[buildScenes.Length];
+
+                if (buildScenesToStringArray.Length > 0)
+                {
+                    Storage.Directory.GetAssetsPaths(buildScenes, (callBackData, callBackResults) =>
+                    {
+                        if (callBackResults.error == true)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
+                        }
+
+                        if (callBackResults.success == true)
+                        {
+                            buildScenesToStringArray = callBackData;
+                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
+                        }
+
+                    });
+                }
+
+                return buildScenesToStringArray;
+            }
+            catch (Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, $"Failed With Exception : {exception.Message}");
+                throw exception;
+            }
+        }
+
+        public static Texture2D GetIconFromPath(string path)
+        {
+            try
+            {
+                Texture2D icon = null;
+
+                if (string.IsNullOrEmpty(path) == false)
+                {
+                    Storage.AssetData.LoadAsset<Texture2D>(path, (loadedAssetData, callbackResults) =>
+                    {
+                        if (callbackResults.error == true)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
+                            return;
+                        }
+
+                        if (callbackResults.success == true)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
+                            icon = loadedAssetData;
+                        }
+                    });
+                }
+
+                return icon;
+            }
+            catch (Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, exception.Message);
+                throw exception;
+            }
+        }
+
+        public static string GetIconPath(Texture2D icon)
+        {
+            try
+            {
+                string iconPath = string.Empty;
+
+                if (icon != null)
+                {
+                    Storage.Directory.GetAssetPath(icon, (loadedAssetData, callbackResults) =>
+                    {
+                        if (callbackResults.error == true)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
+                            return;
+                        }
+
+                        if (callbackResults.success == true)
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
+                            iconPath = loadedAssetData;
+                        }
+                    });
+                }
+
+                return iconPath;
+            }
+            catch (Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, exception.Message);
+                throw exception;
+            }
+        }
+
+        #endregion
+    }
+
     #region Android Icon Data
 
     [Serializable]
-    public struct AndroidAppInfoIcon
+    public struct AndroidAppIconKind
     {
         [Space(5)]
-        public AndroidIconKind androidIconKind;
+        public AndroidIconKind appIconKind;
     }
 
     [Serializable]
-    public struct AndroidAdaptiveAppIcon
+    public struct AdaptiveAppIcon
     {
+        #region Components
+
         [Space(5)]
         public Texture2D foreground;
 
         [Space(5)]
         public Texture2D background;
+
+        #endregion
+
+        #region Converted Data
+
+        public AdaptiveAppIconData ToSerializable()
+        {
+            return new AdaptiveAppIconData
+            {
+                foregroundDirectory = SerializableInstanceDataConverter.GetIconPath(foreground),
+                backgroundDirectory = SerializableInstanceDataConverter.GetIconPath(background)
+            };
+        }
+
+        #endregion
     }
 
     [Serializable]
-    public struct AppDefaultAppIcon
+    public struct AdaptiveAppIconData
     {
+        #region Components
+
+        public string foregroundDirectory;
+
+        public string backgroundDirectory;
+
+        #endregion
+
+        #region Converted Data
+
+        public AdaptiveAppIcon ToInstance()
+        {
+            return new AdaptiveAppIcon
+            {
+                foreground = SerializableInstanceDataConverter.GetIconFromPath(foregroundDirectory),
+                background = SerializableInstanceDataConverter.GetIconFromPath(backgroundDirectory)
+            };
+        }
+
+        #endregion
+    }
+
+    [Serializable]
+    public struct DefaultAppIcon
+    {
+        #region Components
+
         [Space(5)]
         public Texture2D defaultIcon;
+
+        #endregion
+
+        #region Converted Data
+
+        public DefaultAppIconData ToSerializable()
+        {
+            return new DefaultAppIconData
+            {
+                defaultIconDirectory = SerializableInstanceDataConverter.GetIconPath(defaultIcon)
+            };
+        }
+
+        #endregion
+
+    }
+
+    [Serializable]
+    public struct DefaultAppIconData
+    {
+        #region Components
+
+        public string defaultIconDirectory;
+
+        #endregion
+
+        #region Converted Data
+
+        public DefaultAppIcon ToInstance()
+        {
+            return new DefaultAppIcon
+            {
+                defaultIcon = SerializableInstanceDataConverter.GetIconFromPath(defaultIconDirectory)
+            };
+        }
+
+        #endregion
     }
 
     #endregion
@@ -526,9 +702,19 @@ namespace Bridge.Core.App.Manager
 
     #region Build Settings
 
+    [Serializable]
+    public class BuildProfile : ScriptableObject
+    {
+        [Space(5)]
+        public BuildSettings profile;
+    }
+
     /// <summary>
     /// This class contains the app build settings.
     /// </summary>
+    [CreateAssetMenu(fileName = "New Profile", menuName = "3ridge/Build Manager/Profile")]
+    [Serializable]
+    [CustomEditor(typeof(BuildSettings))]
     public class BuildSettings : ScriptableObject
     {
         [Space(5)]
@@ -536,41 +722,44 @@ namespace Bridge.Core.App.Manager
 
         #region App Icons
 
+        [Space(5)]
+        public bool showIconSettings;
+
         #region Standalone
 
         [Space(5)]
-        public AppDefaultAppIcon standaloneAppIcon;
+        public IconKind appIconKind;
+
+        [Space(5)]
+        public DefaultAppIcon standaloneAppIcon;
 
         #endregion
 
         #region Android
 
         [Space(5)]
-        public AndroidAppInfoIcon appIconType;
+        public AndroidAppIconKind androidIconKind;
 
         [Space(5)]
-        public AndroidAdaptiveAppIcon androidAdaptiveAppIcon;
+        public AdaptiveAppIcon androidAdaptiveAppIcon;
 
         [Space(5)]
-        public AppDefaultAppIcon androidRoundAppIcon;
+        public DefaultAppIcon androidRoundAppIcon;
 
         [Space(5)]
-        public AppDefaultAppIcon androidLegacyAppIcon;
+        public DefaultAppIcon androidLegacyAppIcon;
 
         #endregion
 
         #region iOS & tvOS
 
         [Space(5)]
-        public AppDefaultAppIcon iOSAppIcon;
+        public DefaultAppIcon iOSAppIcon;
 
         [Space(5)]
-        public AppDefaultAppIcon tvOSAppIcon;
+        public DefaultAppIcon tvOSAppIcon;
 
         #endregion
-
-        [Space(5)]
-        public bool showIconSettings;
 
         #endregion
 
@@ -623,7 +812,16 @@ namespace Bridge.Core.App.Manager
             return new BuildSettingsData
             {
                 appInfo = this.appInfo.ToSerializable(),
-                buildScenes = GetBuildScenes(),
+                showIconSettings = this.showIconSettings,
+                appIconKind = this.appIconKind,
+                standaloneAppIconData = standaloneAppIcon.ToSerializable(),
+                appIconType = this.androidIconKind,
+                androidAdaptiveAppIconData = this.androidAdaptiveAppIcon.ToSerializable(),
+                androidRoundAppIconData = this.androidRoundAppIcon.ToSerializable(),
+                androidLegacyAppIconData = this.androidLegacyAppIcon.ToSerializable(),
+                iOSAppIconData = this.iOSAppIcon.ToSerializable(),
+                tvOSAppIconData = this.tvOSAppIcon.ToSerializable(),
+                buildScenes = SerializableInstanceDataConverter.GetBuildScenesDirectories(buildScenes),
                 configurations = this.configurations,
                 consoleDisplaySettings = this.consoleDisplaySettings,
                 mobileDisplaySettings = this.mobileDisplaySettings,
@@ -633,47 +831,10 @@ namespace Bridge.Core.App.Manager
                 iOSBuildSettings = this.iOSBuildSettings,
                 standaloneBuildSettings = this.standaloneBuildSettings,
                 webGLBuildSettings = this.webGLBuildSettings,
-                buildAndRun = buildAndRun
+                buildAndRun = this.buildAndRun
             };
         }
 
-        public string[] GetBuildScenes()
-        {
-            try
-            {
-                if(buildScenes == null)
-                {
-                    return new string[0];
-                }
-
-                string[] buildScenesToStringArray = new string[buildScenes.Length];
-
-                if (buildScenesToStringArray.Length > 0)
-                {
-                    Storage.Directory.GetAssetsPaths(buildScenes, (callBackData, callBackResults) =>
-                    {
-                        if (callBackResults.error == true)
-                        {
-                            DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
-                        }
-
-                        if (callBackResults.success == true)
-                        {
-                            buildScenesToStringArray = callBackData;
-                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
-                        }
-
-                    });
-                }
-
-                return buildScenesToStringArray;
-            }
-            catch(Exception exception)
-            {
-                DebugConsole.Log(Debug.LogLevel.Error, $"Failed With Exception : {exception.Message}");
-                throw exception;
-            }
-        }
 
         #endregion
     }
@@ -732,6 +893,49 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public AppInfoDataObject appInfo;
 
+        #region App Icons
+
+        [Space(5)]
+        public bool showIconSettings;
+
+        #region Standalone
+
+        [Space(5)]
+        public IconKind appIconKind;
+
+        [Space(5)]
+        public DefaultAppIconData standaloneAppIconData;
+
+        #endregion
+
+        #region Android
+
+        [Space(5)]
+        public AndroidAppIconKind appIconType;
+
+        [Space(5)]
+        public AdaptiveAppIconData androidAdaptiveAppIconData;
+
+        [Space(5)]
+        public DefaultAppIconData androidRoundAppIconData;
+
+        [Space(5)]
+        public DefaultAppIconData androidLegacyAppIconData;
+
+        #endregion
+
+        #region iOS & tvOS
+
+        [Space(5)]
+        public DefaultAppIconData iOSAppIconData;
+
+        [Space(5)]
+        public DefaultAppIconData tvOSAppIconData;
+
+        #endregion
+
+        #endregion
+
         [Space(5)]
         [NonReorderable]
         public string[] buildScenes;
@@ -783,73 +987,30 @@ namespace Bridge.Core.App.Manager
 
         public BuildSettings ToInstance()
         {
-            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
-
-            buildSettings.appInfo = this.appInfo.ToInstance();
-
-            if(buildScenes != null && buildScenes.Length > 0)
+            return new BuildSettings
             {
-                Storage.AssetData.LoadAssets<SceneAsset>(buildScenes, (loadedScenesResults, callbackResults) =>
-                {
-                    if (callbackResults.error == true)
-                    {
-                        DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
-                        return;
-                    }
-
-                    if (callbackResults.success == true)
-                    {
-                        buildSettings.buildScenes = loadedScenesResults;
-                        DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
-                    }
-                });
-            }
-
-            buildSettings.configurations = this.configurations;
-            buildSettings.consoleDisplaySettings = this.consoleDisplaySettings;
-            buildSettings.mobileDisplaySettings = this.mobileDisplaySettings;
-            buildSettings.standaloneDisplaySettings = this.standaloneDisplaySettings;
-            buildSettings.webDisplaySettings = this.webDisplaySettings;
-            buildSettings.androidBuildSettings = this.androidBuildSettings;
-            buildSettings.iOSBuildSettings = this.iOSBuildSettings;
-            buildSettings.standaloneBuildSettings = this.standaloneBuildSettings;
-            buildSettings.webGLBuildSettings = this.webGLBuildSettings;
-            buildSettings.buildAndRun = this.buildAndRun;
-
-            return buildSettings;
-        }
-
-        public SceneAsset[] GetBuildScenes()
-        {
-            try
-            {
-                SceneAsset[] buildScenesToAssetArray = new SceneAsset[buildScenes.Length];
-
-                if (buildScenesToAssetArray.Length > 0)
-                {
-                    Storage.AssetData.LoadAssets<SceneAsset>(buildScenes, (callBackData, callBackResults) =>
-                    {
-                        if (callBackResults.error == true)
-                        {
-                            DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
-                        }
-
-                        if (callBackResults.success == true)
-                        {
-                            buildScenesToAssetArray = callBackData;
-                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
-                        }
-
-                    });
-                }
-
-                return buildScenesToAssetArray;
-            }
-            catch (Exception exception)
-            {
-                DebugConsole.Log(Debug.LogLevel.Error, $"Failed With Exception : {exception.Message}");
-                throw exception;
-            }
+                appInfo = this.appInfo.ToInstance(),
+                showIconSettings = this.showIconSettings,
+                appIconKind = this.appIconKind,
+                standaloneAppIcon = this.standaloneAppIconData.ToInstance(),
+                androidIconKind = this.appIconType,
+                androidAdaptiveAppIcon = this.androidAdaptiveAppIconData.ToInstance(),
+                androidRoundAppIcon = this.androidRoundAppIconData.ToInstance(),
+                androidLegacyAppIcon = this.androidLegacyAppIconData.ToInstance(),
+                iOSAppIcon = this.iOSAppIconData.ToInstance(),
+                tvOSAppIcon = this.iOSAppIconData.ToInstance(),
+                buildScenes = SerializableInstanceDataConverter.GetBuildScenes(buildScenes),
+                configurations = this.configurations,
+                consoleDisplaySettings = this.consoleDisplaySettings,
+                mobileDisplaySettings = this.mobileDisplaySettings,
+                standaloneDisplaySettings = this.standaloneDisplaySettings,
+                webDisplaySettings = this.webDisplaySettings,
+                androidBuildSettings = this.androidBuildSettings,
+                iOSBuildSettings = this.iOSBuildSettings,
+                standaloneBuildSettings = this.standaloneBuildSettings,
+                webGLBuildSettings = this.webGLBuildSettings,
+                buildAndRun = this.buildAndRun
+            };
         }
     }
 

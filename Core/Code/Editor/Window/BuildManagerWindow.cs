@@ -81,6 +81,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
         #region Settings
 
+        private static BuildProfile profile;
         private static BuildSettings appBuildSettings;
         private static bool RunAppOnCompletion;
         private static AndroidPreferredInstallLocation installLocation;
@@ -229,6 +230,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
         private void InitializeContentData()
         {
+            profile = CreateInstance<BuildProfile>();
             appBuildSettings = CreateInstance<BuildSettings>();
 
             // If config not loaded. set default settings.
@@ -258,9 +260,11 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region App Icons Settings Update
 
+            var buildTargetGroup = BuildManager.GetBuildTargetGroup(appBuildSettings.configurations.platform);
+
             #region Standalone Icon
 
-            if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Standalone)
+            if (buildTargetGroup == BuildTargetGroup.Standalone)
             { 
                 if(appIconStandaloneSerializedObject != null)
                 {
@@ -273,7 +277,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Android Icons
 
-            if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Android)
+            if (buildTargetGroup == BuildTargetGroup.Android)
             {
                 if (androidIconsInfoSerializedObject != null)
                 {
@@ -322,7 +326,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region iOS & tvOS Icons
 
-            if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.iOS)
+            if (buildTargetGroup == BuildTargetGroup.iOS)
             {
                 if(appIconIOSSerializedObject != null)
                 {
@@ -331,7 +335,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 }
             }
 
-            if(EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.tvOS)
+            if(buildTargetGroup == BuildTargetGroup.tvOS)
             {
                 if (appIconTVOSSerializedObject != null)
                 {
@@ -432,8 +436,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Settings Area
 
-            #region App Info Section
-
             #region Text Formating
 
             GUIStyleState headerTextState = new GUIStyleState
@@ -444,8 +446,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             GUIStyle styleHeaderText = new GUIStyle
             {
                 normal = headerTextState,
-               fontSize = 15,
-               fontStyle = FontStyle.Bold
+                fontSize = 15,
+                fontStyle = FontStyle.Bold
             };
 
             var infoTextFieldsLayout = new GUILayoutOption[3];
@@ -455,6 +457,18 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #endregion
 
+            GUILayout.Label("Custom Build Profile", styleHeaderText);
+
+            GUILayout.Space(10);
+
+            SerializedObject buildProfileSerializedObject = new SerializedObject(profile);
+            SerializedProperty buildProfileSerializedObjectProperty = buildProfileSerializedObject.FindProperty("profile");
+            EditorGUILayout.PropertyField(buildProfileSerializedObjectProperty, true);
+            buildProfileSerializedObject.ApplyModifiedProperties();
+
+            #region App Info Section
+
+            GUILayout.Space(20);
             GUILayout.Label("App Information", styleHeaderText);
 
             GUILayout.Space(10);
@@ -470,7 +484,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region App Icons
 
-            if(BuildManager.AppIconsSupported(EditorUserBuildSettings.activeBuildTarget))
+            if(BuildManager.AppIconsSupported(appBuildSettings.configurations.platform))
             {
                 #region Icons Settings Header
 
@@ -487,15 +501,20 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 #endregion
 
-                if(appBuildSettings.showIconSettings == true && BuildManager.AppIconsSupported(BuildManager.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget)))
+                var buildTargetGroup = BuildManager.GetBuildTargetGroup(appBuildSettings.configurations.platform);
+
+                if (appBuildSettings.showIconSettings == true && BuildManager.AppIconsSupported(buildTargetGroup))
                 {
                     var iconLayout = new GUILayoutOption[2];
                     iconLayout[0] = GUILayout.Width(256);
                     iconLayout[1] = GUILayout.Height(100);
 
+                    var iconKindLayout = new GUILayoutOption[1];
+                    iconKindLayout[0] = GUILayout.Width(256);
+
                     #region Standalone
 
-                    if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Standalone)
+                    if (buildTargetGroup == BuildTargetGroup.Standalone)
                     {
                         GUILayout.Space(10);
 
@@ -503,27 +522,31 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                         appIconStandaloneSerializedObjectProperty = appIconStandaloneSerializedObject.FindProperty("standaloneAppIcon");
                         appIconStandaloneSerializedObject.ApplyModifiedProperties();
                         EditorGUILayout.ObjectField(appIconStandaloneSerializedObjectProperty.FindPropertyRelative("defaultIcon"), typeof(Texture2D), iconLayout);
+
+                        GUILayout.Space(10);
+
+                        SerializedObject appIconKindStandaloneSerializedObject = new SerializedObject(appBuildSettings);
+                        SerializedProperty appIconKindStandaloneSerializedObjectProperty = appIconKindStandaloneSerializedObject.FindProperty("appIconKind");
+                        EditorGUILayout.PropertyField(appIconKindStandaloneSerializedObjectProperty, true);
+                        appIconKindStandaloneSerializedObject.ApplyModifiedProperties();
                     }
 
                     #endregion
 
                     #region Android
 
-                    if (EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.Android)
+                    if (buildTargetGroup == BuildTargetGroup.Android)
                     {
                         GUILayout.Space(10);
 
-                        var androidIconKindLayout = new GUILayoutOption[1];
-                        androidIconKindLayout[0] = GUILayout.Width(256);
-
                         androidIconsInfoSerializedObject = new SerializedObject(appBuildSettings);
-                        SerializedProperty androidIconsInfoSerializedObjectProperty = androidIconsInfoSerializedObject.FindProperty("appIconType");
+                        SerializedProperty androidIconsInfoSerializedObjectProperty = androidIconsInfoSerializedObject.FindProperty("androidIconKind");
                         androidIconsInfoSerializedObject.ApplyModifiedProperties();
-                        EditorGUILayout.PropertyField(androidIconsInfoSerializedObjectProperty.FindPropertyRelative("androidIconKind"), androidIconKindLayout);
+                        EditorGUILayout.PropertyField(androidIconsInfoSerializedObjectProperty.FindPropertyRelative("appIconKind"), iconKindLayout);
 
                         GUILayout.Space(10);
 
-                        switch (appBuildSettings.appIconType.androidIconKind)
+                        switch (appBuildSettings.androidIconKind.appIconKind)
                         {
                             case AndroidIconKind.Adaptive:
 
@@ -562,7 +585,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                     #region iOS & tvOS
 
-                    if(EditorUserBuildSettings.selectedBuildTargetGroup == BuildTargetGroup.iOS)
+                    if(buildTargetGroup == BuildTargetGroup.iOS)
                     {
                         GUILayout.Space(10);
 
@@ -710,18 +733,28 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             EditorGUILayout.BeginHorizontal();
 
-            if (GUILayout.Button("Apply Settings", GUILayout.Height(60)))
+            GUI.backgroundColor = Color.yellow;
+
+
+            if (GUILayout.Button("Apply Settings", GUILayout.Height(30)))
             {
                 window.SaveChanges();
 
                 BuildManager.ApplyAppSettings(appBuildSettings.ToSerializable());
             }
 
+            GUI.backgroundColor = Color.grey;
+
+            if (GUILayout.Button("Open Build Settings", GUILayout.Height(30)))
+            {
+                GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
+            }
+
             if (Directory.Exists(appBuildSettings.configurations.targetBuildDirectory) == true)
             {
                 GUILayout.Space(2);
 
-                if (GUILayout.Button("Open Build Folder", GUILayout.Height(60)))
+                if (GUILayout.Button("Open Build Folder", GUILayout.Height(30)))
                 {
                     Storage.Directory.OpenFolder(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()).configurations.targetBuildDirectory);
                 }
@@ -729,19 +762,16 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             EditorGUILayout.EndHorizontal();
 
-
-            if (GUILayout.Button("Open Build Settings", GUILayout.Height(60)))
-            {
-                GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
-            }
+            GUILayout.Space(5);
 
 
             GUI.backgroundColor = Color.green;
             var buttonStyle = new GUIStyle(GUI.skin.button);
-            buttonStyle.normal.textColor = Color.white; 
+            buttonStyle.normal.textColor = Color.white;
+            buttonStyle.fontSize = 15;
+            buttonStyle.fontStyle = FontStyle.Bold;
 
-
-            if (GUILayout.Button("Build App", buttonStyle, GUILayout.Height(60)))
+            if (GUILayout.Button("Build App", buttonStyle, GUILayout.Height(80)))
             {
                 BuildManager.Build();
             }

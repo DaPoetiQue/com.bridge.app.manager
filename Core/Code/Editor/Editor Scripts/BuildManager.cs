@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor.Build;
 using static UnityEditor.PlayerSettings;
 using Bridge.Core.App.Data.Storage;
+using System.Collections.Generic;
 
 namespace Bridge.Core.UnityCustomEditor.App.Manager
 {
@@ -50,19 +51,19 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             if (!string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) && Storage.Directory.FolderExist(buildSettings.configurations.targetBuildDirectory) == true)
             {
-                //BuildCompilerScript.BuildCompiler(buildSettings, (results, resultsData) =>
-                //{
-                //    if (results.error)
-                //    {
-                //        DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
-                //        return;
-                //    }
+                BuildCompilerScript.BuildCompiler(buildSettings, (results, resultsData) =>
+                {
+                    if (results.error)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Error, results.errorValue);
+                        return;
+                    }
 
-                //    if (results.success)
-                //    {
-                //        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                //    }
-                //});
+                    if (results.success)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                    }
+                });
             }
         }
 
@@ -156,11 +157,74 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 #endregion
 
+                #region App Icon
+
+                BuildTarget platform = EditorUserBuildSettings.activeBuildTarget;
+                var platformGroup = GetBuildTargetGroup(platform);
+                var nameBuild = NamedBuildTarget.FromBuildTargetGroup(platformGroup);          
+
+                if (AppIconsSupported(GetBuildTargetGroup(platform)))
+                {
+                    #region Standalone
+
+                    if(platformGroup == BuildTargetGroup.Standalone)
+                    {
+                        var platformIcons = GetIcons(nameBuild, IconKind.Any);
+
+                        if(platformIcons.Length > 0)
+                        {
+                            for (int i = 0; i < platformIcons.Length; i++)
+                            {
+                                if(platformIcons[i] != null)
+                                {
+                                    newBuildSettings.standaloneAppIcon.defaultIcon = platformIcons[i];
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            DebugConsole.Log(Debug.LogLevel.Warning, $"Platform icons for target group : {platform}. missing/not found.");
+                        }
+                    }
+
+                    #endregion
+
+                    #region Mobile
+
+                    #region Android
+
+                    if(platformGroup == BuildTargetGroup.Android)
+                    {
+                        var platformKind = GetSupportedIconKinds(nameBuild);
+
+                        DebugConsole.Log(Debug.LogLevel.Debug, $"Ikon Kinds Count : {platformKind.Length}");
+
+                        if(platformKind.Length > 0)
+                        {
+                            List<PlatformIcon[]> platformIcons = new List<PlatformIcon[]>();
+
+                            for (int i = 0; i < platformKind.Length; i++)
+                            {
+                                var icons = GetPlatformIcons(platformGroup, platformKind[i]);
+                                DebugConsole.Log(Debug.LogLevel.Debug, $"{icons.Length} : Icons found.");
+                                platformIcons.Add(icons);
+                            }
+                        }
+                    }
+
+                    #endregion
+
+                    #endregion
+                }
+
+                #endregion
+
                 #region Configurations Info
 
                 newBuildSettings.configurations = new BuildConfig
                 {
-                    platform = EditorUserBuildSettings.activeBuildTarget
+                    platform = platform
                 };
 
                 #endregion
@@ -330,6 +394,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 #endregion
 
+                ApplyAppSettings(newBuildSettings.ToSerializable());
+
                 callBack.Invoke(newBuildSettings.ToSerializable(), callBackResults);
             }
             catch(Exception exception)
@@ -357,22 +423,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 companyName = companyName,
                 version = bundleVersion
             };
-
-            #endregion
-
-            #region App Icon
-
-            BuildTarget platform = EditorUserBuildSettings.activeBuildTarget;
-            var nameBuild = NamedBuildTarget.FromBuildTargetGroup(GetBuildTargetGroup(platform));
-            var icons = GetIcons(nameBuild, IconKind.Application);
-
-            if (icons.Length > 0)
-            {
-                if(icons[0] != null)
-                {
-                    appInfo.appIcon = icons[0];
-                }
-            }
 
             #endregion
 
@@ -792,18 +842,13 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 BuildSettings buildSettings = buildSettingsData.ToInstance();
 
-                if (buildSettings.appInfo.appIcon != null && AppIconsSupported(GetBuildTargetGroup(buildSettings.configurations.platform)) == false)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Warning, $"Assigned app icon can not be used, because [{buildSettingsData.configurations.platform.ToString()}] platform doesn't support App Icons.");
-                }
-
-                if (buildSettings.appInfo.appIcon != null && AppIconsSupported(GetBuildTargetGroup(buildSettings.configurations.platform)))
+                if (AppIconsSupported(GetBuildTargetGroup(buildSettings.configurations.platform)))
                 {
                     var targetGroup = GetBuildTargetGroup(buildSettingsData.configurations.platform);
 
                     #region Standalone Icons
 
-                    if (targetGroup == BuildTargetGroup.Standalone)
+                    if (targetGroup == BuildTargetGroup.Standalone && buildSettings.standaloneAppIcon.defaultIcon != null)
                     {
                         var buildTarget = GetBuildTargetGroup(buildSettingsData.configurations.platform);
                         var nameBuild = NamedBuildTarget.FromBuildTargetGroup(buildTarget);
@@ -811,7 +856,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                         for (int i = 0; i < icons.Length; i++)
                         {
-                            icons[i] = buildSettings.appInfo.appIcon;
+                            icons[i] = buildSettings.standaloneAppIcon.defaultIcon;
                         }
 
                         SetIcons(nameBuild, icons, IconKind.Any);
@@ -825,29 +870,134 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                     if (targetGroup == BuildTargetGroup.Android)
                     {
-                        PlatformIconKind platformIconKind = AppPlatformIconData.GetAndroindPlatformIconKind(AndroidIconKind.Adaptive);
-                        var platformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
-                        var icons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
-                        var getIcons = GetAppIcons(buildSettings.appInfo.appIcon, 2);
-                        Texture2D[][] textures = new Texture2D[icons.Length][];
 
-                        for (int i = 0; i < textures.Length; i++)
+                        switch(buildSettings.androidIconKind.appIconKind)
                         {
-                            textures[i] = getIcons;
-                        }
+                            case AndroidIconKind.Adaptive:
 
-                        if (icons.Length > 0)
-                        {
-                            for (int i = 0; i < textures.Length; i++)
-                            {
-                                 icons[i].SetTextures(textures[i]);
-                            }
+                                bool hasAllIconsAssigned = true;
 
-                            SetPlatformIcons(targetGroup, platformIconKind, icons);
-                        }
-                        else
-                        {
-                            DebugConsole.Log(Debug.LogLevel.Error, $"Failed to get platform icons for [{GetBuildTargetGroup(buildSettingsData.configurations.platform).ToString()}]");
+                                if(buildSettings.androidAdaptiveAppIcon.foreground != null && buildSettings.androidAdaptiveAppIcon.background == null)
+                                {
+                                    hasAllIconsAssigned = false;
+                                    DebugConsole.Log(Debug.LogLevel.Warning, $"Android Adaptive App Icon.background is not assigned");
+                                }
+
+
+                                if (buildSettings.androidAdaptiveAppIcon.foreground == null && buildSettings.androidAdaptiveAppIcon.background != null)
+                                {
+                                    hasAllIconsAssigned = false;
+                                    DebugConsole.Log(Debug.LogLevel.Warning, $"Android Adaptive App Icon.foreground is not assigned");
+                                }
+
+                                if (hasAllIconsAssigned)
+                                {
+                                    PlatformIconKind platformIconKind = AppPlatformIconData.GetAndroindPlatformIconKind(AndroidIconKind.Adaptive);
+                                    var platformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+                                    var icons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+                                    var getIcons = new Texture2D[] { buildSettings.androidAdaptiveAppIcon.background, buildSettings.androidAdaptiveAppIcon.foreground};
+                                   
+                                    Texture2D[][] textures = new Texture2D[icons.Length][];
+
+                                    for (int i = 0; i < textures.Length; i++)
+                                    {
+                                        textures[i] = getIcons;
+                                    }
+
+                                    if (icons.Length > 0)
+                                    {
+                                        for (int i = 0; i < textures.Length; i++)
+                                        {
+                                            icons[i].SetTextures(textures[i]);
+                                        }
+
+                                        SetPlatformIcons(targetGroup, platformIconKind, icons);
+                                    }
+                                    else
+                                    {
+                                        DebugConsole.Log(Debug.LogLevel.Error, $"Failed to get platform icons for [{GetBuildTargetGroup(buildSettingsData.configurations.platform).ToString()}]");
+                                    }
+                                }
+                                else
+                                {
+                                    DebugConsole.Log(Debug.LogLevel.Error, $"Failed to set platform icons for [{GetBuildTargetGroup(buildSettingsData.configurations.platform).ToString()}]. There's no App Icon asigned.");
+                                    return;
+                                }
+
+                                break;
+
+                            case AndroidIconKind.Round:
+
+                                if (buildSettings.androidRoundAppIcon.defaultIcon != null)
+                                {
+                                    PlatformIconKind platformIconKind = AppPlatformIconData.GetAndroindPlatformIconKind(AndroidIconKind.Adaptive);
+                                    var platformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+                                    var icons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+                                    var getIcons = GetAppIcons(buildSettings.androidRoundAppIcon.defaultIcon, 2);
+                                    Texture2D[][] textures = new Texture2D[icons.Length][];
+
+                                    for (int i = 0; i < textures.Length; i++)
+                                    {
+                                        textures[i] = getIcons;
+                                    }
+
+                                    if (icons.Length > 0)
+                                    {
+                                        for (int i = 0; i < textures.Length; i++)
+                                        {
+                                            icons[i].SetTextures(textures[i]);
+                                        }
+
+                                        SetPlatformIcons(targetGroup, platformIconKind, icons);
+                                    }
+                                    else
+                                    {
+                                        DebugConsole.Log(Debug.LogLevel.Error, $"Failed to get platform icons for [{GetBuildTargetGroup(buildSettingsData.configurations.platform).ToString()}]");
+                                    }
+                                }
+                                else
+                                {
+                                    DebugConsole.Log(Debug.LogLevel.Error, $"Failed to set platform icons for [{GetBuildTargetGroup(buildSettingsData.configurations.platform).ToString()}]. There's no App Icon asigned.");
+                                }
+
+                                break;
+
+                            case AndroidIconKind.Legacy:
+
+
+                                if (buildSettings.androidLegacyAppIcon.defaultIcon != null)
+                                {
+                                    PlatformIconKind platformIconKind = AppPlatformIconData.GetAndroindPlatformIconKind(AndroidIconKind.Adaptive);
+                                    var platformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+                                    var icons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
+                                    var getIcons = GetAppIcons(buildSettings.androidLegacyAppIcon.defaultIcon, 2);
+                                    Texture2D[][] textures = new Texture2D[icons.Length][];
+
+                                    for (int i = 0; i < textures.Length; i++)
+                                    {
+                                        textures[i] = getIcons;
+                                    }
+
+                                    if (icons.Length > 0)
+                                    {
+                                        for (int i = 0; i < textures.Length; i++)
+                                        {
+                                            icons[i].SetTextures(textures[i]);
+                                        }
+
+                                        SetPlatformIcons(targetGroup, platformIconKind, icons);
+                                    }
+                                    else
+                                    {
+                                        DebugConsole.Log(Debug.LogLevel.Error, $"Failed to get platform icons for [{GetBuildTargetGroup(buildSettingsData.configurations.platform).ToString()}]");
+                                    }
+                                }
+                                else
+                                {
+                                    DebugConsole.Log(Debug.LogLevel.Error, $"Failed to set platform icons for [{GetBuildTargetGroup(buildSettingsData.configurations.platform).ToString()}]. There's no App Icon asigned.");
+                                }
+
+                                break;
                         }
                     }
 
