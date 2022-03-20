@@ -815,7 +815,7 @@ namespace Bridge.Core.App.Manager
                 showIconSettings = this.showIconSettings,
                 appIconKind = this.appIconKind,
                 standaloneAppIconData = standaloneAppIcon.ToSerializable(),
-                appIconType = this.androidIconKind,
+                androidIconKind = this.androidIconKind,
                 androidAdaptiveAppIconData = this.androidAdaptiveAppIcon.ToSerializable(),
                 androidRoundAppIconData = this.androidRoundAppIcon.ToSerializable(),
                 androidLegacyAppIconData = this.androidLegacyAppIcon.ToSerializable(),
@@ -911,7 +911,7 @@ namespace Bridge.Core.App.Manager
         #region Android
 
         [Space(5)]
-        public AndroidAppIconKind appIconType;
+        public AndroidAppIconKind androidIconKind;
 
         [Space(5)]
         public AdaptiveAppIconData androidAdaptiveAppIconData;
@@ -993,7 +993,7 @@ namespace Bridge.Core.App.Manager
                 showIconSettings = this.showIconSettings,
                 appIconKind = this.appIconKind,
                 standaloneAppIcon = this.standaloneAppIconData.ToInstance(),
-                androidIconKind = this.appIconType,
+                androidIconKind = this.androidIconKind,
                 androidAdaptiveAppIcon = this.androidAdaptiveAppIconData.ToInstance(),
                 androidRoundAppIcon = this.androidRoundAppIconData.ToInstance(),
                 androidLegacyAppIcon = this.androidLegacyAppIconData.ToInstance(),

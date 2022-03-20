@@ -38,9 +38,9 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             if (string.IsNullOrEmpty(buildSettings.configurations.targetBuildDirectory) ||   Storage.Directory.FolderExist(buildSettings.configurations.targetBuildDirectory) == false)
             {
-                buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "").Replace(" ", string.Empty);
+                buildSettings.configurations.targetBuildDirectory = EditorUtility.SaveFolderPanel("Choose Build Folder", "", "");
                 ApplyAppSettings(buildSettings);
-                DebugConsole.Log(Debug.LogLevel.Debug, $"Build Directory Set @ : {buildSettings.configurations.buildLocation}");
+                DebugConsole.Log(Debug.LogLevel.Debug, $"Build Directory Set @ : {buildSettings.configurations.targetBuildDirectory}");
             }
 
             #region Saving Editor Data
@@ -841,8 +841,16 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 #region App Icons
 
                 // BuildSettings buildSettings = buildSettingsData.ToInstance();
-                BuildSettings buildSettings;
-                AppDataBuilder.CreateNewBuildSettingsInstance(out buildSettings);
+                BuildSettings buildSettings = BuildSettings.CreateInstance<BuildSettings>();
+
+                buildSettings.configurations = buildSettingsData.configurations;
+
+                buildSettings.standaloneAppIcon = buildSettingsData.standaloneAppIconData.ToInstance();
+
+                buildSettings.androidAdaptiveAppIcon = buildSettingsData.androidAdaptiveAppIconData.ToInstance();
+                buildSettings.androidRoundAppIcon = buildSettingsData.androidRoundAppIconData.ToInstance();
+                buildSettings.androidLegacyAppIcon = buildSettingsData.androidLegacyAppIconData.ToInstance();
+                buildSettings.androidIconKind = buildSettingsData.androidIconKind;
 
                 if (AppIconsSupported(GetBuildTargetGroup(buildSettings.configurations.platform)))
                 {
