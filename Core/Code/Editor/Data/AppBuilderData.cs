@@ -6,7 +6,6 @@ using UnityEngine.Rendering;
 using Bridge.Core.App.Data.Storage;
 using Bridge.Core.UnityCustomEditor.Debugger;
 using System.Linq;
-using Bridge.Core.UnityCustomEditor.App.Manager;
 
 namespace Bridge.Core.App.Manager
 {
@@ -1057,30 +1056,32 @@ namespace Bridge.Core.App.Manager
 
         public BuildSettings ToInstance()
         {
-            return new BuildSettings
-            {
-                appInfo = this.appInfo.ToInstance(),
-                showIconSettings = this.showIconSettings,
-                appIconKind = this.appIconKind,
-                standaloneAppIcon = this.standaloneAppIconData.ToInstance(),
-                androidIconKind = this.androidIconKind,
-                androidAdaptiveAppIcon = this.androidAdaptiveAppIconData.ToInstance(),
-                androidRoundAppIcon = this.androidRoundAppIconData.ToInstance(),
-                androidLegacyAppIcon = this.androidLegacyAppIconData.ToInstance(),
-                iOSAppIcon = this.iOSAppIconData.ToInstance(),
-                tvOSAppIcon = this.iOSAppIconData.ToInstance(),
-                buildScenes = SerializableInstanceDataConverter.GetBuildScenes(buildScenes),
-                configurations = this.configurations,
-                consoleDisplaySettings = this.consoleDisplaySettings,
-                mobileDisplaySettings = this.mobileDisplaySettings,
-                standaloneDisplaySettings = this.standaloneDisplaySettings,
-                webDisplaySettings = this.webDisplaySettings,
-                androidBuildSettings = this.androidBuildSettings,
-                iOSBuildSettings = this.iOSBuildSettings,
-                standaloneBuildSettings = this.standaloneBuildSettings,
-                webGLBuildSettings = this.webGLBuildSettings,
-                buildAndRun = this.buildAndRun
-            };
+
+            BuildSettings buildSettingsInstance = ScriptableObject.CreateInstance<BuildSettings>();
+
+            buildSettingsInstance.appInfo = this.appInfo.ToInstance();
+            buildSettingsInstance.showIconSettings = this.showIconSettings;
+            buildSettingsInstance.appIconKind = this.appIconKind;
+            buildSettingsInstance.standaloneAppIcon = this.standaloneAppIconData.ToInstance();
+            buildSettingsInstance.androidIconKind = this.androidIconKind;
+            buildSettingsInstance.androidAdaptiveAppIcon = androidAdaptiveAppIconData.ToInstance();
+            buildSettingsInstance.androidRoundAppIcon = this.androidRoundAppIconData.ToInstance();
+            buildSettingsInstance.androidLegacyAppIcon = this.androidLegacyAppIconData.ToInstance();
+            buildSettingsInstance.iOSAppIcon = this.iOSAppIconData.ToInstance();
+            buildSettingsInstance.tvOSAppIcon = this.iOSAppIconData.ToInstance();
+            buildSettingsInstance.buildScenes = SerializableInstanceDataConverter.GetBuildScenes(buildScenes);
+            buildSettingsInstance.configurations = this.configurations;
+            buildSettingsInstance.consoleDisplaySettings = this.consoleDisplaySettings;
+            buildSettingsInstance.mobileDisplaySettings = this.mobileDisplaySettings;
+            buildSettingsInstance.standaloneDisplaySettings = this.standaloneDisplaySettings;
+            buildSettingsInstance.webDisplaySettings = this.webDisplaySettings;
+            buildSettingsInstance.androidBuildSettings = this.androidBuildSettings;
+            buildSettingsInstance.iOSBuildSettings = this.iOSBuildSettings;
+            buildSettingsInstance.standaloneBuildSettings = this.standaloneBuildSettings;
+            buildSettingsInstance.webGLBuildSettings = this.webGLBuildSettings;
+            buildSettingsInstance.buildAndRun = this.buildAndRun;
+
+            return buildSettingsInstance;
         }
 
         public override bool Equals(object obj)
