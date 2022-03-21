@@ -428,26 +428,26 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Splash Screen
 
-            if (PlayerSettings.SplashScreen.logos.Length > 0)
-            {
-                appInfo.splashScreens.screens = GetSplashScreenLogoData(PlayerSettings.SplashScreen.logos);
-            }
+            //if (PlayerSettings.SplashScreen.logos.Length > 0)
+            //{
+            //    appInfo.splashScreens.screens = GetSplashScreenLogoData(PlayerSettings.SplashScreen.logos);
+            //}
 
-            if (PlayerSettings.SplashScreen.background != null)
-            {
-                appInfo.splashScreens.background = PlayerSettings.SplashScreen.background;
-                appInfo.splashScreens.backgroundColor = PlayerSettings.SplashScreen.backgroundColor;
-            }
-            else
-            {
-                appInfo.splashScreens.backgroundColor = Color.black;
-            }
+            //if (PlayerSettings.SplashScreen.background != null)
+            //{
+            //    appInfo.splashScreens.background = PlayerSettings.SplashScreen.background;
+            //    appInfo.splashScreens.backgroundColor = PlayerSettings.SplashScreen.backgroundColor;
+            //}
+            //else
+            //{
+            //    appInfo.splashScreens.backgroundColor = Color.black;
+            //}
 
-            appInfo.splashScreens.unityLogoStyle = PlayerSettings.SplashScreen.unityLogoStyle;
-            appInfo.splashScreens.animationMode = PlayerSettings.SplashScreen.animationMode;
-            appInfo.splashScreens.logoDrawMode = PlayerSettings.SplashScreen.drawMode;
-            appInfo.splashScreens.showSplashScreen = PlayerSettings.SplashScreen.show;
-            appInfo.splashScreens.showUnityLogo = PlayerSettings.SplashScreen.showUnityLogo;
+            //appInfo.splashScreens.unityLogoStyle = PlayerSettings.SplashScreen.unityLogoStyle;
+            //appInfo.splashScreens.animationMode = PlayerSettings.SplashScreen.animationMode;
+            //appInfo.splashScreens.logoDrawMode = PlayerSettings.SplashScreen.drawMode;
+            //appInfo.splashScreens.showSplashScreen = PlayerSettings.SplashScreen.show;
+            //appInfo.splashScreens.showUnityLogo = PlayerSettings.SplashScreen.showUnityLogo;
 
             #endregion
 

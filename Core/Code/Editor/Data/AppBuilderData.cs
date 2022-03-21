@@ -63,7 +63,7 @@ namespace Bridge.Core.App.Manager
     /// Information about the app.
     /// </summary>
     [Serializable]
-    public struct AppInfo
+    public struct AppInfo : IEquatable<AppInfo>
     {
         #region Components
 
@@ -75,9 +75,6 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public string version;
-
-        [Space(5)]
-        public SplashScreen splashScreens;
 
         #endregion
 
@@ -93,11 +90,36 @@ namespace Bridge.Core.App.Manager
             {
                 displayName = this.displayName,
                 companyName = this.companyName,
-                version = this.version,
-                splashScreens = this.splashScreens.ToSerializable()
+                version = this.version
             };
 
             return appInfoData;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public bool Equals(AppInfo other)
+        {
+
+            return this.displayName.Equals(other.displayName) &&
+                (
+                    object.ReferenceEquals(this.companyName, other.companyName) ||
+                    this.companyName != null &&
+                    this.companyName.Equals(other.companyName)
+                ) &&
+                (
+                    object.ReferenceEquals(this.version, other.version) ||
+                    this.version != null &&
+                    this.version.Equals(other.version)
+                );
         }
 
         #endregion
@@ -120,9 +142,6 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public string version;
 
-        [Space(5)]
-        public SplashScreenData splashScreens;
-
         #endregion
 
         #region Data Conversion
@@ -133,8 +152,7 @@ namespace Bridge.Core.App.Manager
             {
                 displayName = this.displayName,
                 companyName = this.companyName,
-                version = this.version,
-                splashScreens = this.splashScreens.ToInstance()
+                version = this.version
             };
 
             return appInfo;
