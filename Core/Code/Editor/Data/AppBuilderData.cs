@@ -157,6 +157,11 @@ namespace Bridge.Core.App.Manager
             return appInfo;
         }
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return base.Equals(obj);
@@ -337,6 +342,11 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public AndroidIconKind appIconKind;
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return this.Equals(obj);
@@ -441,6 +451,11 @@ namespace Bridge.Core.App.Manager
             {
                 defaultIcon = SerializableInstanceDataConverter.GetIconFromPath(defaultIconDirectory)
             };
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -665,6 +680,11 @@ namespace Bridge.Core.App.Manager
             return splashScreen;
         }
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return this.Equals(obj);
@@ -783,7 +803,6 @@ namespace Bridge.Core.App.Manager
     /// </summary>
     [CreateAssetMenu(fileName = "New Profile", menuName = "3ridge/Build Manager/Profile")]
     [Serializable]
-    [CustomEditor(typeof(BuildSettings))]
     public class BuildSettings : ScriptableObject
     {
         [Space(5)]
@@ -1084,6 +1103,11 @@ namespace Bridge.Core.App.Manager
             return buildSettingsInstance;
         }
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return this.Equals(obj as BuildSettingsData);
@@ -1153,6 +1177,10 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public int height;
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         public override bool Equals(object obj)
         {
@@ -1173,6 +1201,11 @@ namespace Bridge.Core.App.Manager
     {
         public AppResolution resolution;
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return this.Equals(obj);
@@ -1189,6 +1222,11 @@ namespace Bridge.Core.App.Manager
     {
         [Space(5)]
         public UIOrientation allowedOrientation;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         public override bool Equals(object obj)
         {
@@ -1219,6 +1257,11 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public bool allowFullScreenSwitch;
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return this.Equals(obj);
@@ -1239,6 +1282,11 @@ namespace Bridge.Core.App.Manager
     {
         [Space(5)]
         public AppResolution resolution;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         public override bool Equals(object obj)
         {
@@ -1339,6 +1387,11 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public bool buildAppBundle;
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return this.Equals(obj);
@@ -1368,6 +1421,11 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public string blueToothUsageDescription;
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return this.Equals(obj);
@@ -1396,6 +1454,11 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public OtherSettings otherSettings;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         public override bool Equals(object obj)
         {
@@ -1439,6 +1502,11 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         public UsageDescriptionData UsageDescription;
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
         public override bool Equals(object obj)
         {
             return this.Equals(obj);
@@ -1464,6 +1532,11 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public ApiCompatibilityLevel apiCompatibility;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         public override bool Equals(object obj)
         {
@@ -1542,6 +1615,11 @@ namespace Bridge.Core.App.Manager
 
         [HideInInspector]
         public string targetBuildDirectory;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         public override bool Equals(object obj)
         {

@@ -754,12 +754,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                     appBuildSettings = defaultBuildSettingsState.ToInstance();
                 }
-
-                DebugConsole.Log(Debug.LogLevel.Debug, "--> Settings Changed.");
-            }
-            else
-            {
-                DebugConsole.Log(Debug.LogLevel.Debug, "--> Settings Not Changed.");
             }
 
             EditorGUILayout.EndHorizontal();
