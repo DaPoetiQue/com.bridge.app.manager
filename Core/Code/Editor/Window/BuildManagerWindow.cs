@@ -408,13 +408,13 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
         private void OnEditorWindowUpdate()
         {
-            GUILayout.BeginArea(settingsSectionRect);
-
-            var defaultGUIColor = GUI.backgroundColor;
-
             #region Menu Content Area
 
+            GUILayout.BeginArea(settingsSectionRect);
+
             #region Menu Content and Style Update
+
+            var defaultGUIColor = GUI.backgroundColor;
 
             if (appBuildSettings == null)
             {
@@ -430,11 +430,9 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #endregion
 
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style ,layout);
-
             #region Scroll Area
 
-            #region Settings Area
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style, layout);
 
             #region Text Formating
 
@@ -457,6 +455,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #endregion
 
+            #region Build Profile
+
             GUILayout.Label("Custom Build Profile", styleHeaderText);
 
             GUILayout.Space(10);
@@ -465,6 +465,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             SerializedProperty buildProfileSerializedObjectProperty = buildProfileSerializedObject.FindProperty("profile");
             EditorGUILayout.PropertyField(buildProfileSerializedObjectProperty, true);
             buildProfileSerializedObject.ApplyModifiedProperties();
+
+            #endregion
 
             #region App Info Section
 
@@ -721,25 +723,26 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 }
             }
 
-            #endregion
-
-            #region App Builder
-
             GUILayout.Space(15);
 
-            EditorGUILayout.BeginHorizontal();
+            #endregion
+
+            // Buttons For Applying/Revrting Changes.
+            #region Apply & Revert
 
             BuildSettingsData currentBuildSettingsState = appBuildSettings.ToSerializable();
             BuildSettingsData defaultBuildSettingsState = BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo());
 
             bool settingsNotChanged = currentBuildSettingsState.Equals(defaultBuildSettingsState);
 
+
             if (settingsNotChanged == false)
             {
+                EditorGUILayout.BeginHorizontal();
 
                 GUI.backgroundColor = Color.yellow;
 
-                if (GUILayout.Button("Apply Settings", GUILayout.Height(30)))
+                if (GUILayout.Button("Apply New Settings", GUILayout.Height(30)))
                 {
                     window.SaveChanges();
 
@@ -748,17 +751,23 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 GUI.backgroundColor = Color.red;
 
-                if (GUILayout.Button("Revert Changes", GUILayout.Height(30)))
+                if (GUILayout.Button("Revert Settings", GUILayout.Height(30)))
                 {
                     window.SaveChanges();
 
                     appBuildSettings = defaultBuildSettingsState.ToInstance();
                 }
+
+                EditorGUILayout.EndHorizontal();
             }
 
-            EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(15);
+
+            #endregion
+
+            // Buttons For Opening Build Settings / Folder.
+            #region Open Folders
 
             GUILayout.Label("Build Settings", styleHeaderText);
 
@@ -768,14 +777,13 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             GUI.backgroundColor = Color.grey;
 
-            if (GUILayout.Button("Open Build Settings", GUILayout.Height(30)))
+            if (GUILayout.Button("Open Builds Settings", GUILayout.Height(30)))
             {
                 GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
             }
 
             if (Directory.Exists(appBuildSettings.configurations.targetBuildDirectory) == true)
             {
-                GUILayout.Space(2);
 
                 if (GUILayout.Button("Open Build Folder", GUILayout.Height(30)))
                 {
@@ -786,6 +794,11 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(5);
+
+            #endregion
+
+            // Button For Building Application.
+            #region Build App
 
             GUI.backgroundColor = Color.green;
             var buttonStyle = new GUIStyle(GUI.skin.button);
@@ -806,8 +819,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             SerializedProperty buildSerializedObjectProperty = buildSerializedObject.FindProperty("buildAndRun");
             EditorGUILayout.PropertyField(buildSerializedObjectProperty, true);
             buildSerializedObject.ApplyModifiedProperties();
-
-            #endregion
 
             #endregion
 

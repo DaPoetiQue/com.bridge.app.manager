@@ -891,22 +891,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                         {
                             case AndroidIconKind.Adaptive:
 
-                                bool hasAllIconsAssigned = true;
-
-                                if(buildSettings.androidAdaptiveAppIcon.foreground != null && buildSettings.androidAdaptiveAppIcon.background == null)
-                                {
-                                    hasAllIconsAssigned = false;
-                                    DebugConsole.Log(Debug.LogLevel.Warning, $"Android Adaptive App Icon.background is not assigned");
-                                }
-
-
-                                if (buildSettings.androidAdaptiveAppIcon.foreground == null && buildSettings.androidAdaptiveAppIcon.background != null)
-                                {
-                                    hasAllIconsAssigned = false;
-                                    DebugConsole.Log(Debug.LogLevel.Warning, $"Android Adaptive App Icon.foreground is not assigned");
-                                }
-
-                                if (hasAllIconsAssigned)
+                                if (buildSettings.androidAdaptiveAppIcon.foreground != null && buildSettings.androidAdaptiveAppIcon.background != null)
                                 {
                                     PlatformIconKind platformIconKind = AppPlatformIconData.GetAndroindPlatformIconKind(AndroidIconKind.Adaptive);
                                     var platformIcons = GetPlatformIcons(GetBuildTargetGroup(buildSettingsData.configurations.platform), platformIconKind);
