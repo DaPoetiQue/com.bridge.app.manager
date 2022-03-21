@@ -315,10 +315,20 @@ namespace Bridge.Core.App.Manager
     #region Android Icon Data
 
     [Serializable]
-    public struct AndroidAppIconKind
+    public struct AndroidAppIconKind : IEquatable<AndroidAppIconKind>
     {
         [Space(5)]
         public AndroidIconKind appIconKind;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(AndroidAppIconKind other)
+        {
+            return appIconKind.Equals(other.appIconKind);
+        }
     }
 
     [Serializable]
@@ -1055,8 +1065,28 @@ namespace Bridge.Core.App.Manager
             if (other == null)
                 return false;
 
-            return this.appInfo.Equals(other.appInfo) && this.standaloneAppIconData.Equals(other.standaloneAppIconData) && this.showIconSettings.Equals(other.showIconSettings);
+            return this.appInfo.Equals(other.appInfo)
+                && this.standaloneAppIconData.Equals(other.standaloneAppIconData)
+                && this.showIconSettings.Equals(other.showIconSettings)
+                && this.androidIconKind.Equals(other.androidIconKind)
+                && this.androidAdaptiveAppIconData.Equals(other.androidAdaptiveAppIconData)
+                && this.androidRoundAppIconData.Equals(other.androidRoundAppIconData)
+                && this.androidLegacyAppIconData.Equals(other.androidLegacyAppIconData)
+                && this.iOSAppIconData.Equals(other.iOSAppIconData)
+                && this.tvOSAppIconData.Equals(other.tvOSAppIconData)
+                && this.configurations.Equals(other.configurations)
+                && this.standaloneDisplaySettings.Equals(other.standaloneDisplaySettings)
+                && this.mobileDisplaySettings.Equals(other.mobileDisplaySettings)
+                && this.consoleDisplaySettings.Equals(other.consoleDisplaySettings)
+                && this.webDisplaySettings.Equals(other.webDisplaySettings)
+                && this.androidBuildSettings.Equals(other.androidBuildSettings);
+         
 
+        }
+
+        private bool ScenesEquals(string[] current, string[] defaults)
+        {
+            return current == defaults; ;
         }
     }
 
@@ -1083,29 +1113,63 @@ namespace Bridge.Core.App.Manager
     #region Display Data
 
     [Serializable]
-    public struct AppResolution
+    public struct AppResolution : IEquatable<AppResolution>
     {
         public int width;
 
         [Space(5)]
         public int height;
+
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(AppResolution other)
+        {
+            return this.width.Equals(other.width)
+                && this.height.Equals(other.height);
+
+
+        }
     }
 
     [Serializable]
-    public struct ConsoleDisplaySettings
+    public struct ConsoleDisplaySettings : IEquatable<ConsoleDisplaySettings>
     {
         public AppResolution resolution;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(ConsoleDisplaySettings other)
+        {
+            return this.resolution.Equals(other.resolution);
+        }
     }
 
     [Serializable]
-    public struct MobileDisplaySettings
+    public struct MobileDisplaySettings : IEquatable<MobileDisplaySettings>
     {
         [Space(5)]
         public UIOrientation allowedOrientation;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(MobileDisplaySettings other)
+        {
+            return this.allowedOrientation.Equals(other.allowedOrientation);
+        }
     }
 
     [Serializable]
-    public struct StandaloneDisplaySettings
+    public struct StandaloneDisplaySettings : IEquatable<StandaloneDisplaySettings>
     {
         [Space(5)]
         public FullScreenMode fullScreenMode;
@@ -1121,13 +1185,37 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public bool allowFullScreenSwitch;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(StandaloneDisplaySettings other)
+        {
+            return this.fullScreenMode.Equals(other.fullScreenMode) 
+                && this.defaultIsNativeResolution.Equals(other.defaultIsNativeResolution) 
+                && this.resolution.Equals(other.resolution)
+                && this.resizableWindow.Equals(other.resizableWindow)
+                && this.allowFullScreenSwitch.Equals(other.allowFullScreenSwitch);
+        }
     }
 
     [Serializable]
-    public struct WebDisplaySettings
+    public struct WebDisplaySettings : IEquatable<WebDisplaySettings>
     {
         [Space(5)]
         public AppResolution resolution;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(WebDisplaySettings other)
+        {
+            return this.resolution.Equals(other.resolution);
+        }
     }
 
     #endregion
@@ -1204,7 +1292,7 @@ namespace Bridge.Core.App.Manager
     #region Platform Build Settings
 
     [Serializable]
-    public struct AndroidBuildSettings
+    public struct AndroidBuildSettings : IEquatable<AndroidBuildSettings>
     {
         [Space(5)]
         public string packageName;
@@ -1217,10 +1305,23 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public bool buildAppBundle;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(AndroidBuildSettings other)
+        {
+            return this.packageName.Equals(other.packageName) 
+                && this.installLocation.Equals(other.installLocation) 
+                && this.sdkVersion.Equals(other.sdkVersion) 
+                && this.buildAppBundle.Equals(other.buildAppBundle);
+        }
     }
 
     [Serializable]
-    public struct iOSBuildSettings
+    public struct iOSBuildSettings : IEquatable<iOSBuildSettings>
     {
         [Space(5)]
         public string bundleIdentifier;
@@ -1233,10 +1334,23 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public string blueToothUsageDescription;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(iOSBuildSettings other)
+        {
+            return this.bundleIdentifier.Equals(other.bundleIdentifier)
+                && this.cameraUsageDescription.Equals(other.cameraUsageDescription)
+                && this.microPhoneUsageDescription.Equals(other.microPhoneUsageDescription)
+                && this.blueToothUsageDescription.Equals(other.blueToothUsageDescription);
+        }
     }
 
     [Serializable]
-    public class StandaloneBuildSettings
+    public class StandaloneBuildSettings : IEquatable<StandaloneBuildSettings>
     {
         [Space(5)]
         public WindowsBuildSettings windows;
@@ -1249,10 +1363,26 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public OtherSettings otherSettings;
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            return this.Equals(obj as StandaloneBuildSettings);
+        }
+
+        public bool Equals(StandaloneBuildSettings other)
+        {
+            return this.windows.Equals(other.windows)
+                && this.mac.Equals(other.mac)
+                && this.linux.Equals(other.linux)
+                && this.otherSettings.Equals(other.otherSettings);
+        }
     }
 
     [Serializable]
-    public struct OSXBuildSettings
+    public struct OSXBuildSettings : IEquatable<OSXBuildSettings>
     {
         [Space(5)]
         public ColorSpace colorSpace;
@@ -1275,16 +1405,43 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public UsageDescriptionData UsageDescription;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(OSXBuildSettings other)
+        {
+            return this.colorSpace.Equals(other.colorSpace)
+                && this.graphicsApi.Equals(other.graphicsApi)
+                && this.bundleIdentifier.Equals(other.bundleIdentifier)
+                && this.build.Equals(other.build)
+                && this.category.Equals(other.category)
+                && this.storeValidation.Equals(other.storeValidation)
+                && this.UsageDescription.Equals(other.UsageDescription);
+        }
     }
 
     [Serializable]
-    public struct OtherSettings
+    public struct OtherSettings : IEquatable<OtherSettings>
     {
         [Space(5)]
         public ScriptingImplementation scriptingBackend;
 
         [Space(5)]
         public ApiCompatibilityLevel apiCompatibility;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(OtherSettings other)
+        {
+            return this.scriptingBackend.Equals(other.scriptingBackend)
+                && this.apiCompatibility.Equals(other.apiCompatibility);
+        }
     }
 
     [Serializable]
@@ -1336,7 +1493,7 @@ namespace Bridge.Core.App.Manager
     /// App build settings.
     /// </summary>
     [Serializable]
-    public struct BuildConfig
+    public struct BuildConfig : IEquatable<BuildConfig>
     {
         [Space(5)]
         public BuildTarget platform;
@@ -1352,6 +1509,20 @@ namespace Bridge.Core.App.Manager
 
         [HideInInspector]
         public string targetBuildDirectory;
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(BuildConfig other)
+        {
+            return platform.Equals(other.platform) 
+                && this.allowDebugging.Equals(other.allowDebugging) 
+                && this.developmentBuild.Equals(other.developmentBuild) 
+                && this.buildLocation.Equals(other.buildLocation) 
+                && this.targetBuildDirectory.Equals(other.targetBuildDirectory);
+        }
     }
 
     [Serializable]
