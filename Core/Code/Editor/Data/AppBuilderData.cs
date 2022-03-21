@@ -571,7 +571,7 @@ namespace Bridge.Core.App.Manager
     /// Contains serializable splash screen data.
     /// </summary>
     [Serializable]
-    public struct SplashScreenData
+    public struct SplashScreenData : IEquatable<SplashScreenData>
     {
         #region Components
 
@@ -646,6 +646,16 @@ namespace Bridge.Core.App.Manager
             splashScreen.showSplashScreen = this.showSplashScreen;
 
             return splashScreen;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(SplashScreenData other)
+        {
+            return this.screens.Equals(other.screens);
         }
 
         #endregion
@@ -1078,15 +1088,19 @@ namespace Bridge.Core.App.Manager
                 && this.standaloneDisplaySettings.Equals(other.standaloneDisplaySettings)
                 && this.mobileDisplaySettings.Equals(other.mobileDisplaySettings)
                 && this.consoleDisplaySettings.Equals(other.consoleDisplaySettings)
-                && this.webDisplaySettings.Equals(other.webDisplaySettings)
-                && this.androidBuildSettings.Equals(other.androidBuildSettings);
+                && this.webDisplaySettings.Equals(other.webDisplaySettings) 
+                && DataComparison.Equals(this.buildScenes, other.buildScenes);
          
 
         }
+    }
 
-        private bool ScenesEquals(string[] current, string[] defaults)
+    [Serializable]
+    public static class DataComparison
+    {
+        public static bool Equals<T>(T[] itemA, T[] itemB)
         {
-            return current == defaults; ;
+            return Enumerable.SequenceEqual(itemA, itemB);
         }
     }
 
