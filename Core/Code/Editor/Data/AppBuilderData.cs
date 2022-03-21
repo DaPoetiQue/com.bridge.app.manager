@@ -107,7 +107,7 @@ namespace Bridge.Core.App.Manager
     /// Serializable information about the app.
     /// </summary>
     [Serializable]
-    public struct AppInfoDataObject
+    public struct AppInfoDataObject : IEquatable<AppInfoDataObject>
     {
         #region Components
 
@@ -138,6 +138,27 @@ namespace Bridge.Core.App.Manager
             };
 
             return appInfo;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public bool Equals(AppInfoDataObject other)
+        {
+
+            return this.displayName.Equals(other.displayName) &&
+                (
+                    object.ReferenceEquals(this.companyName, other.companyName) ||
+                    this.companyName != null &&
+                    this.companyName.Equals(other.companyName)
+                ) &&
+                (
+                    object.ReferenceEquals(this.version, other.version) ||
+                    this.version != null &&
+                    this.version.Equals(other.version)
+                );
         }
 
         #endregion
@@ -377,7 +398,7 @@ namespace Bridge.Core.App.Manager
     }
 
     [Serializable]
-    public struct DefaultAppIconData
+    public struct DefaultAppIconData : IEquatable<DefaultAppIconData>
     {
         #region Components
 
@@ -393,6 +414,17 @@ namespace Bridge.Core.App.Manager
             {
                 defaultIcon = SerializableInstanceDataConverter.GetIconFromPath(defaultIconDirectory)
             };
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public bool Equals(DefaultAppIconData other)
+        {
+            return this.defaultIconDirectory.Equals(other.defaultIconDirectory);
+
         }
 
         #endregion
@@ -888,7 +920,7 @@ namespace Bridge.Core.App.Manager
     /// This class contains the serializable app build settings.
     /// </summary>
     [Serializable]
-    public class BuildSettingsData
+    public class BuildSettingsData : IEquatable<BuildSettingsData>
     {
         [Space(5)]
         public AppInfoDataObject appInfo;
@@ -1011,6 +1043,20 @@ namespace Bridge.Core.App.Manager
                 webGLBuildSettings = this.webGLBuildSettings,
                 buildAndRun = this.buildAndRun
             };
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj as BuildSettingsData);
+        }
+
+        public bool Equals(BuildSettingsData other)
+        {
+            if (other == null)
+                return false;
+
+            return this.appInfo.Equals(other.appInfo) && this.standaloneAppIconData.Equals(other.standaloneAppIconData) && this.showIconSettings.Equals(other.showIconSettings);
+
         }
     }
 

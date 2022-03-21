@@ -745,6 +745,12 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
         #region Applied Settings
 
+        public static bool BuildSettingsChanged()
+        {
+
+            return true;
+        }
+
         /// <summary>
         /// This method create build settings for the selected platform.
         /// </summary>

@@ -727,21 +727,50 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             GUILayout.Space(15);
 
+            EditorGUILayout.BeginHorizontal();
+
+            BuildSettingsData currentBuildSettingsState = appBuildSettings.ToSerializable();
+            BuildSettingsData defaultBuildSettingsState = BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo());
+
+            bool settingsNotChanged = currentBuildSettingsState.Equals(defaultBuildSettingsState);
+
+            if (settingsNotChanged == false)
+            {
+
+                GUI.backgroundColor = Color.yellow;
+
+                if (GUILayout.Button("Apply Settings", GUILayout.Height(30)))
+                {
+                    window.SaveChanges();
+
+                    BuildManager.ApplyAppSettings(appBuildSettings.ToSerializable());
+                }
+
+                GUI.backgroundColor = Color.red;
+
+                if (GUILayout.Button("Revert Changes", GUILayout.Height(30)))
+                {
+                    window.SaveChanges();
+
+                    appBuildSettings = defaultBuildSettingsState.ToInstance();
+                }
+
+                DebugConsole.Log(Debug.LogLevel.Debug, "--> Settings Changed.");
+            }
+            else
+            {
+                DebugConsole.Log(Debug.LogLevel.Debug, "--> Settings Not Changed.");
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            GUILayout.Space(15);
+
             GUILayout.Label("Build Settings", styleHeaderText);
 
             GUILayout.Space(10);
 
             EditorGUILayout.BeginHorizontal();
-
-            GUI.backgroundColor = Color.yellow;
-
-
-            if (GUILayout.Button("Apply Settings", GUILayout.Height(30)))
-            {
-                window.SaveChanges();
-
-                BuildManager.ApplyAppSettings(appBuildSettings.ToSerializable());
-            }
 
             GUI.backgroundColor = Color.grey;
 
@@ -763,7 +792,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(5);
-
 
             GUI.backgroundColor = Color.green;
             var buttonStyle = new GUIStyle(GUI.skin.button);
