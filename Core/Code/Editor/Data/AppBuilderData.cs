@@ -6,6 +6,7 @@ using UnityEngine.Rendering;
 using Bridge.Core.App.Data.Storage;
 using Bridge.Core.UnityCustomEditor.Debugger;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Bridge.Core.App.Manager
 {
@@ -907,8 +908,8 @@ namespace Bridge.Core.App.Manager
         #endregion
 
         [Space(5)]
-        [NonReorderable]
-        public SceneAsset[] buildScenes;
+        //[NonReorderable]
+        public BuidScene[] buildScenes;
 
         [Space(5)]
         public BuildConfig configurations;
@@ -965,7 +966,7 @@ namespace Bridge.Core.App.Manager
                 androidLegacyAppIconData = this.androidLegacyAppIcon.ToSerializable(),
                 iOSAppIconData = this.iOSAppIcon.ToSerializable(),
                 tvOSAppIconData = this.tvOSAppIcon.ToSerializable(),
-                buildScenes = SerializableInstanceDataConverter.GetBuildScenesDirectories(buildScenes),
+                //buildScenes = SerializableInstanceDataConverter.GetBuildScenesDirectories(buildScenes),
                 configurations = this.configurations,
                 consoleDisplaySettings = this.consoleDisplaySettings,
                 mobileDisplaySettings = this.mobileDisplaySettings,
@@ -983,47 +984,35 @@ namespace Bridge.Core.App.Manager
         #endregion
     }
 
-    #region Remove this 
+    #region Scene Data
 
-    public static class AppDataBuilder
+    [Serializable]
+    public struct BuidScene : IEquatable<BuidScene>
     {
-        public static void CreateNewBuildSettingsInstance(out BuildSettings settings)
-        {
-            BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+        public string sceneName;
 
-            settings = buildSettings;
+        [Space(5)]
+        public SceneAsset scene;
+
+        [Space(5)]
+        public bool isActive;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
 
-        //public static BuildSettings CreateNewBuildSettingsInstance()
-        //{
-        //    BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
 
-        //    return buildSettings;
-        //}
-
-        //public static BuildSettings CreateNewBuildSettingsInstance(BuildSettingsData buildSettingsData)
-        //{
-        //    BuildSettings buildSettings = ScriptableObject.CreateInstance<BuildSettings>();
-
-        //    buildSettings.appInfo = new AppInfo
-        //    {
-        //        appName = buildSettingsData.appInfo.appName,
-        //        companyName = buildSettings.appInfo.companyName,
-        //        appVersion = buildSettings.appInfo.appVersion,
-        //        appIdentifier = buildSettings.appInfo.appIdentifier,
-        //        appIcons = buildSettings.appInfo.appIcons
-        //    };
-
-        //    buildSettings.configurations = buildSettingsData.configurations;
-        //    buildSettings.buildScenes = buildSettingsData.GetBuildScenes();
-        //    buildSettings.buildAndRun = buildSettingsData.buildAndRun;
-
-        //    buildSettings.androidBuildSettings = buildSettingsData.androidBuildSettings;
-        //    buildSettings.standaloneBuildSettings = buildSettingsData.standaloneBuildSettings;
-
-
-        //    return buildSettings;
-        // }
+        public bool Equals(BuidScene other)
+        {
+            return this.sceneName.Equals(other.sceneName) 
+                && this.scene.Equals(other.scene)
+                && this.isActive.Equals(other.isActive);
+        }
     }
 
     #endregion
@@ -1152,7 +1141,7 @@ namespace Bridge.Core.App.Manager
             buildSettingsInstance.androidLegacyAppIcon = this.androidLegacyAppIconData.ToInstance();
             buildSettingsInstance.iOSAppIcon = this.iOSAppIconData.ToInstance();
             buildSettingsInstance.tvOSAppIcon = this.iOSAppIconData.ToInstance();
-            buildSettingsInstance.buildScenes = SerializableInstanceDataConverter.GetBuildScenes(buildScenes);
+            //buildSettingsInstance.buildScenes = SerializableInstanceDataConverter.GetBuildScenes(buildScenes);
             buildSettingsInstance.configurations = this.configurations;
             buildSettingsInstance.consoleDisplaySettings = this.consoleDisplaySettings;
             buildSettingsInstance.mobileDisplaySettings = this.mobileDisplaySettings;
@@ -1182,7 +1171,7 @@ namespace Bridge.Core.App.Manager
             if (other == null)
                 return false;
 
-            return this.appInfo.Equals(other.appInfo) 
+            return this.appInfo.Equals(other.appInfo)
                 //&& this.splashScreenSettingsData.Equals(other.splashScreenSettingsData)
                 && this.standaloneAppIconData.Equals(other.standaloneAppIconData)
                 && this.overideIconSettings.Equals(other.overideIconSettings)
@@ -1196,8 +1185,8 @@ namespace Bridge.Core.App.Manager
                 && this.standaloneDisplaySettings.Equals(other.standaloneDisplaySettings)
                 && this.mobileDisplaySettings.Equals(other.mobileDisplaySettings)
                 && this.consoleDisplaySettings.Equals(other.consoleDisplaySettings)
-                && this.webDisplaySettings.Equals(other.webDisplaySettings) 
-                && DataComparison.Equals(this.buildScenes, other.buildScenes);
+                && this.webDisplaySettings.Equals(other.webDisplaySettings);
+                //&& DataComparison.Equals(this.buildScenes, other.buildScenes);
          
 
         }

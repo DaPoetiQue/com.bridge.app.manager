@@ -244,7 +244,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                         if (callbackResults.success == true)
                         {
-                            newBuildSettings.buildScenes = loadedScenesResults;
+                           // newBuildSettings.buildScenes = loadedScenesResults;
                             DebugConsole.Log(Debug.LogLevel.Error, callbackResults.successValue);
                         }
                     });

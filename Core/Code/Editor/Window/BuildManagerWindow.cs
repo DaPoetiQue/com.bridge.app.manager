@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEditorInternal;
 using System.IO;
 using Bridge.Core.App.Manager;
 using Bridge.Core.UnityCustomEditor.Debugger;
@@ -105,6 +106,12 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
         SerializedObject appIconStandaloneSerializedObject;
         SerializedProperty appIconStandaloneSerializedObjectProperty;
+
+        #endregion
+
+        #region Build Settings Data
+
+        ReorderableList reordarableSceneList;
 
         #endregion
 
@@ -633,12 +640,24 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             GUILayout.Label("Included Scenes", styleHeaderText);
 
-            GUILayout.Space(10);
+            GUILayout.Space(15);
+
             SerializedObject sceneDataSerializedObject = new SerializedObject(appBuildSettings);
             sceneDataSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
             SerializedProperty sceneDataSerializedObjectProperty = sceneDataSerializedObject.FindProperty("buildScenes");
-            EditorGUILayout.PropertyField(sceneDataSerializedObjectProperty, true);
-            sceneDataSerializedObject.ApplyModifiedProperties();
+            //EditorGUILayout.PropertyField(sceneDataSerializedObjectProperty, true);
+            //sceneDataSerializedObject.ApplyModifiedProperties();
+
+            //reordarableSceneList = new ReorderableList(appBuildSettings.buildScenes, typeof(BuidScene), true, true, true, true);
+
+            //reordarableSceneList.DoList(new Rect(0, 0, 100, EditorGUIUtility.singleLineHeight));
+            //reordarableSceneList.DoLayoutList();
+
+            GetReorderableItemList(sceneDataSerializedObjectProperty).DoLayoutList();
+
+            //reordarableSceneList.drawElementCallback = OnDrawReordarableItemList;
+            //reordarableSceneList.drawHeaderCallback = OnDrawReordarableItemListHeader;
+
 
             #endregion
 
@@ -858,6 +877,34 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             GUILayout.EndArea();
 
             #endregion
+        }
+
+        private ReorderableList GetReorderableItemList(SerializedProperty property)
+        {
+            if(reordarableSceneList == null)
+            {
+                reordarableSceneList = new ReorderableList(property.serializedObject, property, true, true, true, true);
+
+                reordarableSceneList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => 
+                {
+                    GUIContent content = new GUIContent();
+                    content.text = (string.IsNullOrEmpty(property.GetArrayElementAtIndex(index).FindPropertyRelative("scene").objectReferenceValue?.name))? "New Scene" : property.GetArrayElementAtIndex(index).FindPropertyRelative("scene").objectReferenceValue?.name;
+
+                    //EditorGUI.LabelField(new Rect(rect.x, rect.y, 100, EditorGUIUtility.singleLineHeight), "Build Scene");
+                    //EditorGUI.PropertyField(new Rect(rect.x, rect.y, 200, EditorGUIUtility.singleLineHeight), property.GetArrayElementAtIndex(index).FindPropertyRelative("isActive"), GUIContent.none);
+                    EditorGUI.PropertyField(new Rect(rect.x, rect.y - 3, rect.width - 100, 25), property.GetArrayElementAtIndex(index).FindPropertyRelative("scene"), content);
+                    EditorGUI.PropertyField(new Rect(rect.width, rect.y, 100, EditorGUIUtility.singleLineHeight), property.GetArrayElementAtIndex(index).FindPropertyRelative("isActive"), GUIContent.none);
+                    // EditorGUI.PropertyField(rect, property.GetArrayElementAtIndex(index), true);
+                };
+
+                reordarableSceneList.drawHeaderCallback = (Rect headerRect) => 
+                {
+                    string name = "Build Scenes";
+                    EditorGUI.LabelField(headerRect, name);
+                };
+            }
+
+            return reordarableSceneList;
         }
 
         #region Unity Editor Event
