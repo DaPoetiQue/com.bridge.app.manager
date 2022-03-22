@@ -209,9 +209,9 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             #region Settings Header
 
             settingsHeaderStyle.normal.textColor = Color.white;
-            settingsHeaderStyle.fontSize = 15;
+            settingsHeaderStyle.fontSize = 10;
             settingsHeaderStyle.fontStyle = FontStyle.Bold;
-            settingsHeaderStyle.padding.top = 40;
+            settingsHeaderStyle.padding.top = 20;
             settingsHeaderStyle.padding.left = 50;
             settingsHeaderStyle.alignment = TextAnchor.LowerCenter;
             settingsHeaderContent.text = "Build Manager";
@@ -364,7 +364,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             headerSectionRect.x = 0;
             headerSectionRect.y = 0;
             headerSectionRect.width = Screen.width;
-            headerSectionRect.height = 100;
+            headerSectionRect.height = 50;
 
             if(headerSectionTexture == null)
             {
@@ -377,8 +377,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Icon
 
-            iconRect.width = 100;
-            iconRect.height = 100;
+            iconRect.width = 50;
+            iconRect.height = 50;
             iconRect.x = 10;
             iconRect.y = 0;
 
@@ -428,11 +428,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             layout[0] = GUILayout.Width(settingsSectionRect.width);
             layout[1] = GUILayout.ExpandHeight(true);
 
-            #endregion
-
-            #region Scroll Area
-
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style, layout);
 
             #region Text Formating
 
@@ -444,7 +439,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             GUIStyle styleHeaderText = new GUIStyle
             {
                 normal = headerTextState,
-                fontSize = 15,
+                fontSize = 11,
                 fontStyle = FontStyle.Bold
             };
 
@@ -454,6 +449,12 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             infoTextFieldsLayout[2] = GUILayout.Height(25);
 
             #endregion
+
+            #endregion
+
+            #region Scroll Area
+
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style, layout);
 
             #region Build Profile
 
@@ -497,7 +498,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 GUILayout.Space(10);
 
                 SerializedObject showIconsSettingsSerializedObject = new SerializedObject(appBuildSettings);
-                SerializedProperty showIconsSettingsSerializedObjectProperty = showIconsSettingsSerializedObject.FindProperty("showIconSettings");
+                SerializedProperty showIconsSettingsSerializedObjectProperty = showIconsSettingsSerializedObject.FindProperty("overideIconSettings");
                 EditorGUILayout.PropertyField(showIconsSettingsSerializedObjectProperty, true);
                 showIconsSettingsSerializedObject.ApplyModifiedProperties();
 
@@ -505,7 +506,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 var buildTargetGroup = BuildManager.GetBuildTargetGroup(appBuildSettings.configurations.platform);
 
-                if (appBuildSettings.showIconSettings == true && BuildManager.AppIconsSupported(buildTargetGroup))
+                if (appBuildSettings.overideIconSettings == true && BuildManager.AppIconsSupported(buildTargetGroup))
                 {
                     var iconLayout = new GUILayoutOption[2];
                     iconLayout[0] = GUILayout.Width(256);
@@ -742,8 +743,17 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #endregion
 
+
+            EditorGUILayout.EndScrollView();
+
+            #endregion
+
+            #region Footer Menu
+
             // Buttons For Applying/Revrting Changes.
             #region Apply & Revert
+
+            GUILayout.Space(15);
 
             BuildSettingsData currentBuildSettingsState = appBuildSettings.ToSerializable();
             BuildSettingsData defaultBuildSettingsState = BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo());
@@ -755,18 +765,18 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             {
                 EditorGUILayout.BeginHorizontal();
 
-                GUI.backgroundColor = Color.yellow;
+                GUI.backgroundColor = Color.grey;
 
-                if (GUILayout.Button("Apply New Settings", GUILayout.Height(30)))
+                if (GUILayout.Button("Apply Changes", GUILayout.Height(30)))
                 {
                     window.SaveChanges();
 
                     BuildManager.ApplyAppSettings(appBuildSettings.ToSerializable());
                 }
 
-                GUI.backgroundColor = Color.red;
+                GUI.backgroundColor = Color.gray;
 
-                if (GUILayout.Button("Revert Settings", GUILayout.Height(30)))
+                if (GUILayout.Button("Revert Changes", GUILayout.Height(30)))
                 {
                     window.SaveChanges();
 
@@ -776,15 +786,12 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 EditorGUILayout.EndHorizontal();
             }
 
-
-            GUILayout.Space(15);
-
             #endregion
 
             // Buttons For Opening Build Settings / Folder.
             #region Open Folders
 
-            GUILayout.Label("Build Settings", styleHeaderText);
+            // GUILayout.Label("Build Settings", styleHeaderText);
 
             GUILayout.Space(10);
 
@@ -842,9 +849,9 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             EditorGUILayout.PropertyField(buildSerializedObjectProperty, true);
             buildSerializedObject.ApplyModifiedProperties();
 
-            #endregion
+            GUILayout.Space(15);
 
-            EditorGUILayout.EndScrollView();
+            #endregion
 
             #endregion
 

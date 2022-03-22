@@ -859,7 +859,7 @@ namespace Bridge.Core.App.Manager
         #region App Icons
 
         [Space(5)]
-        public bool showIconSettings;
+        public bool overideIconSettings;
 
         #region Standalone
 
@@ -955,7 +955,7 @@ namespace Bridge.Core.App.Manager
             return new BuildSettingsData
             {
                 appInfo = this.appInfo.ToSerializable(),
-                showIconSettings = this.showIconSettings,
+                overideIconSettings = this.overideIconSettings,
                 // splashScreenSettingsData = this.splashScreenSettings.ToSerializable(),
                 appIconKind = this.appIconKind,
                 standaloneAppIconData = standaloneAppIcon.ToSerializable(),
@@ -1040,7 +1040,7 @@ namespace Bridge.Core.App.Manager
         #region App Icons
 
         [Space(5)]
-        public bool showIconSettings;
+        public bool overideIconSettings;
 
         #region Standalone
 
@@ -1143,7 +1143,7 @@ namespace Bridge.Core.App.Manager
 
             buildSettingsInstance.appInfo = this.appInfo.ToInstance();
             // buildSettingsInstance.splashScreenSettings = this.splashScreenSettingsData.ToInstance();
-            buildSettingsInstance.showIconSettings = this.showIconSettings;
+            buildSettingsInstance.overideIconSettings = this.overideIconSettings;
             buildSettingsInstance.appIconKind = this.appIconKind;
             buildSettingsInstance.standaloneAppIcon = this.standaloneAppIconData.ToInstance();
             buildSettingsInstance.androidIconKind = this.androidIconKind;
@@ -1185,7 +1185,7 @@ namespace Bridge.Core.App.Manager
             return this.appInfo.Equals(other.appInfo) 
                 //&& this.splashScreenSettingsData.Equals(other.splashScreenSettingsData)
                 && this.standaloneAppIconData.Equals(other.standaloneAppIconData)
-                && this.showIconSettings.Equals(other.showIconSettings)
+                && this.overideIconSettings.Equals(other.overideIconSettings)
                 && this.androidIconKind.Equals(other.androidIconKind)
                 && this.androidAdaptiveAppIconData.Equals(other.androidAdaptiveAppIconData)
                 && this.androidRoundAppIconData.Equals(other.androidRoundAppIconData)
