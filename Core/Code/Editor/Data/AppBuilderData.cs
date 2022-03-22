@@ -192,33 +192,50 @@ namespace Bridge.Core.App.Manager
 
     public static class SerializableInstanceDataConverter
     {
-        #region 
+        #region Components
+
+        private static string[] buildScenesToStringArray = new string[0];
+        private static SceneAsset[] buildScenesToAssetArray = new SceneAsset[0];
+
+        #endregion
+
+        #region Data Functions
 
         public static SceneAsset[] GetBuildScenes(string[] buildScenes)
         {
             try
             {
-                SceneAsset[] buildScenesToAssetArray = new SceneAsset[buildScenes.Length];
-
-                if (buildScenesToAssetArray.Length > 0)
+                if(buildScenes != null)
                 {
-                    Storage.AssetData.LoadAssets<SceneAsset>(buildScenes, (callBackData, callBackResults) =>
+                    if (buildScenesToAssetArray == null || buildScenesToAssetArray.Length != buildScenes.Length)
                     {
-                        if (callBackResults.error == true)
-                        {
-                            DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
-                        }
+                        buildScenesToAssetArray = new SceneAsset[buildScenes.Length];
+                    }
 
-                        if (callBackResults.success == true)
+                    if (buildScenesToAssetArray.Contains(null))
+                    {
+                        Storage.AssetData.LoadAssets<SceneAsset>(buildScenes, (callBackData, callBackResults) =>
                         {
-                            buildScenesToAssetArray = callBackData;
-                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
-                        }
+                            if (callBackResults.error == true)
+                            {
+                                DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
+                            }
 
-                    });
+                            if (callBackResults.success == true)
+                            {
+                                buildScenesToAssetArray = callBackData;
+                            }
+
+                        });
+                    }
+
+                    return buildScenesToAssetArray;
                 }
-
-                return buildScenesToAssetArray;
+                else
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, $"No Build Scenes Assigned - Returning Null.");
+                    return null;
+                }
             }
             catch (Exception exception)
             {
@@ -231,32 +248,38 @@ namespace Bridge.Core.App.Manager
         {
             try
             {
-                if (buildScenes == null)
+                if (buildScenes != null)
                 {
-                    return new string[0];
-                }
-
-                string[] buildScenesToStringArray = new string[buildScenes.Length];
-
-                if (buildScenesToStringArray.Length > 0)
-                {
-                    Storage.Directory.GetAssetsPaths(buildScenes, (callBackData, callBackResults) =>
+                    if (buildScenesToStringArray == null || buildScenesToStringArray.Length != buildScenes.Length)
                     {
-                        if (callBackResults.error == true)
-                        {
-                            DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
-                        }
+                        buildScenesToStringArray = new string[buildScenes.Length];
+                    }
 
-                        if (callBackResults.success == true)
+                    if (buildScenesToStringArray.Contains(null))
+                    {
+                        Storage.Directory.GetAssetsPaths(buildScenes, (callBackData, callBackResults) =>
                         {
-                            buildScenesToStringArray = callBackData;
-                            DebugConsole.Log(Debug.LogLevel.Success, callBackResults.successValue);
-                        }
+                            if (callBackResults.error == true)
+                            {
+                                DebugConsole.Log(Debug.LogLevel.Error, callBackResults.errorValue);
+                            }
 
-                    });
+                            if (callBackResults.success == true)
+                            {
+                                buildScenesToStringArray = callBackData;
+                            }
+
+                        });
+                    }
+
+                    return buildScenesToStringArray;
                 }
+                else
+                {
 
-                return buildScenesToStringArray;
+                    DebugConsole.Log(Debug.LogLevel.Warning, $"No Build Scenes Assigned - Returning Null.");
+                    return null;
+                }
             }
             catch (Exception exception)
             {
@@ -693,7 +716,13 @@ namespace Bridge.Core.App.Manager
 
         public bool Equals(SplashScreenSettingsData other)
         {
-            return this.screens.Equals(other.screens);
+
+            return this.backgroundColor.Equals(other.backgroundColor)
+                && this.unityLogoStyle.Equals(other.unityLogoStyle)
+                && this.animationMode.Equals(other.animationMode)
+                && this.logoDrawMode.Equals(other.logoDrawMode)
+                && this.showUnityLogo.Equals(other.showUnityLogo)
+                && this.showSplashScreen.Equals(other.showSplashScreen);
         }
 
         #endregion
@@ -744,7 +773,7 @@ namespace Bridge.Core.App.Manager
     }
 
     [Serializable]
-    public struct SplashScreenLogoData
+    public struct SplashScreenLogoData : IEquatable<SplashScreenLogoData>
     {
         #region Components
 
@@ -783,6 +812,24 @@ namespace Bridge.Core.App.Manager
             splashScreenLogo.duration = this.duration;
 
             return splashScreenLogo;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(SplashScreenLogoData other)
+        {
+
+            return this.name.Equals(other.name)
+                && this.logo.Equals(other.logo) 
+                && this.duration.Equals(other.duration);
         }
 
         #endregion
@@ -824,13 +871,6 @@ namespace Bridge.Core.App.Manager
 
         #endregion
 
-        #region Splash Screens
-
-        [Space(5)]
-        public SplashScreenSettings splashScreenSettings;
-
-        #endregion
-
         #region Android
 
         [Space(5)]
@@ -856,6 +896,13 @@ namespace Bridge.Core.App.Manager
         public DefaultAppIcon tvOSAppIcon;
 
         #endregion
+
+        #endregion
+
+        #region Splash Screens
+
+        //[Space(5)]
+        //public SplashScreenSettings splashScreenSettings;
 
         #endregion
 
@@ -909,7 +956,7 @@ namespace Bridge.Core.App.Manager
             {
                 appInfo = this.appInfo.ToSerializable(),
                 showIconSettings = this.showIconSettings,
-                splashScreenSettingsData = this.splashScreenSettings.ToSerializable(),
+                // splashScreenSettingsData = this.splashScreenSettings.ToSerializable(),
                 appIconKind = this.appIconKind,
                 standaloneAppIconData = standaloneAppIcon.ToSerializable(),
                 androidIconKind = this.androidIconKind,
@@ -1035,8 +1082,8 @@ namespace Bridge.Core.App.Manager
 
         #region Splash Screens
 
-        [Space(5)]
-        public SplashScreenSettingsData splashScreenSettingsData;
+        //[Space(5)]
+        //public SplashScreenSettingsData splashScreenSettingsData;
 
         #endregion
 
@@ -1095,7 +1142,7 @@ namespace Bridge.Core.App.Manager
             BuildSettings buildSettingsInstance = ScriptableObject.CreateInstance<BuildSettings>();
 
             buildSettingsInstance.appInfo = this.appInfo.ToInstance();
-            buildSettingsInstance.splashScreenSettings = this.splashScreenSettingsData.ToInstance();
+            // buildSettingsInstance.splashScreenSettings = this.splashScreenSettingsData.ToInstance();
             buildSettingsInstance.showIconSettings = this.showIconSettings;
             buildSettingsInstance.appIconKind = this.appIconKind;
             buildSettingsInstance.standaloneAppIcon = this.standaloneAppIconData.ToInstance();
@@ -1135,7 +1182,8 @@ namespace Bridge.Core.App.Manager
             if (other == null)
                 return false;
 
-            return this.appInfo.Equals(other.appInfo)
+            return this.appInfo.Equals(other.appInfo) 
+                //&& this.splashScreenSettingsData.Equals(other.splashScreenSettingsData)
                 && this.standaloneAppIconData.Equals(other.standaloneAppIconData)
                 && this.showIconSettings.Equals(other.showIconSettings)
                 && this.androidIconKind.Equals(other.androidIconKind)
@@ -1144,7 +1192,7 @@ namespace Bridge.Core.App.Manager
                 && this.androidLegacyAppIconData.Equals(other.androidLegacyAppIconData)
                 && this.iOSAppIconData.Equals(other.iOSAppIconData)
                 && this.tvOSAppIconData.Equals(other.tvOSAppIconData)
-                && this.configurations.Equals(other.configurations)
+                //&& this.configurations.Equals(other.configurations)
                 && this.standaloneDisplaySettings.Equals(other.standaloneDisplaySettings)
                 && this.mobileDisplaySettings.Equals(other.mobileDisplaySettings)
                 && this.consoleDisplaySettings.Equals(other.consoleDisplaySettings)
@@ -1645,8 +1693,7 @@ namespace Bridge.Core.App.Manager
 
         public bool Equals(BuildConfig other)
         {
-            return platform.Equals(other.platform) 
-                && this.allowDebugging.Equals(other.allowDebugging) 
+            return  this.allowDebugging.Equals(other.allowDebugging) 
                 && this.developmentBuild.Equals(other.developmentBuild) 
                 && this.buildLocation.Equals(other.buildLocation) 
                 && this.targetBuildDirectory.Equals(other.targetBuildDirectory);
