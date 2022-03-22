@@ -888,13 +888,12 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 reordarableSceneList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => 
                 {
                     GUIContent content = new GUIContent();
+                    content.tooltip = "Assign Scenes To Include In Build.";
                     content.text = (string.IsNullOrEmpty(property.GetArrayElementAtIndex(index).FindPropertyRelative("scene").objectReferenceValue?.name))? "New Scene" : property.GetArrayElementAtIndex(index).FindPropertyRelative("scene").objectReferenceValue?.name;
 
-                    //EditorGUI.LabelField(new Rect(rect.x, rect.y, 100, EditorGUIUtility.singleLineHeight), "Build Scene");
-                    //EditorGUI.PropertyField(new Rect(rect.x, rect.y, 200, EditorGUIUtility.singleLineHeight), property.GetArrayElementAtIndex(index).FindPropertyRelative("isActive"), GUIContent.none);
-                    EditorGUI.PropertyField(new Rect(rect.x, rect.y - 3, rect.width - 100, 25), property.GetArrayElementAtIndex(index).FindPropertyRelative("scene"), content);
+                    EditorGUI.LabelField(new Rect(rect.x, rect.y, 150, EditorGUIUtility.singleLineHeight), content);
+                    EditorGUI.PropertyField(new Rect(rect.x + 125, rect.y - 3, rect.width - 185, 25), property.GetArrayElementAtIndex(index).FindPropertyRelative("scene"), GUIContent.none);
                     EditorGUI.PropertyField(new Rect(rect.width, rect.y, 100, EditorGUIUtility.singleLineHeight), property.GetArrayElementAtIndex(index).FindPropertyRelative("isActive"), GUIContent.none);
-                    // EditorGUI.PropertyField(rect, property.GetArrayElementAtIndex(index), true);
                 };
 
                 reordarableSceneList.drawHeaderCallback = (Rect headerRect) => 
