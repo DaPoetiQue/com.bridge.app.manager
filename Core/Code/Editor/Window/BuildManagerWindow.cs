@@ -101,13 +101,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
         #region Updated Objects Settings
 
-        #region Build Scenes
-
-        SerializedObject sceneDataSerializedObject;
-        SerializedProperty sceneDataSerializedObjectProperty;
-
-        #endregion
-
         #region Standalone Icon Data
 
         SerializedObject appIconStandaloneSerializedObject;
@@ -261,8 +254,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 window = GetWindow<BuildManagerWindow>();
                 window.wantsMouseEnterLeaveWindow = false;
-                //window.Repaint();
-                // DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
+                window.Repaint();
+                DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
             }
 
             #region App Icons Settings Update
@@ -272,8 +265,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             #region Standalone Icon
 
             if (buildTargetGroup == BuildTargetGroup.Standalone)
-            {
-                if (appIconStandaloneSerializedObject != null)
+            { 
+                if(appIconStandaloneSerializedObject != null)
                 {
                     appIconStandaloneSerializedObject.ApplyModifiedProperties();
                     appIconStandaloneSerializedObject.Update();
@@ -286,11 +279,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             if (buildTargetGroup == BuildTargetGroup.Android)
             {
-                if (androidIconsInfoSerializedObject == null)
-                {
-                    androidIconsInfoSerializedObject = new SerializedObject(appBuildSettings);
-                }
-
                 if (androidIconsInfoSerializedObject != null)
                 {
                     androidIconsInfoSerializedObject.ApplyModifiedProperties();
@@ -553,11 +541,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                     {
                         GUILayout.Space(10);
 
-                        if(androidIconsInfoSerializedObject == null)
-                        {
-                            androidIconsInfoSerializedObject = new SerializedObject(appBuildSettings);
-                        }
-                      
+                        androidIconsInfoSerializedObject = new SerializedObject(appBuildSettings);
                         SerializedProperty androidIconsInfoSerializedObjectProperty = androidIconsInfoSerializedObject.FindProperty("androidIconKind");
                         androidIconsInfoSerializedObject.ApplyModifiedProperties();
                         EditorGUILayout.PropertyField(androidIconsInfoSerializedObjectProperty.FindPropertyRelative("appIconKind"), iconKindLayout);
@@ -568,15 +552,15 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                         {
                             case AndroidIconKind.Adaptive:
 
-                                appIconForegroundSerializedObject = new SerializedObject(appBuildSettings);
-                                appIconForegroundSerializedObjectProperty = appIconForegroundSerializedObject.FindProperty("androidAdaptiveAppIcon");
-                                EditorGUILayout.ObjectField(appIconForegroundSerializedObjectProperty.FindPropertyRelative("foreground"), typeof(Texture2D), iconLayout);
-
-                                EditorGUILayout.Separator();
-
                                 appIconBackgroundSerializedObject = new SerializedObject(appBuildSettings);
                                 appIconBackgrounSerializedObjectProperty = appIconBackgroundSerializedObject.FindProperty("androidAdaptiveAppIcon");
                                 EditorGUILayout.ObjectField(appIconBackgrounSerializedObjectProperty.FindPropertyRelative("background"), typeof(Texture2D), iconLayout);
+
+                                EditorGUILayout.Separator();
+
+                                appIconForegroundSerializedObject = new SerializedObject(appBuildSettings);
+                                appIconForegroundSerializedObjectProperty = appIconForegroundSerializedObject.FindProperty("androidAdaptiveAppIcon");
+                                EditorGUILayout.ObjectField(appIconForegroundSerializedObjectProperty.FindPropertyRelative("foreground"), typeof(Texture2D), iconLayout);
 
                                 break;
 
@@ -649,12 +633,9 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             GUILayout.Label("Included Scenes", styleHeaderText);
 
             GUILayout.Space(10);
-
-            if (sceneDataSerializedObject == null)
-                sceneDataSerializedObject = new SerializedObject(appBuildSettings);
-
+            SerializedObject sceneDataSerializedObject = new SerializedObject(appBuildSettings);
             sceneDataSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
-            sceneDataSerializedObjectProperty = sceneDataSerializedObject.FindProperty("buildScenes");
+            SerializedProperty sceneDataSerializedObjectProperty = sceneDataSerializedObject.FindProperty("buildScenes");
             EditorGUILayout.PropertyField(sceneDataSerializedObjectProperty, true);
             sceneDataSerializedObject.ApplyModifiedProperties();
 
@@ -776,7 +757,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 GUI.backgroundColor = Color.yellow;
 
-                if (GUILayout.Button("Apply Settings", GUILayout.Height(30)))
+                if (GUILayout.Button("Apply New Settings", GUILayout.Height(30)))
                 {
                     window.SaveChanges();
 
