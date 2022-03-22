@@ -524,7 +524,7 @@ namespace Bridge.Core.App.Manager
     /// Contains splash screen data.
     /// </summary>
     [Serializable]
-    public struct SplashScreen
+    public struct SplashScreenSettings
     {
         #region Components
 
@@ -557,11 +557,12 @@ namespace Bridge.Core.App.Manager
 
         #region Data Conversions
 
-        public SplashScreenData ToSerializable()
+        public SplashScreenSettingsData ToSerializable()
         {
-            SplashScreenData splashScreen = new SplashScreenData();
 
-            if (this.screens.Length > 0)
+            SplashScreenSettingsData splashScreen = new SplashScreenSettingsData();
+
+            if (this.screens != null && this.screens.Length > 0)
             {
                 splashScreen.screens = new SplashScreenLogoData[this.screens.Length];
 
@@ -603,7 +604,7 @@ namespace Bridge.Core.App.Manager
     /// Contains serializable splash screen data.
     /// </summary>
     [Serializable]
-    public struct SplashScreenData : IEquatable<SplashScreenData>
+    public struct SplashScreenSettingsData : IEquatable<SplashScreenSettingsData>
     {
         #region Components
 
@@ -636,14 +637,14 @@ namespace Bridge.Core.App.Manager
 
         #region Data Conversions
 
-        public SplashScreen ToInstance()
+        public SplashScreenSettings ToInstance()
         {
             if (screens == null)
             {
-                return new SplashScreen();
+                return new SplashScreenSettings();
             }
 
-            SplashScreen splashScreen = new SplashScreen();
+            SplashScreenSettings splashScreen = new SplashScreenSettings();
 
             if (screens.Length > 0)
             {
@@ -690,7 +691,7 @@ namespace Bridge.Core.App.Manager
             return this.Equals(obj);
         }
 
-        public bool Equals(SplashScreenData other)
+        public bool Equals(SplashScreenSettingsData other)
         {
             return this.screens.Equals(other.screens);
         }
@@ -823,6 +824,13 @@ namespace Bridge.Core.App.Manager
 
         #endregion
 
+        #region Splash Screens
+
+        [Space(5)]
+        public SplashScreenSettings splashScreenSettings;
+
+        #endregion
+
         #region Android
 
         [Space(5)]
@@ -901,6 +909,7 @@ namespace Bridge.Core.App.Manager
             {
                 appInfo = this.appInfo.ToSerializable(),
                 showIconSettings = this.showIconSettings,
+                splashScreenSettingsData = this.splashScreenSettings.ToSerializable(),
                 appIconKind = this.appIconKind,
                 standaloneAppIconData = standaloneAppIcon.ToSerializable(),
                 androidIconKind = this.androidIconKind,
@@ -1024,6 +1033,13 @@ namespace Bridge.Core.App.Manager
 
         #endregion
 
+        #region Splash Screens
+
+        [Space(5)]
+        public SplashScreenSettingsData splashScreenSettingsData;
+
+        #endregion
+
         [Space(5)]
         [NonReorderable]
         public string[] buildScenes;
@@ -1079,6 +1095,7 @@ namespace Bridge.Core.App.Manager
             BuildSettings buildSettingsInstance = ScriptableObject.CreateInstance<BuildSettings>();
 
             buildSettingsInstance.appInfo = this.appInfo.ToInstance();
+            buildSettingsInstance.splashScreenSettings = this.splashScreenSettingsData.ToInstance();
             buildSettingsInstance.showIconSettings = this.showIconSettings;
             buildSettingsInstance.appIconKind = this.appIconKind;
             buildSettingsInstance.standaloneAppIcon = this.standaloneAppIconData.ToInstance();

@@ -490,7 +490,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             {
                 #region Icons Settings Header
 
-                GUILayout.Space(15);
+                GUILayout.Space(25);
 
                 GUILayout.Label("Application Icon", styleHeaderText);
 
@@ -608,6 +608,21 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                     #endregion
                 }
             }
+
+            #endregion
+
+            #region Splash Screens
+
+            GUILayout.Space(15);
+
+            GUILayout.Label("Splash Screens", styleHeaderText);
+
+            GUILayout.Space(10);
+
+            SerializedObject splashScreensSerializedObject = new SerializedObject(appBuildSettings);
+            SerializedProperty splashScreensSerializedObjectProperty = splashScreensSerializedObject.FindProperty("splashScreenSettings");
+            EditorGUILayout.PropertyField(splashScreensSerializedObjectProperty, true);
+            splashScreensSerializedObject.ApplyModifiedProperties();
 
             #endregion
 
