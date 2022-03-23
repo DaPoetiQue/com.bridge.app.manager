@@ -231,23 +231,24 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 #region Build Scene Info
 
-                string[] buildScenes = EditorBuildSettingsScene.GetActiveSceneList(EditorBuildSettings.scenes);
 
-                if (buildScenes.Length > 0)
+                var buildSceneList = EditorBuildSettings.scenes;
+
+                BuildSceneData[] buildSceneData = new BuildSceneData[buildSceneList.Length];
+                BuildScene[] buildScene = new BuildScene[buildSceneList.Length];
+
+                if (buildSceneList.Length > 0)
                 {
-                    Storage.AssetData.LoadAssets<SceneAsset>(buildScenes, (loadedScenesResults, callbackResults) =>
+                    for (int i = 0; i < buildSceneList.Length; i++)
                     {
-                        if (callbackResults.error == true)
+                        BuildSceneData sceneData = new BuildSceneData
                         {
-                            DebugConsole.Log(Debug.LogLevel.Error, callbackResults.errorValue);
-                        }
+                            scenePath = buildSceneList[i].path,
+                            isActive = buildSceneList[i].enabled
+                        };
 
-                        if (callbackResults.success == true)
-                        {
-                           // newBuildSettings.buildScenes = loadedScenesResults;
-                            DebugConsole.Log(Debug.LogLevel.Error, callbackResults.successValue);
-                        }
-                    });
+                        buildScene[i] = sceneData.ToInstance();
+                    }
                 }
 
                 #endregion
