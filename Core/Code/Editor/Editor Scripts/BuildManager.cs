@@ -102,7 +102,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 if (results.success == true)
                 {
                     buildSettingsData = GetBuildSettings(GetDefaultStorageInfo());
-                    DebugConsole.Log(Debug.LogLevel.Success, $"Build data loaded successfully @ : {GetDefaultStorageInfo().filePath}.");
+                    // DebugConsole.Log(Debug.LogLevel.Success, $"Build data loaded successfully @ : {GetDefaultStorageInfo().filePath}.");
                 }
 
             });
@@ -705,7 +705,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 {
                     buildSettingsData = loadedResults;
 
-                    DebugConsole.Log(Debug.LogLevel.Success, $"Load Completed With Results : {loadStatus.successValue}");
+                    // DebugConsole.Log(Debug.LogLevel.Success, $"Load Completed With Results : {loadStatus.successValue}");
                 }
             });
 

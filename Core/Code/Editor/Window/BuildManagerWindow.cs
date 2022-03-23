@@ -265,7 +265,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 window = GetWindow<BuildManagerWindow>();
                 window.wantsMouseEnterLeaveWindow = false;
                 window.Repaint();
-                DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
+                // DebugConsole.Log(Debug.LogLevel.Debug, this, "Window Refreshed!.");
             }
 
             #region App Icons Settings Update

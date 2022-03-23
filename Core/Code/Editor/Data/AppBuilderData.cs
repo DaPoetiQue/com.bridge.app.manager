@@ -661,20 +661,23 @@ namespace Bridge.Core.App.Manager
                 }
             }
 
-            Storage.Directory.GetAssetPath<Sprite>(background, (backgroundPath, results) =>
+            if (background != null)
             {
-                if (results.error == true)
+                Storage.Directory.GetAssetPath<Sprite>(background, (backgroundPath, results) =>
                 {
-                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
-                    return;
-                }
+                    if (results.error == true)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
+                        return;
+                    }
 
-                if (results.success == true)
-                {
-                    splashScreen.background = backgroundPath;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            });
+                    if (results.success == true)
+                    {
+                        splashScreen.background = backgroundPath;
+                        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                    }
+                });
+            }
 
             splashScreen.backgroundColor = this.backgroundColor;
             splashScreen.unityLogoStyle = this.unityLogoStyle;
@@ -745,20 +748,24 @@ namespace Bridge.Core.App.Manager
                 }
             }
 
-            Storage.AssetData.LoadAsset<Sprite>(background, (backgroundImage, results) =>
+            if (background != null)
             {
-                if (results.error == true)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
-                    return;
-                }
 
-                if (results.success == true)
+                Storage.AssetData.LoadAsset<Sprite>(background, (backgroundImage, results) =>
                 {
-                    splashScreen.background = backgroundImage;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
-                }
-            });
+                    if (results.error == true)
+                    {
+                        DebugConsole.Log(Debug.LogLevel.Warning, results.errorValue);
+                        return;
+                    }
+
+                    if (results.success == true)
+                    {
+                        splashScreen.background = backgroundImage;
+                        DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
+                    }
+                });
+            }
 
             splashScreen.backgroundColor = this.backgroundColor;
             splashScreen.unityLogoStyle = this.unityLogoStyle;
@@ -1133,7 +1140,7 @@ namespace Bridge.Core.App.Manager
                 {
                     scene = resultsData;
 
-                    DebugConsole.Log(Debug.LogLevel.Success, resultsCallback.successValue);
+                    //DebugConsole.Log(Debug.LogLevel.Success, resultsCallback.successValue);
                 }
             
             });
