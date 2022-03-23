@@ -1056,122 +1056,6 @@ namespace Bridge.Core.App.Manager
         #endregion
     }
 
-    #region Scene Data
-
-    [Serializable]
-    public struct BuildScene
-    {
-        [Space(5)]
-        public SceneAsset scene;
-
-        [Space(5)]
-        public bool isActive;
-
-        public BuildSceneData ToSerializable()
-        {
-            return new BuildSceneData
-            {
-                scenePath = GetSceneData(),
-                isActive = this.isActive
-            };
-        }
-
-        public string GetSceneData()
-        {
-            if(scene == null)
-            {
-                return null;
-            }
-
-            string scenePath = string.Empty;
-
-            Storage.Directory.GetAssetPath(scene, (resultsData, callbackResults) => 
-            {
-                if (callbackResults.error)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Warning, callbackResults.errorValue);
-                }
-
-                if(callbackResults.success)
-                {
-                    scenePath = resultsData;
-                }
-            
-            });
-
-
-            return scenePath;
-        }
-    }
-
-
-    [Serializable]
-    public struct BuildSceneData : IEquatable<BuildSceneData>
-    {
-        public string scenePath;
-        public bool isActive;
-
-        public BuildScene ToInstance()
-        {
-            return new BuildScene
-            {
-                scene = GetScene(),
-                isActive = this.isActive
-            };
-        }
-
-        public override string ToString()
-        {
-            return scenePath;
-        }
-
-        private SceneAsset GetScene()
-        {
-            if(scenePath == null)
-            {
-                return null;
-            }
-
-            SceneAsset scene = null;
-            
-            Storage.AssetData.LoadAsset<SceneAsset>(scenePath, (resultsData, resultsCallback) => 
-            {
-                if(resultsCallback.error)
-                {
-                    DebugConsole.Log(Debug.LogLevel.Warning, resultsCallback.errorValue);
-                }
-
-                if(resultsCallback.success)
-                {
-                    scene = resultsData;
-
-                    //DebugConsole.Log(Debug.LogLevel.Success, resultsCallback.successValue);
-                }
-            
-            });
-
-            return scene;
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return this.Equals(obj);
-        }
-
-        public bool Equals(BuildSceneData other)
-        {
-            return this.scenePath.Equals(other.scenePath)
-                && this.isActive.Equals(other.isActive);
-        }
-    }
-
-    #endregion
-
     /// <summary>
     /// This class contains the serializable app build settings.
     /// </summary>
@@ -1340,12 +1224,124 @@ namespace Bridge.Core.App.Manager
                 && this.standaloneDisplaySettings.Equals(other.standaloneDisplaySettings)
                 && this.mobileDisplaySettings.Equals(other.mobileDisplaySettings)
                 && this.consoleDisplaySettings.Equals(other.consoleDisplaySettings)
-                && this.webDisplaySettings.Equals(other.webDisplaySettings);
-                //&& DataComparison.Equals(this.buildScenes, other.buildScenes);
-         
-
+                && this.webDisplaySettings.Equals(other.webDisplaySettings)
+                && DataComparison.Equals(this.buildScenes, other.buildScenes);
         }
     }
+
+    #region Scene Data
+
+    [Serializable]
+    public struct BuildScene
+    {
+        [Space(5)]
+        public SceneAsset scene;
+
+        [Space(5)]
+        public bool isActive;
+
+        public BuildSceneData ToSerializable()
+        {
+            return new BuildSceneData
+            {
+                scenePath = GetSceneData(),
+                isActive = this.isActive
+            };
+        }
+
+        public string GetSceneData()
+        {
+            if (scene == null)
+            {
+                return null;
+            }
+
+            string scenePath = string.Empty;
+
+            Storage.Directory.GetAssetPath(scene, (resultsData, callbackResults) =>
+            {
+                if (callbackResults.error)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, callbackResults.errorValue);
+                }
+
+                if (callbackResults.success)
+                {
+                    scenePath = resultsData;
+                }
+
+            });
+
+
+            return scenePath;
+        }
+    }
+
+
+    [Serializable]
+    public struct BuildSceneData : IEquatable<BuildSceneData>
+    {
+        public string scenePath;
+        public bool isActive;
+
+        public BuildScene ToInstance()
+        {
+            return new BuildScene
+            {
+                scene = GetScene(),
+                isActive = this.isActive
+            };
+        }
+
+        public override string ToString()
+        {
+            return scenePath;
+        }
+
+        private SceneAsset GetScene()
+        {
+            if (scenePath == null)
+            {
+                return null;
+            }
+
+            SceneAsset scene = null;
+
+            Storage.AssetData.LoadAsset<SceneAsset>(scenePath, (resultsData, resultsCallback) =>
+            {
+                if (resultsCallback.error)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, resultsCallback.errorValue);
+                }
+
+                if (resultsCallback.success)
+                {
+                    scene = resultsData;
+                }
+
+            });
+
+            return scene;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj);
+        }
+
+        public bool Equals(BuildSceneData other)
+        {
+            return this.scenePath.Equals(other.scenePath)
+                && this.isActive.Equals(other.isActive);
+        }
+    }
+
+    #endregion
 
     [Serializable]
     public static class DataComparison
