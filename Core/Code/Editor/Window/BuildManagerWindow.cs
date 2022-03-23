@@ -27,9 +27,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             windowInstance.minSize = new Vector2(400, 400);
             windowInstance.maxSize = new Vector2(600, 600);
             windowInstance.Show();
-
-            window.minSize = windowInstance.minSize;
-            window.maxSize = windowInstance.maxSize;
         }
 
         #endregion

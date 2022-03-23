@@ -6,6 +6,7 @@ using Bridge.Core.App.Manager;
 using System;
 using Bridge.Core.UnityCustomEditor.App.Manager;
 using Bridge.Core.UnityCustomEditor.Debugger;
+using System.Collections.Generic;
 
 public static class AppBuildConfig
 {
@@ -14,7 +15,7 @@ public static class AppBuildConfig
         try
         {
             BuildSettings settings = BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()).ToInstance();
-            BuildApplication(settings.ToSerializable(), GetBuildScenes(), settings.buildAndRun);
+            BuildApplication(settings.ToSerializable(), GetBuildScenes(SerializableInstanceDataConverter.GetBuildScenes(settings.buildScenes)), settings.buildAndRun);
         }
         catch (Exception exception)
         {
@@ -110,18 +111,27 @@ public static class AppBuildConfig
             }
         }
 
-    public static string[] GetBuildScenes()
+    public static string[] GetBuildScenes(BuildSceneData[] buildScenes)
     {
-        int sceneCount = SceneManager.sceneCount;
-        string[] scenePath = new string[sceneCount];
+
+        if(buildScenes == null)
+        {
+            DebugConsole.Log(Bridge.Core.Debug.LogLevel.Warning, $"Build scenes can not Be NULL : Returning NULL");
+            return null;
+        }
+
+        int sceneCount = buildScenes.Length;
+        List<string> activeSceneList = new List<string>();
 
         for (int i = 0; i < sceneCount; i++)
         {
-            scenePath[i] = SceneUtility.GetScenePathByBuildIndex(i);
-            DebugConsole.Log(Bridge.Core.Debug.LogLevel.Debug, $"Found scene @ : {scenePath[i]}");
+            if(buildScenes[i].isActive && activeSceneList.Contains(buildScenes[i].scenePath) == false)
+            {
+                activeSceneList.Add(buildScenes[i].scenePath);
+            }
         }
 
-        return scenePath;
+        return activeSceneList.ToArray();
     }
 
     public static BuildSceneData[] GetBuildSceneData()

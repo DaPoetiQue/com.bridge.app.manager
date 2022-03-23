@@ -1120,6 +1120,11 @@ namespace Bridge.Core.App.Manager
             };
         }
 
+        public override string ToString()
+        {
+            return scenePath;
+        }
+
         private SceneAsset GetScene()
         {
             if(scenePath == null)
