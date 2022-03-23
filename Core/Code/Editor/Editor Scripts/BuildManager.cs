@@ -122,7 +122,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Build Scenes
 
-            buildSettings.buildScenes = AppBuildConfig.GetBuildScenes();
+            buildSettings.buildScenes = AppBuildConfig.GetBuildSceneData();
 
             #endregion
 

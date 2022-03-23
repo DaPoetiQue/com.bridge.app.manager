@@ -124,6 +124,20 @@ public static class AppBuildConfig
         return scenePath;
     }
 
+    public static BuildSceneData[] GetBuildSceneData()
+    {
+        int sceneCount = SceneManager.sceneCount;
+        BuildSceneData[] scenePath = new BuildSceneData[sceneCount];
+
+        for (int i = 0; i < sceneCount; i++)
+        {
+            scenePath[i].scenePath = SceneUtility.GetScenePathByBuildIndex(i);
+            DebugConsole.Log(Bridge.Core.Debug.LogLevel.Debug, $"Found scene @ : {scenePath[i]}");
+        }
+
+        return scenePath;
+    }
+
 
     /// <summary>
     /// This function is for getting a runtime platform group for the currently selected platform.

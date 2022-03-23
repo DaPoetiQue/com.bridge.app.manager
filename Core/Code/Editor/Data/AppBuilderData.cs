@@ -198,9 +198,74 @@ namespace Bridge.Core.App.Manager
         private static string[] buildScenesToStringArray = new string[0];
         private static SceneAsset[] buildScenesToAssetArray = new SceneAsset[0];
 
+        private static BuildScene[] buildSceneArray = new BuildScene[0];
+        private static BuildSceneData[] buildSceneDataArray = new BuildSceneData[0];
+
         #endregion
 
         #region Data Functions
+
+        public static BuildScene[] GetBuildScenes(BuildSceneData[] buildSceneData)
+        {
+            try
+            {
+                if(buildSceneData != null)
+                {
+                    if (buildSceneArray == null || buildSceneArray.Length != buildSceneData.Length)
+                    {
+                        buildSceneArray = new BuildScene[buildSceneData.Length];
+                    }
+
+                    for (int i = 0; i < buildSceneArray.Length; i++)
+                    {
+                        buildSceneArray[i] = buildSceneData[i].ToInstance();
+                    }
+
+                    return buildSceneArray;
+                }
+                else
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, $"No Build Scene data Assigned - Returning Null.");
+                    return null;
+                }
+            }
+            catch (Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, $"Failed With Exception : {exception.Message}");
+                throw exception;
+            }
+        }
+
+        public static BuildSceneData[] GetBuildScenes(BuildScene[] buildSceneData)
+        {
+            try
+            {
+                if (buildSceneData != null)
+                {
+                    if (buildSceneDataArray == null || buildSceneDataArray.Length != buildSceneData.Length)
+                    {
+                        buildSceneDataArray = new BuildSceneData[buildSceneData.Length];
+                    }
+
+                    for (int i = 0; i < buildSceneDataArray.Length; i++)
+                    {
+                        buildSceneDataArray[i] = buildSceneData[i].ToSerializable();
+                    }
+
+                    return buildSceneDataArray;
+                }
+                else
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, $"No Build Scenes Assigned - Returning Null.");
+                    return null;
+                }
+            }
+            catch(Exception exception)
+            {
+                DebugConsole.Log(Debug.LogLevel.Error, $"Failed With Exception : {exception.Message}");
+                throw exception;
+            }
+        }
 
         public static SceneAsset[] GetBuildScenes(string[] buildScenes)
         {
@@ -902,14 +967,14 @@ namespace Bridge.Core.App.Manager
 
         #region Splash Screens
 
-        //[Space(5)]
-        //public SplashScreenSettings splashScreenSettings;
+        [Space(5)]
+        public SplashScreenSettings splashScreenSettings;
 
         #endregion
 
         [Space(5)]
         //[NonReorderable]
-        public BuidScene[] buildScenes;
+        public BuildScene[] buildScenes;
 
         [Space(5)]
         public BuildConfig configurations;
@@ -957,7 +1022,7 @@ namespace Bridge.Core.App.Manager
             {
                 appInfo = this.appInfo.ToSerializable(),
                 overideIconSettings = this.overideIconSettings,
-                // splashScreenSettingsData = this.splashScreenSettings.ToSerializable(),
+                splashScreenSettingsData = this.splashScreenSettings.ToSerializable(),
                 appIconKind = this.appIconKind,
                 standaloneAppIconData = standaloneAppIcon.ToSerializable(),
                 androidIconKind = this.androidIconKind,
@@ -966,7 +1031,7 @@ namespace Bridge.Core.App.Manager
                 androidLegacyAppIconData = this.androidLegacyAppIcon.ToSerializable(),
                 iOSAppIconData = this.iOSAppIcon.ToSerializable(),
                 tvOSAppIconData = this.tvOSAppIcon.ToSerializable(),
-                //buildScenes = SerializableInstanceDataConverter.GetBuildScenesDirectories(buildScenes),
+                buildScenes = SerializableInstanceDataConverter.GetBuildScenes(buildScenes),
                 configurations = this.configurations,
                 consoleDisplaySettings = this.consoleDisplaySettings,
                 mobileDisplaySettings = this.mobileDisplaySettings,
@@ -987,15 +1052,94 @@ namespace Bridge.Core.App.Manager
     #region Scene Data
 
     [Serializable]
-    public struct BuidScene : IEquatable<BuidScene>
+    public struct BuildScene
     {
-        public string sceneName;
-
         [Space(5)]
         public SceneAsset scene;
 
         [Space(5)]
         public bool isActive;
+
+        public BuildSceneData ToSerializable()
+        {
+            return new BuildSceneData
+            {
+                scenePath = GetSceneData(),
+                isActive = this.isActive
+            };
+        }
+
+        public string GetSceneData()
+        {
+            if(scene == null)
+            {
+                return null;
+            }
+
+            string scenePath = string.Empty;
+
+            Storage.Directory.GetAssetPath(scene, (resultsData, callbackResults) => 
+            {
+                if (callbackResults.error)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, callbackResults.errorValue);
+                }
+
+                if(callbackResults.success)
+                {
+                    scenePath = resultsData;
+                }
+            
+            });
+
+
+            return scenePath;
+        }
+    }
+
+
+    [Serializable]
+    public struct BuildSceneData : IEquatable<BuildSceneData>
+    {
+        public string scenePath;
+        public bool isActive;
+
+        public BuildScene ToInstance()
+        {
+            return new BuildScene
+            {
+                scene = GetScene(),
+                isActive = this.isActive
+            };
+        }
+
+        private SceneAsset GetScene()
+        {
+            if(scenePath == null)
+            {
+                return null;
+            }
+
+            SceneAsset scene = null;
+            
+            Storage.AssetData.LoadAsset<SceneAsset>(scenePath, (resultsData, resultsCallback) => 
+            {
+                if(resultsCallback.error)
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, resultsCallback.errorValue);
+                }
+
+                if(resultsCallback.success)
+                {
+                    scene = resultsData;
+
+                    DebugConsole.Log(Debug.LogLevel.Success, resultsCallback.successValue);
+                }
+            
+            });
+
+            return scene;
+        }
 
         public override int GetHashCode()
         {
@@ -1007,10 +1151,9 @@ namespace Bridge.Core.App.Manager
             return this.Equals(obj);
         }
 
-        public bool Equals(BuidScene other)
+        public bool Equals(BuildSceneData other)
         {
-            return this.sceneName.Equals(other.sceneName) 
-                && this.scene.Equals(other.scene)
+            return this.scenePath.Equals(other.scenePath)
                 && this.isActive.Equals(other.isActive);
         }
     }
@@ -1071,14 +1214,14 @@ namespace Bridge.Core.App.Manager
 
         #region Splash Screens
 
-        //[Space(5)]
-        //public SplashScreenSettingsData splashScreenSettingsData;
+        [Space(5)]
+        public SplashScreenSettingsData splashScreenSettingsData;
 
         #endregion
 
         [Space(5)]
         [NonReorderable]
-        public string[] buildScenes;
+        public BuildSceneData[] buildScenes;
 
         [Space(5)]
         public BuildConfig configurations;
@@ -1131,7 +1274,7 @@ namespace Bridge.Core.App.Manager
             BuildSettings buildSettingsInstance = ScriptableObject.CreateInstance<BuildSettings>();
 
             buildSettingsInstance.appInfo = this.appInfo.ToInstance();
-            // buildSettingsInstance.splashScreenSettings = this.splashScreenSettingsData.ToInstance();
+            buildSettingsInstance.splashScreenSettings = this.splashScreenSettingsData.ToInstance();
             buildSettingsInstance.overideIconSettings = this.overideIconSettings;
             buildSettingsInstance.appIconKind = this.appIconKind;
             buildSettingsInstance.standaloneAppIcon = this.standaloneAppIconData.ToInstance();
@@ -1141,7 +1284,7 @@ namespace Bridge.Core.App.Manager
             buildSettingsInstance.androidLegacyAppIcon = this.androidLegacyAppIconData.ToInstance();
             buildSettingsInstance.iOSAppIcon = this.iOSAppIconData.ToInstance();
             buildSettingsInstance.tvOSAppIcon = this.iOSAppIconData.ToInstance();
-            //buildSettingsInstance.buildScenes = SerializableInstanceDataConverter.GetBuildScenes(buildScenes);
+            buildSettingsInstance.buildScenes = SerializableInstanceDataConverter.GetBuildScenes(buildScenes);
             buildSettingsInstance.configurations = this.configurations;
             buildSettingsInstance.consoleDisplaySettings = this.consoleDisplaySettings;
             buildSettingsInstance.mobileDisplaySettings = this.mobileDisplaySettings;
@@ -1172,7 +1315,7 @@ namespace Bridge.Core.App.Manager
                 return false;
 
             return this.appInfo.Equals(other.appInfo)
-                //&& this.splashScreenSettingsData.Equals(other.splashScreenSettingsData)
+                && this.splashScreenSettingsData.Equals(other.splashScreenSettingsData)
                 && this.standaloneAppIconData.Equals(other.standaloneAppIconData)
                 && this.overideIconSettings.Equals(other.overideIconSettings)
                 && this.androidIconKind.Equals(other.androidIconKind)

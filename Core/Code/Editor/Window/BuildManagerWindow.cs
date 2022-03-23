@@ -24,9 +24,12 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         public static void OpenAppBuildManagerEditor()
         {
             var windowInstance = GetWindow<BuildManagerWindow>("App Build Manager");
-            windowInstance.minSize = new Vector2(350, 400);
-            windowInstance.maxSize = new Vector2(500, 600);
+            windowInstance.minSize = new Vector2(400, 400);
+            windowInstance.maxSize = new Vector2(600, 600);
             windowInstance.Show();
+
+            window.minSize = windowInstance.minSize;
+            window.maxSize = windowInstance.maxSize;
         }
 
         #endregion
@@ -455,6 +458,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             infoTextFieldsLayout[1] = GUILayout.MaxWidth(settingsSectionRect.width);
             infoTextFieldsLayout[2] = GUILayout.Height(25);
 
+            GUILayout.Space(15);
+
             #endregion
 
             #endregion
@@ -621,22 +626,44 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Splash Screens
 
-            GUILayout.Space(15);
+            GUILayout.Space(25);
 
             GUILayout.Label("Splash Screens", styleHeaderText);
 
-            GUILayout.Space(10);
+            GUILayout.Space(5);
 
-            //SerializedObject splashScreensSerializedObject = new SerializedObject(appBuildSettings);
-            //SerializedProperty splashScreensSerializedObjectProperty = splashScreensSerializedObject.FindProperty("splashScreenSettings");
-            //EditorGUILayout.PropertyField(splashScreensSerializedObjectProperty, true);
-            //splashScreensSerializedObject.ApplyModifiedProperties();
+            GUILayoutOption[] layoutOpt = new GUILayoutOption[2];
+            layoutOpt[0] = GUILayout.Width(385);
+            layoutOpt[1] = GUILayout.Height(256);
+
+            GUIContent content = new GUIContent();
+            content.text = "Splash Screen Preview";
+            content.image = new Texture2D(1, 1);
+
+            GUIStyle splashPreviewStyle = new GUIStyle();
+
+            splashPreviewStyle.alignment = TextAnchor.UpperCenter;
+            splashPreviewStyle.fontStyle = FontStyle.Bold;
+            splashPreviewStyle.fontSize = 15;
+            splashPreviewStyle.normal.textColor = Color.white;
+            splashPreviewStyle.padding = new RectOffset(0, 0, 25, 25);
+
+            //GUILayout.Box(content, splashPreviewStyle, layoutOpt);
+
+            //GUILayout.Box(appBuildSettings.androidRoundAppIcon.defaultIcon, layoutOpt);
+
+            // GUILayout.Space(15);
+
+            SerializedObject splashScreensSerializedObject = new SerializedObject(appBuildSettings);
+            SerializedProperty splashScreensSerializedObjectProperty = splashScreensSerializedObject.FindProperty("splashScreenSettings");
+            EditorGUILayout.PropertyField(splashScreensSerializedObjectProperty, true);
+            splashScreensSerializedObject.ApplyModifiedProperties();
 
             #endregion
 
             #region Build Scenes Section
 
-            GUILayout.Space(15);
+            GUILayout.Space(20);
 
             GUILayout.Label("Included Scenes", styleHeaderText);
 
@@ -645,18 +672,9 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             SerializedObject sceneDataSerializedObject = new SerializedObject(appBuildSettings);
             sceneDataSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
             SerializedProperty sceneDataSerializedObjectProperty = sceneDataSerializedObject.FindProperty("buildScenes");
-            //EditorGUILayout.PropertyField(sceneDataSerializedObjectProperty, true);
-            //sceneDataSerializedObject.ApplyModifiedProperties();
-
-            //reordarableSceneList = new ReorderableList(appBuildSettings.buildScenes, typeof(BuidScene), true, true, true, true);
-
-            //reordarableSceneList.DoList(new Rect(0, 0, 100, EditorGUIUtility.singleLineHeight));
-            //reordarableSceneList.DoLayoutList();
 
             GetReorderableItemList(sceneDataSerializedObjectProperty).DoLayoutList();
-
-            //reordarableSceneList.drawElementCallback = OnDrawReordarableItemList;
-            //reordarableSceneList.drawHeaderCallback = OnDrawReordarableItemListHeader;
+            sceneDataSerializedObject.ApplyModifiedProperties();
 
 
             #endregion
@@ -893,7 +911,9 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                     EditorGUI.LabelField(new Rect(rect.x, rect.y, 150, EditorGUIUtility.singleLineHeight), content);
                     EditorGUI.PropertyField(new Rect(rect.x + 125, rect.y - 3, rect.width - 185, 25), property.GetArrayElementAtIndex(index).FindPropertyRelative("scene"), GUIContent.none);
-                    EditorGUI.PropertyField(new Rect(rect.width, rect.y, 100, EditorGUIUtility.singleLineHeight), property.GetArrayElementAtIndex(index).FindPropertyRelative("isActive"), GUIContent.none);
+                    EditorGUI.PropertyField(new Rect(rect.width - 5, rect.y, 100, EditorGUIUtility.singleLineHeight), property.GetArrayElementAtIndex(index).FindPropertyRelative("isActive"), GUIContent.none);
+
+                    property.serializedObject.ApplyModifiedProperties();
                 };
 
                 reordarableSceneList.drawHeaderCallback = (Rect headerRect) => 
