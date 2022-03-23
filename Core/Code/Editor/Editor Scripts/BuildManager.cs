@@ -242,6 +242,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                         BuildSceneData sceneData = new BuildSceneData
                         {
                             scenePath = buildScenes[i].path,
+                            guid = buildScenes[i].guid,
                             isActive = buildScenes[i].enabled
                         };
 
@@ -1048,6 +1049,38 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 //        }
                 //    }
                 //}
+
+                #endregion
+
+                #region Build Scenes
+
+                if(buildSettingsData.buildScenes != null)
+                {
+                    List<EditorBuildSettingsScene> sceneBuildSettings = new List<EditorBuildSettingsScene>();
+                    EditorBuildSettings.scenes = null;
+
+                    for (int i = 0; i < buildSettingsData.buildScenes.Length; i++)
+                    {
+                        EditorBuildSettingsScene sceneSettings = new EditorBuildSettingsScene() 
+                        {
+                            path = buildSettingsData.buildScenes[i].scenePath,
+                            guid = buildSettingsData.buildScenes[i].guid,
+                            enabled = buildSettingsData.buildScenes[i].isActive
+                        };
+
+                        if(sceneBuildSettings.Contains(sceneSettings) == false)
+                        {
+                            sceneBuildSettings.Add(sceneSettings);
+                        }
+                    }
+
+                    EditorBuildSettings.scenes = sceneBuildSettings.ToArray();
+                }
+                else
+                {
+                    DebugConsole.Log(Debug.LogLevel.Warning, "There are no build scenes assigned.");
+                }
+
 
                 #endregion
 

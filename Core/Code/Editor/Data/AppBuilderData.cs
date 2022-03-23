@@ -1281,8 +1281,15 @@ namespace Bridge.Core.App.Manager
     [Serializable]
     public struct BuildSceneData : IEquatable<BuildSceneData>
     {
+        #region Components
+
         public string scenePath;
+        public GUID guid;
         public bool isActive;
+
+        #endregion
+
+        #region Main
 
         public BuildScene ToInstance()
         {
@@ -1324,6 +1331,10 @@ namespace Bridge.Core.App.Manager
             return scene;
         }
 
+        #endregion
+
+        #region Comparison
+
         public override int GetHashCode()
         {
             return base.GetHashCode();
@@ -1336,9 +1347,12 @@ namespace Bridge.Core.App.Manager
 
         public bool Equals(BuildSceneData other)
         {
-            return this.scenePath.Equals(other.scenePath)
+            return this.scenePath.Equals(other.scenePath) 
+                && this.guid.Equals(other.guid)
                 && this.isActive.Equals(other.isActive);
         }
+
+        #endregion
     }
 
     #endregion
