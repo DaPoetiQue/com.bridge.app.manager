@@ -618,6 +618,9 @@ namespace Bridge.Core.App.Manager
         #region Components
 
         [Space(5)]
+        public Sprite mainSplashScreen;
+
+        [Space(5)]
         [NonReorderable]
         public SplashScreenLogo[] screens;
 
@@ -700,29 +703,14 @@ namespace Bridge.Core.App.Manager
     {
         #region Components
 
-        [Space(5)]
-        [NonReorderable]
+        public string mainSplashScreenPath;
         public SplashScreenLogoData[] screens;
-
-        [Space(5)]
         public string background;
-
-        [Space(5)]
         public Color backgroundColor;
-
-        [Space(5)]
         public PlayerSettings.SplashScreen.UnityLogoStyle unityLogoStyle;
-
-        [Space(5)]
         public PlayerSettings.SplashScreen.AnimationMode animationMode;
-
-        [Space(5)]
         public PlayerSettings.SplashScreen.DrawMode logoDrawMode;
-
-        [Space(5)]
         public bool showUnityLogo;
-
-        [Space(5)]
         public bool showSplashScreen;
 
         #endregion

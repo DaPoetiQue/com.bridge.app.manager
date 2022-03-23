@@ -102,6 +102,13 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
         #region Updated Objects Settings
 
+        #region Splash Screen Data
+
+        SerializedObject splashScreenSerializedObject;
+        SerializedProperty splashScreenSerializedObjectProperty;
+
+        #endregion
+
         #region Standalone Icon Data
 
         SerializedObject appIconStandaloneSerializedObject;
@@ -112,6 +119,12 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         #region Build Settings Data
 
         ReorderableList reordarableSceneList;
+
+        #endregion
+
+        #region Splash Screen Data
+
+        ReorderableList reordarableSplashScreenList;
 
         #endregion
 
@@ -627,7 +640,18 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             GUILayout.Label("Splash Screens", styleHeaderText);
 
-            GUILayout.Space(5);
+            GUILayout.Space(15);
+
+            var splashScreenPreviewLayout = new GUILayoutOption[2];
+            splashScreenPreviewLayout[0] = GUILayout.Width(256);
+            splashScreenPreviewLayout[1] = GUILayout.Height(100);
+
+            splashScreenSerializedObject = new SerializedObject(appBuildSettings);
+            splashScreenSerializedObjectProperty = splashScreenSerializedObject.FindProperty("splashScreenSettings");
+            splashScreenSerializedObject.ApplyModifiedProperties();
+            EditorGUILayout.ObjectField(splashScreenSerializedObjectProperty.FindPropertyRelative("mainSplashScreen"), typeof(Sprite), splashScreenPreviewLayout);
+
+            GUILayout.Space(15);
 
             GUILayoutOption[] layoutOpt = new GUILayoutOption[2];
             layoutOpt[0] = GUILayout.Width(385);
@@ -651,10 +675,21 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             // GUILayout.Space(15);
 
-            SerializedObject splashScreensSerializedObject = new SerializedObject(appBuildSettings);
-            SerializedProperty splashScreensSerializedObjectProperty = splashScreensSerializedObject.FindProperty("splashScreenSettings");
-            EditorGUILayout.PropertyField(splashScreensSerializedObjectProperty, true);
-            splashScreensSerializedObject.ApplyModifiedProperties();
+            //SerializedObject splashScreensSerializedObject = new SerializedObject(appBuildSettings);
+            //SerializedProperty splashScreensSerializedObjectProperty = splashScreensSerializedObject.FindProperty("splashScreenSettings");
+            //EditorGUILayout.PropertyField(splashScreensSerializedObjectProperty, true);
+            //splashScreensSerializedObject.ApplyModifiedProperties();
+
+            SerializedObject splashScreenListSerializedObject = new SerializedObject(appBuildSettings);
+            splashScreenListSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
+            SerializedProperty splashScreensSerializedObjectProperty = splashScreenListSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("screens");
+
+            if(splashScreensSerializedObjectProperty != null)
+            {
+                //EditorGUILayout.PropertyField(splashScreensSerializedObjectProperty, true);
+                GetSplashScreenItemReorderableList(splashScreensSerializedObjectProperty).DoLayoutList();
+                splashScreenListSerializedObject.ApplyModifiedProperties();
+            }
 
             #endregion
 
@@ -670,7 +705,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             sceneDataSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
             SerializedProperty sceneDataSerializedObjectProperty = sceneDataSerializedObject.FindProperty("buildScenes");
 
-            GetReorderableItemList(sceneDataSerializedObjectProperty).DoLayoutList();
+            GetBuildSceneItemReorderableList(sceneDataSerializedObjectProperty).DoLayoutList();
             sceneDataSerializedObject.ApplyModifiedProperties();
 
 
@@ -894,7 +929,46 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             #endregion
         }
 
-        private ReorderableList GetReorderableItemList(SerializedProperty property)
+        /// <summary>
+        /// This function returns a reoderable list for splash screen items.
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        private ReorderableList GetSplashScreenItemReorderableList(SerializedProperty property)
+        {
+            if (reordarableSplashScreenList == null)
+            {
+                reordarableSplashScreenList = new ReorderableList(property.serializedObject, property, true, true, true, true);
+
+                reordarableSplashScreenList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
+                {
+                    GUIContent content = new GUIContent();
+                    content.tooltip = "Assign Image To Use As Slash Screen.";
+                    content.text = "Duration";
+
+                    EditorGUI.PropertyField(new Rect(rect.x, rect.y - 3, rect.width - 185, 25), property.GetArrayElementAtIndex(index).FindPropertyRelative("logo"), GUIContent.none);
+                    EditorGUI.LabelField(new Rect(rect.x + 225, rect.y, 150, EditorGUIUtility.singleLineHeight), content);
+                    EditorGUI.PropertyField(new Rect(rect.width - 8, rect.y - 3, 25, 23), property.GetArrayElementAtIndex(index).FindPropertyRelative("duration"), GUIContent.none);
+
+                    property.serializedObject.ApplyModifiedProperties();
+                };
+
+                reordarableSplashScreenList.drawHeaderCallback = (Rect headerRect) =>
+                {
+                    string name = "Splash Screen List";
+                    EditorGUI.LabelField(headerRect, name);
+                };
+            }
+
+            return reordarableSplashScreenList;
+        }
+
+        /// <summary>
+        /// This function returns a reoderable list for build scene items.
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        private ReorderableList GetBuildSceneItemReorderableList(SerializedProperty property)
         {
             if(reordarableSceneList == null)
             {
@@ -915,7 +989,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 reordarableSceneList.drawHeaderCallback = (Rect headerRect) => 
                 {
-                    string name = "Build Scenes";
+                    string name = "Build Scenes List";
                     EditorGUI.LabelField(headerRect, name);
                 };
             }
