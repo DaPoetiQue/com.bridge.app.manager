@@ -87,6 +87,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         private static bool RunAppOnCompletion;
         private static AndroidPreferredInstallLocation installLocation;
 
+        private static int currentToolTab;
+
         #region Storage Data
 
         //private static StorageData.DirectoryInfoData appInfoStorageData = new StorageData.DirectoryInfoData()
@@ -486,9 +488,20 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             infoTextFieldsLayout[1] = GUILayout.MaxWidth(settingsSectionRect.width);
             infoTextFieldsLayout[2] = GUILayout.Height(25);
 
-            GUILayout.Space(15);
+            #endregion
 
             #endregion
+
+            #region Toolbar
+
+            GUILayout.Space(5);
+
+            GUILayoutOption[] toolBarLayout = new GUILayoutOption[1];
+            toolBarLayout[0] = GUILayout.Height(35);
+
+            currentToolTab = GUILayout.Toolbar(currentToolTab, new string[] {"App Manager","Build Settings", "Content Manager" }, toolBarLayout);
+
+            GUILayout.Space(15);
 
             #endregion
 
