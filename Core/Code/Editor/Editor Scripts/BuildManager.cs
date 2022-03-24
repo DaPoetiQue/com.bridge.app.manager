@@ -651,7 +651,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         /// </summary>
         /// <param name="splashScreenLogos"></param>
         /// <returns></returns>
-        private static Core.App.Manager.SplashScreenLogo[] GetSplashScreenLogoData(PlayerSettings.SplashScreenLogo[] splashScreenLogos)
+        private static Core.App.Manager.SplashScreen[] GetSplashScreenLogoData(PlayerSettings.SplashScreenLogo[] splashScreenLogos)
         {
             if (splashScreenLogos.Length <= 0)
             {
@@ -659,12 +659,12 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 return null;
             }
 
-            Core.App.Manager.SplashScreenLogo[] splashScreenLogoDataList = new Core.App.Manager.SplashScreenLogo[splashScreenLogos.Length];
+            Core.App.Manager.SplashScreen[] splashScreenLogoDataList = new Core.App.Manager.SplashScreen[splashScreenLogos.Length];
 
             for (int i = 0; i < splashScreenLogos.Length; i++)
             {
                 splashScreenLogoDataList[i].duration = splashScreenLogos[i].duration;
-                splashScreenLogoDataList[i].logo = splashScreenLogos[i].logo;
+                splashScreenLogoDataList[i].screen = splashScreenLogos[i].logo;
             }
 
             return splashScreenLogoDataList;
@@ -675,7 +675,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         /// </summary>
         /// <param name="splashScreenLogos"></param>
         /// <returns></returns>
-        private static PlayerSettings.SplashScreenLogo[] GetSplashScreenLogos(Core.App.Manager.SplashScreenLogo[] splashScreenLogoData)
+        private static PlayerSettings.SplashScreenLogo[] GetSplashScreenLogos(Core.App.Manager.SplashScreen[] splashScreenLogoData)
         {
             if (splashScreenLogoData.Length <= 0)
             {
@@ -687,7 +687,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             for (int i = 0; i < splashScreenLogoData.Length; i++)
             {
-                splashScreenLogosList[i] = PlayerSettings.SplashScreenLogo.Create(splashScreenLogoData[i].duration, splashScreenLogoData[i].logo);
+                splashScreenLogosList[i] = PlayerSettings.SplashScreenLogo.Create(splashScreenLogoData[i].duration, splashScreenLogoData[i].screen);
             }
 
             return splashScreenLogosList;

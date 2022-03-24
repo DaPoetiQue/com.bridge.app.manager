@@ -618,11 +618,11 @@ namespace Bridge.Core.App.Manager
         #region Components
 
         [Space(5)]
-        public Sprite mainSplashScreen;
+        public SplashScreen mainSplashScreen;
 
         [Space(5)]
         [NonReorderable]
-        public SplashScreenLogo[] screens;
+        public SplashScreen[] screens;
 
         [Space(5)]
         public Sprite background;
@@ -728,7 +728,7 @@ namespace Bridge.Core.App.Manager
 
             if (screens.Length > 0)
             {
-                splashScreen.screens = new SplashScreenLogo[this.screens.Length];
+                splashScreen.screens = new SplashScreen[this.screens.Length];
 
                 for (int i = 0; i < this.screens.Length; i++)
                 {
@@ -790,7 +790,7 @@ namespace Bridge.Core.App.Manager
     }
 
     [Serializable]
-    public struct SplashScreenLogo
+    public struct SplashScreen
     {
         #region Components
 
@@ -798,7 +798,7 @@ namespace Bridge.Core.App.Manager
         public string name;
 
         [Space(5)]
-        public Sprite logo;
+        public Sprite screen;
 
         [Space(5)]
         public float duration;
@@ -811,7 +811,7 @@ namespace Bridge.Core.App.Manager
         {
             SplashScreenLogoData splashScreenLogo = new SplashScreenLogoData();
             splashScreenLogo.name = this.name;
-            Storage.Directory.GetAssetPath(logo, (logoPath, results) =>
+            Storage.Directory.GetAssetPath(screen, (logoPath, results) =>
             {
                 if (results.error == true)
                 {
@@ -851,9 +851,9 @@ namespace Bridge.Core.App.Manager
 
         #region Data Conversions
 
-        public SplashScreenLogo ToInstance()
+        public SplashScreen ToInstance()
         {
-            SplashScreenLogo splashScreenLogo = new SplashScreenLogo();
+            SplashScreen splashScreenLogo = new SplashScreen();
             splashScreenLogo.name = this.name;
             Storage.AssetData.LoadAsset<Sprite>(this.logo, (logo, results) =>
             {
@@ -865,7 +865,7 @@ namespace Bridge.Core.App.Manager
 
                 if (results.success == true)
                 {
-                    splashScreenLogo.logo = logo;
+                    splashScreenLogo.screen = logo;
                     DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
                 }
             });
@@ -921,6 +921,9 @@ namespace Bridge.Core.App.Manager
 
         [Space(5)]
         public bool overideIconSettings;
+
+        [Space(5)]
+        public bool overideSplashScreen;
 
         #region Standalone
 
@@ -1017,6 +1020,7 @@ namespace Bridge.Core.App.Manager
             {
                 appInfo = this.appInfo.ToSerializable(),
                 overideIconSettings = this.overideIconSettings,
+                overideSplashScreen = this.overideSplashScreen,
                 splashScreenSettingsData = this.splashScreenSettings.ToSerializable(),
                 appIconKind = this.appIconKind,
                 standaloneAppIconData = standaloneAppIcon.ToSerializable(),
@@ -1055,41 +1059,28 @@ namespace Bridge.Core.App.Manager
 
         #region App Icons
 
-        [Space(5)]
         public bool overideIconSettings;
+        public bool overideSplashScreen;
 
         #region Standalone
 
-        [Space(5)]
         public IconKind appIconKind;
-
-        [Space(5)]
         public DefaultAppIconData standaloneAppIconData;
 
         #endregion
 
         #region Android
 
-        [Space(5)]
         public AndroidAppIconKind androidIconKind;
-
-        [Space(5)]
         public AdaptiveAppIconData androidAdaptiveAppIconData;
-
-        [Space(5)]
         public DefaultAppIconData androidRoundAppIconData;
-
-        [Space(5)]
         public DefaultAppIconData androidLegacyAppIconData;
 
         #endregion
 
         #region iOS & tvOS
 
-        [Space(5)]
         public DefaultAppIconData iOSAppIconData;
-
-        [Space(5)]
         public DefaultAppIconData tvOSAppIconData;
 
         #endregion
@@ -1098,51 +1089,31 @@ namespace Bridge.Core.App.Manager
 
         #region Splash Screens
 
-        [Space(5)]
         public SplashScreenSettingsData splashScreenSettingsData;
 
         #endregion
 
-        [Space(5)]
-        [NonReorderable]
         public BuildSceneData[] buildScenes;
-
-        [Space(5)]
         public BuildConfig configurations;
 
         #region Display Settings
 
-        [Space(5)]
         public ConsoleDisplaySettings consoleDisplaySettings;
-
-        [Space(5)]
         public MobileDisplaySettings mobileDisplaySettings;
-
-        [Space(5)]
         public StandaloneDisplaySettings standaloneDisplaySettings;
-
-        [Space(5)]
         public WebDisplaySettings webDisplaySettings;
 
         #endregion
 
         #region Platform Build Settings
 
-        [Space(5)]
         public AndroidBuildSettings androidBuildSettings;
-
-        [Space(5)]
         public iOSBuildSettings iOSBuildSettings;
-
-        [Space(5)]
         public StandaloneBuildSettings standaloneBuildSettings;
-
-        [Space(5)]
         public WebGLBuildSettings webGLBuildSettings;
 
         #endregion
 
-        [Space(5)]
         public bool buildAndRun;
 
         public void CreateInstance(out BuildSettings settings)
@@ -1160,6 +1131,7 @@ namespace Bridge.Core.App.Manager
             buildSettingsInstance.appInfo = this.appInfo.ToInstance();
             buildSettingsInstance.splashScreenSettings = this.splashScreenSettingsData.ToInstance();
             buildSettingsInstance.overideIconSettings = this.overideIconSettings;
+            buildSettingsInstance.overideSplashScreen = this.overideSplashScreen;
             buildSettingsInstance.appIconKind = this.appIconKind;
             buildSettingsInstance.standaloneAppIcon = this.standaloneAppIconData.ToInstance();
             buildSettingsInstance.androidIconKind = this.androidIconKind;
@@ -1202,6 +1174,7 @@ namespace Bridge.Core.App.Manager
                 && this.splashScreenSettingsData.Equals(other.splashScreenSettingsData)
                 && this.standaloneAppIconData.Equals(other.standaloneAppIconData)
                 && this.overideIconSettings.Equals(other.overideIconSettings)
+                && this.overideSplashScreen.Equals(other.overideSplashScreen)
                 && this.androidIconKind.Equals(other.androidIconKind)
                 && this.androidAdaptiveAppIconData.Equals(other.androidAdaptiveAppIconData)
                 && this.androidRoundAppIconData.Equals(other.androidRoundAppIconData)

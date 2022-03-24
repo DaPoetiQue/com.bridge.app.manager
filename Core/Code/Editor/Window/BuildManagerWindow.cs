@@ -125,6 +125,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         #region Splash Screen Data
 
         ReorderableList reordarableSplashScreenList;
+        SerializedObject splashScreenBackgroundSerializedObject;
+        SerializedProperty splashScreenBackgroundSerializedObjectProperty;
 
         #endregion
 
@@ -365,6 +367,22 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             }
 
             #endregion
+
+            #endregion
+
+            #region Splash Screens
+
+            if(splashScreenSerializedObject != null)
+            {
+                splashScreenSerializedObject.ApplyModifiedProperties();
+                splashScreenSerializedObject.Update();
+            }
+
+            if(splashScreenBackgroundSerializedObject != null)
+            {
+                splashScreenBackgroundSerializedObject.ApplyModifiedProperties();
+                splashScreenBackgroundSerializedObject.Update();
+            }
 
             #endregion
 
@@ -636,59 +654,114 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Splash Screens
 
-            GUILayout.Space(25);
+            GUILayout.Space(35);
 
-            GUILayout.Label("Splash Screens", styleHeaderText);
+            GUILayout.Label("Splash Screen Settings", styleHeaderText);
 
-            GUILayout.Space(15);
-
-            var splashScreenPreviewLayout = new GUILayoutOption[2];
-            splashScreenPreviewLayout[0] = GUILayout.Width(256);
-            splashScreenPreviewLayout[1] = GUILayout.Height(100);
-
-            splashScreenSerializedObject = new SerializedObject(appBuildSettings);
-            splashScreenSerializedObjectProperty = splashScreenSerializedObject.FindProperty("splashScreenSettings");
-            splashScreenSerializedObject.ApplyModifiedProperties();
-            EditorGUILayout.ObjectField(splashScreenSerializedObjectProperty.FindPropertyRelative("mainSplashScreen"), typeof(Sprite), splashScreenPreviewLayout);
 
             GUILayout.Space(15);
 
-            GUILayoutOption[] layoutOpt = new GUILayoutOption[2];
-            layoutOpt[0] = GUILayout.Width(385);
-            layoutOpt[1] = GUILayout.Height(256);
+            SerializedObject showSplashScreenSettingsSerializedObject = new SerializedObject(appBuildSettings);
+            SerializedProperty showSplashScreenSettingsSerializedObjectProperty = showSplashScreenSettingsSerializedObject.FindProperty("overideSplashScreen");
+            EditorGUILayout.PropertyField(showSplashScreenSettingsSerializedObjectProperty, true);
+            showSplashScreenSettingsSerializedObject.ApplyModifiedProperties();
 
-            GUIContent content = new GUIContent();
-            content.text = "Splash Screen Preview";
-            content.image = new Texture2D(1, 1);
-
-            GUIStyle splashPreviewStyle = new GUIStyle();
-
-            splashPreviewStyle.alignment = TextAnchor.UpperCenter;
-            splashPreviewStyle.fontStyle = FontStyle.Bold;
-            splashPreviewStyle.fontSize = 15;
-            splashPreviewStyle.normal.textColor = Color.white;
-            splashPreviewStyle.padding = new RectOffset(0, 0, 25, 25);
-
-            //GUILayout.Box(content, splashPreviewStyle, layoutOpt);
-
-            //GUILayout.Box(appBuildSettings.androidRoundAppIcon.defaultIcon, layoutOpt);
-
-            // GUILayout.Space(15);
-
-            //SerializedObject splashScreensSerializedObject = new SerializedObject(appBuildSettings);
-            //SerializedProperty splashScreensSerializedObjectProperty = splashScreensSerializedObject.FindProperty("splashScreenSettings");
-            //EditorGUILayout.PropertyField(splashScreensSerializedObjectProperty, true);
-            //splashScreensSerializedObject.ApplyModifiedProperties();
-
-            SerializedObject splashScreenListSerializedObject = new SerializedObject(appBuildSettings);
-            splashScreenListSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
-            SerializedProperty splashScreensSerializedObjectProperty = splashScreenListSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("screens");
-
-            if(splashScreensSerializedObjectProperty != null)
+            if (appBuildSettings.overideSplashScreen == true)
             {
-                //EditorGUILayout.PropertyField(splashScreensSerializedObjectProperty, true);
-                GetSplashScreenItemReorderableList(splashScreensSerializedObjectProperty).DoLayoutList();
-                splashScreenListSerializedObject.ApplyModifiedProperties();
+
+                GUILayout.Space(15);
+
+                var splashScreenPreviewLayout = new GUILayoutOption[2];
+                splashScreenPreviewLayout[0] = GUILayout.Width(256);
+                splashScreenPreviewLayout[1] = GUILayout.Height(100);
+
+                splashScreenSerializedObject = new SerializedObject(appBuildSettings);
+                splashScreenSerializedObjectProperty = splashScreenSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("mainSplashScreen");
+                splashScreenSerializedObject.ApplyModifiedProperties();
+                splashScreenSerializedObject.Update();
+                EditorGUILayout.ObjectField(splashScreenSerializedObjectProperty.FindPropertyRelative("screen"), typeof(Sprite), splashScreenPreviewLayout);
+
+                GUILayout.Space(15);
+
+                GUILayoutOption[] layoutOpt = new GUILayoutOption[2];
+                layoutOpt[0] = GUILayout.Width(385);
+                layoutOpt[1] = GUILayout.Height(256);
+
+                GUIContent content = new GUIContent();
+                content.text = "Splash Screen Preview";
+                content.image = new Texture2D(1, 1);
+
+                GUIStyle splashPreviewStyle = new GUIStyle();
+
+                splashPreviewStyle.alignment = TextAnchor.UpperCenter;
+                splashPreviewStyle.fontStyle = FontStyle.Bold;
+                splashPreviewStyle.fontSize = 15;
+                splashPreviewStyle.normal.textColor = Color.white;
+                splashPreviewStyle.padding = new RectOffset(0, 0, 25, 25);
+
+                SerializedObject splashScreenDataSerializedObject = new SerializedObject(appBuildSettings);
+                SerializedProperty splashScreeDataSerializedObjectProperty = splashScreenDataSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("mainSplashScreen");
+                splashScreenDataSerializedObject.ApplyModifiedProperties();
+
+                EditorGUILayout.PropertyField(splashScreeDataSerializedObjectProperty.FindPropertyRelative("duration"), infoTextFieldsLayout);
+
+                GUILayout.Space(10);
+
+                SerializedObject splashScreenListSerializedObject = new SerializedObject(appBuildSettings);
+                splashScreenListSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
+                SerializedProperty splashScreensSerializedObjectProperty = splashScreenListSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("screens");
+
+                if(appBuildSettings != null)
+                {
+                    GetSplashScreenItemReorderableList(splashScreensSerializedObjectProperty).DoLayoutList();
+                    splashScreenListSerializedObject.ApplyModifiedProperties();
+                    splashScreenListSerializedObject.Update();
+                }
+
+
+                GUILayout.Space(15);
+
+                splashScreenBackgroundSerializedObject = new SerializedObject(appBuildSettings);
+                splashScreenBackgroundSerializedObjectProperty = splashScreenBackgroundSerializedObject.FindProperty("splashScreenSettings");
+                EditorGUILayout.ObjectField(splashScreenBackgroundSerializedObjectProperty.FindPropertyRelative("background"), typeof(Sprite), splashScreenPreviewLayout);
+                splashScreenBackgroundSerializedObject.ApplyModifiedProperties();
+                splashScreenBackgroundSerializedObject.Update();
+
+                GUILayout.Space(20);
+
+                GUIContent colorField = new GUIContent();
+                colorField.text = "Background Color";
+
+                appBuildSettings.splashScreenSettings.backgroundColor = EditorGUILayout.ColorField(colorField, appBuildSettings.splashScreenSettings.backgroundColor, true, true, false);
+
+                GUILayout.Space(10);
+
+                SerializedObject showUnityLogoSerializedObject = new SerializedObject(appBuildSettings);
+                SerializedProperty showUnityLogoSerializedObjectProperty = showUnityLogoSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("showUnityLogo");
+                EditorGUILayout.PropertyField(showUnityLogoSerializedObjectProperty, true);
+                showUnityLogoSerializedObject.ApplyModifiedProperties();
+                showUnityLogoSerializedObject.Update();
+
+                GUILayout.Space(5);
+
+                if (appBuildSettings != null)
+                {
+                    appBuildSettings.splashScreenSettings.logoDrawMode = (PlayerSettings.SplashScreen.DrawMode)EditorGUILayout.EnumPopup("Logo Draw Mode", appBuildSettings.splashScreenSettings.logoDrawMode);
+                    GUILayout.Space(5);
+
+                    appBuildSettings.splashScreenSettings.animationMode = (PlayerSettings.SplashScreen.AnimationMode)EditorGUILayout.EnumPopup("Animation Mode", appBuildSettings.splashScreenSettings.animationMode);
+                    GUILayout.Space(5);
+
+                    appBuildSettings.splashScreenSettings.unityLogoStyle = (PlayerSettings.SplashScreen.UnityLogoStyle)EditorGUILayout.EnumPopup("Unity Logo Style", appBuildSettings.splashScreenSettings.unityLogoStyle);
+                }
+
+                GUILayout.Space(10);
+
+                SerializedObject showSplashScreenSerializedObject = new SerializedObject(appBuildSettings);
+                SerializedProperty showSplashScreenSerializedObjectProperty = showSplashScreenSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("showSplashScreen");
+                EditorGUILayout.PropertyField(showSplashScreenSerializedObjectProperty, true);
+                showSplashScreenSerializedObject.ApplyModifiedProperties();
+                showSplashScreenSerializedObject.Update();
             }
 
             #endregion
@@ -946,7 +1019,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                     content.tooltip = "Assign Image To Use As Slash Screen.";
                     content.text = "Duration";
 
-                    EditorGUI.PropertyField(new Rect(rect.x, rect.y - 3, rect.width - 185, 25), property.GetArrayElementAtIndex(index).FindPropertyRelative("logo"), GUIContent.none);
+                    EditorGUI.PropertyField(new Rect(rect.x, rect.y - 3, rect.width - 185, 25), property.GetArrayElementAtIndex(index).FindPropertyRelative("screen"), GUIContent.none);
                     EditorGUI.LabelField(new Rect(rect.x + 225, rect.y, 150, EditorGUIUtility.singleLineHeight), content);
                     EditorGUI.PropertyField(new Rect(rect.width - 8, rect.y - 3, 25, 23), property.GetArrayElementAtIndex(index).FindPropertyRelative("duration"), GUIContent.none);
 
@@ -955,7 +1028,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                 reordarableSplashScreenList.drawHeaderCallback = (Rect headerRect) =>
                 {
-                    string name = "Splash Screen List";
+                    string name = "Additional Screen List";
                     EditorGUI.LabelField(headerRect, name);
                 };
             }
