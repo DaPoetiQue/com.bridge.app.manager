@@ -1020,7 +1020,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                     content.text = "Duration";
 
                     EditorGUI.PropertyField(new Rect(rect.x, rect.y - 3, rect.width - 185, 25), property.GetArrayElementAtIndex(index).FindPropertyRelative("screen"), GUIContent.none);
-                    EditorGUI.LabelField(new Rect(rect.x + 225, rect.y, 150, EditorGUIUtility.singleLineHeight), content);
+                    EditorGUI.LabelField(new Rect(rect.width - 110, rect.y, 150, EditorGUIUtility.singleLineHeight), content);
                     EditorGUI.PropertyField(new Rect(rect.width - 8, rect.y - 3, 25, 23), property.GetArrayElementAtIndex(index).FindPropertyRelative("duration"), GUIContent.none);
 
                     property.serializedObject.ApplyModifiedProperties();
