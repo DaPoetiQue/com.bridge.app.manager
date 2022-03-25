@@ -87,7 +87,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         private static bool RunAppOnCompletion;
         private static AndroidPreferredInstallLocation installLocation;
 
-        private static int currentToolTab;
+        private static int currentToolTab = 1;
 
         #region Storage Data
 
@@ -505,6 +505,34 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #endregion
 
+            switch(currentToolTab)
+            {
+                case 0:
+
+                    break;
+
+                case 1:
+
+                    BuildSettingsPanel(styleHeaderText, style, defaultGUIColor, layout, infoTextFieldsLayout);
+
+                    break;
+
+                case 2:
+
+                    break;
+            }
+
+        
+
+            GUILayout.EndArea();
+
+            #endregion
+        }
+
+        private void BuildSettingsPanel(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
+        {
+            #region Build Settings
+
             #region Scroll Area
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style, layout);
@@ -540,7 +568,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region App Icons
 
-            if(BuildManager.AppIconsSupported(appBuildSettings.configurations.platform))
+            if (BuildManager.AppIconsSupported(appBuildSettings.configurations.platform))
             {
                 #region Icons Settings Header
 
@@ -641,7 +669,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
                     #region iOS & tvOS
 
-                    if(buildTargetGroup == BuildTargetGroup.iOS)
+                    if (buildTargetGroup == BuildTargetGroup.iOS)
                     {
                         GUILayout.Space(10);
 
@@ -724,7 +752,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 splashScreenListSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
                 SerializedProperty splashScreensSerializedObjectProperty = splashScreenListSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("screens");
 
-                if(appBuildSettings != null)
+                if (appBuildSettings != null)
                 {
                     GetSplashScreenItemReorderableList(splashScreensSerializedObjectProperty).DoLayoutList();
                     splashScreenListSerializedObject.ApplyModifiedProperties();
@@ -871,7 +899,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 SerializedObject buildSettingsObject = new SerializedObject(appBuildSettings);
                 SerializedProperty buildSettingsProperty = buildSettingsObject.FindProperty("standaloneBuildSettings");
                 EditorGUILayout.PropertyField(buildSettingsProperty, true);
-                buildSettingsObject.ApplyModifiedProperties();    
+                buildSettingsObject.ApplyModifiedProperties();
             }
 
             if (PlatformSpecificData.GetRuntimeOS(appBuildSettings) == RuntimeOS.Web)
@@ -1009,8 +1037,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             #endregion
 
             #endregion
-
-            GUILayout.EndArea();
 
             #endregion
         }
