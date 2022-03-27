@@ -1186,7 +1186,8 @@ namespace Bridge.Core.App.Manager
                 && this.mobileDisplaySettings.Equals(other.mobileDisplaySettings)
                 && this.consoleDisplaySettings.Equals(other.consoleDisplaySettings)
                 && this.webDisplaySettings.Equals(other.webDisplaySettings)
-                && DataComparison.Equals(this.buildScenes, other.buildScenes);
+                && DataComparison.Equals(this.buildScenes, other.buildScenes) 
+                && this.buildAndRun.Equals(other.buildAndRun);
         }
     }
 

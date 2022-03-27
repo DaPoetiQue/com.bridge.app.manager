@@ -238,7 +238,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             settingsHeaderStyle.padding.top = 20;
             settingsHeaderStyle.padding.left = 50;
             settingsHeaderStyle.alignment = TextAnchor.LowerCenter;
-            settingsHeaderContent.text = "Build Manager";
+            // settingsHeaderContent.text = "Build Manager";
 
             #endregion
 
@@ -494,77 +494,39 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Toolbar
 
-            GUILayout.Space(5);
-
-            GUILayoutOption[] toolBarLayout = new GUILayoutOption[1];
-            toolBarLayout[0] = GUILayout.Height(35);
-
-            currentToolTab = GUILayout.Toolbar(currentToolTab, new string[] {"App Manager","Build Settings", "Content Manager" }, toolBarLayout);
-
-            GUILayout.Space(15);
+            WindowHeaderContent(styleHeaderText, style, defaultGUIColor, layout, infoTextFieldsLayout);
 
             #endregion
 
-            switch(currentToolTab)
+            switch (currentToolTab)
             {
                 case 0:
+
+                    BuildSettingsWindow(styleHeaderText, style, defaultGUIColor, layout, infoTextFieldsLayout);
 
                     break;
 
                 case 1:
 
-                    BuildSettingsPanel(styleHeaderText, style, defaultGUIColor, layout, infoTextFieldsLayout);
-
-                    break;
-
-                case 2:
+                    AppVisualsWindow(styleHeaderText, style, defaultGUIColor, layout, infoTextFieldsLayout);
 
                     break;
             }
 
-        
+            WindowFooterContent(styleHeaderText, style, defaultGUIColor, layout, infoTextFieldsLayout);
 
             GUILayout.EndArea();
 
             #endregion
         }
 
-        private void BuildSettingsPanel(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
+        private void AppVisualsWindow(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
         {
             #region Build Settings
 
             #region Scroll Area
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style, layout);
-
-            #region Build Profile
-
-            GUILayout.Label("Custom Build Profile", styleHeaderText);
-
-            GUILayout.Space(10);
-
-            SerializedObject buildProfileSerializedObject = new SerializedObject(profile);
-            SerializedProperty buildProfileSerializedObjectProperty = buildProfileSerializedObject.FindProperty("profile");
-            EditorGUILayout.PropertyField(buildProfileSerializedObjectProperty, true);
-            buildProfileSerializedObject.ApplyModifiedProperties();
-
-            #endregion
-
-            #region App Info Section
-
-            GUILayout.Space(20);
-            GUILayout.Label("App Information", styleHeaderText);
-
-            GUILayout.Space(10);
-            SerializedObject appInfoSerializedObject = new SerializedObject(appBuildSettings);
-            SerializedProperty appInfoSerializedObjectProperty = appInfoSerializedObject.FindProperty("appInfo");
-            appInfoSerializedObject.ApplyModifiedProperties();
-
-            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("displayName"), infoTextFieldsLayout);
-            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("companyName"), infoTextFieldsLayout);
-            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("version"), infoTextFieldsLayout);
-
-            #endregion
 
             #region App Icons
 
@@ -713,8 +675,8 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 GUILayout.Space(15);
 
                 var splashScreenPreviewLayout = new GUILayoutOption[2];
-                splashScreenPreviewLayout[0] = GUILayout.Width(256);
-                splashScreenPreviewLayout[1] = GUILayout.Height(100);
+                splashScreenPreviewLayout[0] = GUILayout.Width(window.position.size.x - 50);
+                splashScreenPreviewLayout[1] = GUILayout.Height(240);
 
                 splashScreenSerializedObject = new SerializedObject(appBuildSettings);
                 splashScreenSerializedObjectProperty = splashScreenSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("mainSplashScreen");
@@ -749,7 +711,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 GUILayout.Space(10);
 
                 SerializedObject splashScreenListSerializedObject = new SerializedObject(appBuildSettings);
-                splashScreenListSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
+                //splashScreenListSerializedObject.CopyFromSerializedPropertyIfDifferent(appInfoSerializedObjectProperty);
                 SerializedProperty splashScreensSerializedObjectProperty = splashScreenListSerializedObject.FindProperty("splashScreenSettings").FindPropertyRelative("screens");
 
                 if (appBuildSettings != null)
@@ -804,6 +766,62 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 showSplashScreenSerializedObject.ApplyModifiedProperties();
                 showSplashScreenSerializedObject.Update();
             }
+
+            #endregion
+
+            EditorGUILayout.EndScrollView();
+
+            #endregion
+
+            #endregion
+        }
+
+        private void WindowHeaderContent(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
+        {
+            GUILayout.Space(5);
+
+            GUILayoutOption[] toolBarLayout = new GUILayoutOption[1];
+            toolBarLayout[0] = GUILayout.Height(35);
+
+            currentToolTab = GUILayout.Toolbar(currentToolTab, new string[] {"Build Settings", "Build Visuals" }, toolBarLayout);
+
+            GUILayout.Space(5);
+        }
+
+        private void BuildSettingsWindow(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
+        {
+            #region Build Settings
+
+            #region Scroll Area
+
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, style, layout);
+
+            #region Build Profile
+
+            GUILayout.Label("Custom Build Profile", styleHeaderText);
+
+            GUILayout.Space(10);
+
+            SerializedObject buildProfileSerializedObject = new SerializedObject(profile);
+            SerializedProperty buildProfileSerializedObjectProperty = buildProfileSerializedObject.FindProperty("profile");
+            EditorGUILayout.PropertyField(buildProfileSerializedObjectProperty, true);
+            buildProfileSerializedObject.ApplyModifiedProperties();
+
+            #endregion
+
+            #region App Info Section
+
+            GUILayout.Space(20);
+            GUILayout.Label("App Information", styleHeaderText);
+
+            GUILayout.Space(10);
+            SerializedObject appInfoSerializedObject = new SerializedObject(appBuildSettings);
+            SerializedProperty appInfoSerializedObjectProperty = appInfoSerializedObject.FindProperty("appInfo");
+            appInfoSerializedObject.ApplyModifiedProperties();
+
+            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("displayName"), infoTextFieldsLayout);
+            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("companyName"), infoTextFieldsLayout);
+            EditorGUILayout.PropertyField(appInfoSerializedObjectProperty.FindPropertyRelative("version"), infoTextFieldsLayout);
 
             #endregion
 
@@ -926,10 +944,15 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #endregion
 
-
             EditorGUILayout.EndScrollView();
 
             #endregion
+
+            #endregion
+        }
+
+        private void WindowFooterContent(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
+        {
 
             #region Footer Menu
 
@@ -976,8 +999,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             // GUILayout.Label("Build Settings", styleHeaderText);
 
-            GUILayout.Space(10);
-
             EditorGUILayout.BeginHorizontal();
 
             GUI.backgroundColor = Color.grey;
@@ -994,7 +1015,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             EditorGUILayout.EndHorizontal();
 
-            GUILayout.Space(5);
+            GUILayout.Space(1);
 
             if (Directory.Exists(appBuildSettings.configurations.targetBuildDirectory) == true)
             {
@@ -1005,7 +1026,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 }
             }
 
-            GUILayout.Space(5);
+            GUILayout.Space(1);
 
             #endregion
 
@@ -1033,8 +1054,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             buildSerializedObject.ApplyModifiedProperties();
 
             GUILayout.Space(15);
-
-            #endregion
 
             #endregion
 

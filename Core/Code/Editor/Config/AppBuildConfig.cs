@@ -67,8 +67,6 @@ public static class AppBuildConfig
                     DebugConsole.Log(Bridge.Core.Debug.LogLevel.Warning, $"Removing file @ : {buildSettings.configurations.buildLocation}");
                 }
 
-            
-
                 if(GetRuntimeOs(buildSettings) != RuntimeOS.None)
                 {
                     buildOptions.locationPathName = buildSettings.configurations.buildLocation;
