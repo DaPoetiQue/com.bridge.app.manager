@@ -372,7 +372,6 @@ namespace Bridge.Core.App.Manager
 
                         if (callbackResults.success == true)
                         {
-                            DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
                             icon = loadedAssetData;
                         }
                     });
@@ -405,7 +404,6 @@ namespace Bridge.Core.App.Manager
 
                         if (callbackResults.success == true)
                         {
-                            DebugConsole.Log(Debug.LogLevel.Success, callbackResults.successValue);
                             iconPath = loadedAssetData;
                         }
                     });
@@ -822,7 +820,6 @@ namespace Bridge.Core.App.Manager
                 if (results.success == true)
                 {
                     splashScreenLogo.logo = logoPath;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
                 }
             });
             splashScreenLogo.duration = this.duration;
@@ -866,7 +863,6 @@ namespace Bridge.Core.App.Manager
                 if (results.success == true)
                 {
                     splashScreenLogo.screen = logo;
-                    DebugConsole.Log(Debug.LogLevel.Success, results.successValue);
                 }
             });
 
@@ -1181,12 +1177,16 @@ namespace Bridge.Core.App.Manager
                 && this.androidLegacyAppIconData.Equals(other.androidLegacyAppIconData)
                 && this.iOSAppIconData.Equals(other.iOSAppIconData)
                 && this.tvOSAppIconData.Equals(other.tvOSAppIconData)
-                //&& this.configurations.Equals(other.configurations)
+                && this.configurations.Equals(other.configurations)
                 && this.standaloneDisplaySettings.Equals(other.standaloneDisplaySettings)
                 && this.mobileDisplaySettings.Equals(other.mobileDisplaySettings)
                 && this.consoleDisplaySettings.Equals(other.consoleDisplaySettings)
                 && this.webDisplaySettings.Equals(other.webDisplaySettings)
-                && DataComparison.Equals(this.buildScenes, other.buildScenes) 
+                && DataComparison.Equals(this.buildScenes, other.buildScenes)
+                && this.androidBuildSettings.Equals(other.androidBuildSettings) 
+                && this.iOSBuildSettings.Equals(other.iOSBuildSettings)
+                && this.standaloneDisplaySettings.Equals(other.standaloneDisplaySettings) 
+                && this.standaloneBuildSettings.Equals(other.standaloneBuildSettings)
                 && this.buildAndRun.Equals(other.buildAndRun);
         }
     }
@@ -1326,6 +1326,47 @@ namespace Bridge.Core.App.Manager
         {
             return Enumerable.SequenceEqual(itemA, itemB);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj1"></param>
+        /// <param name="obj2"></param>
+        /// <returns></returns>
+        public static bool EnumArrayEquals<T>(T[] obj1, T[] obj2)
+        {
+            bool isEqual = true;
+
+            if (obj1 != null)
+            {
+                if (obj1.Length.Equals(obj2.Length))
+                {
+
+                    for (int i = 0; i < obj1.Length; i++)
+                    {
+                        if (obj1[i].Equals(obj2[i]))
+                        {
+                            isEqual = true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    isEqual = false;
+                }
+            }
+            else
+            {
+                isEqual = false;
+            }
+
+            return isEqual;
+        }
     }
 
     #endregion
@@ -1427,7 +1468,7 @@ namespace Bridge.Core.App.Manager
         public FullScreenMode fullScreenMode;
 
         [Space(5)]
-        public bool defaultIsNativeResolution;
+        public bool isNativeResolution;
 
         [Space(5)]
         public AppResolution resolution;
@@ -1436,7 +1477,7 @@ namespace Bridge.Core.App.Manager
         public bool resizableWindow;
 
         [Space(5)]
-        public bool allowFullScreenSwitch;
+        public bool fullScreenSwitch;
 
         public override int GetHashCode()
         {
@@ -1451,10 +1492,10 @@ namespace Bridge.Core.App.Manager
         public bool Equals(StandaloneDisplaySettings other)
         {
             return this.fullScreenMode.Equals(other.fullScreenMode) 
-                && this.defaultIsNativeResolution.Equals(other.defaultIsNativeResolution) 
+                && this.isNativeResolution.Equals(other.isNativeResolution) 
                 && this.resolution.Equals(other.resolution)
                 && this.resizableWindow.Equals(other.resizableWindow)
-                && this.allowFullScreenSwitch.Equals(other.allowFullScreenSwitch);
+                && this.fullScreenSwitch.Equals(other.fullScreenSwitch);
         }
     }
 
@@ -1622,7 +1663,7 @@ namespace Bridge.Core.App.Manager
     }
 
     [Serializable]
-    public class StandaloneBuildSettings : IEquatable<StandaloneBuildSettings>
+    public struct StandaloneBuildSettings : IEquatable<StandaloneBuildSettings>
     {
         [Space(5)]
         public WindowsBuildSettings windows;
@@ -1646,7 +1687,7 @@ namespace Bridge.Core.App.Manager
             if (obj == null)
                 return false;
 
-            return this.Equals(obj as StandaloneBuildSettings);
+            return this.Equals(obj);
         }
 
         public bool Equals(StandaloneBuildSettings other)
@@ -1696,12 +1737,12 @@ namespace Bridge.Core.App.Manager
         public bool Equals(OSXBuildSettings other)
         {
             return this.colorSpace.Equals(other.colorSpace)
-                && this.graphicsApi.Equals(other.graphicsApi)
                 && this.bundleIdentifier.Equals(other.bundleIdentifier)
                 && this.build.Equals(other.build)
                 && this.category.Equals(other.category)
                 && this.storeValidation.Equals(other.storeValidation)
-                && this.UsageDescription.Equals(other.UsageDescription);
+                && this.UsageDescription.Equals(other.UsageDescription)
+                && DataComparison.EnumArrayEquals(this.graphicsApi, other.graphicsApi);
         }
     }
 
@@ -1732,20 +1773,40 @@ namespace Bridge.Core.App.Manager
     }
 
     [Serializable]
-    public struct UsageDescriptionData
+    public struct UsageDescriptionData : IEquatable<UsageDescriptionData>
     {
         [Space(5)]
         public string camera;
 
         [Space(5)]
-        public string microPhone;
+        public string microphone;
 
         [Space(5)]
-        public string blueTooth;
+        public string bluetooth;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            return this.Equals(obj);
+        }
+
+        public bool Equals(UsageDescriptionData other)
+        {
+            return this.camera.Equals(other.camera)
+                && this.microphone.Equals(other.microphone)
+                && this.bluetooth.Equals(other.bluetooth);
+        }
     }
 
     [Serializable]
-    public struct WindowsBuildSettings
+    public struct WindowsBuildSettings : IEquatable<WindowsBuildSettings>
     {
         [Space(5)]
         public ColorSpace colorSpace;
@@ -1753,10 +1814,29 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         [NonReorderable]
         public GraphicsDeviceType[] graphicsApi;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            return this.Equals(obj);
+        }
+
+        public bool Equals(WindowsBuildSettings other)
+        {
+            return this.colorSpace.Equals(other.colorSpace)
+                && DataComparison.EnumArrayEquals(graphicsApi, other.graphicsApi);
+        }
     }
 
     [Serializable]
-    public struct LinuxBuildSettings
+    public struct LinuxBuildSettings : IEquatable<LinuxBuildSettings>
     {
         [Space(5)]
         public ColorSpace colorSpace;
@@ -1764,6 +1844,25 @@ namespace Bridge.Core.App.Manager
         [Space(5)]
         [NonReorderable]
         public GraphicsDeviceType[] graphicsApi;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            return this.Equals(obj);
+        }
+
+        public bool Equals(LinuxBuildSettings other)
+        {
+            return this.colorSpace.Equals(other.colorSpace)
+                && DataComparison.EnumArrayEquals(this.graphicsApi, other.graphicsApi);
+        }
     }
 
     [Serializable]
@@ -1809,10 +1908,9 @@ namespace Bridge.Core.App.Manager
 
         public bool Equals(BuildConfig other)
         {
-            return  this.allowDebugging.Equals(other.allowDebugging) 
-                && this.developmentBuild.Equals(other.developmentBuild) 
-                && this.buildLocation.Equals(other.buildLocation) 
-                && this.targetBuildDirectory.Equals(other.targetBuildDirectory);
+            return this.allowDebugging.Equals(other.allowDebugging)
+                && this.developmentBuild.Equals(other.developmentBuild)
+                && this.platform.Equals(other.platform);
         }
     }
 

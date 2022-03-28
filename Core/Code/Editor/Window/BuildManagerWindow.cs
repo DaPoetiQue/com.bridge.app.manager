@@ -87,7 +87,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
         private static bool RunAppOnCompletion;
         private static AndroidPreferredInstallLocation installLocation;
 
-        private static int currentToolTab = 1;
+        private static int currentToolTab = 0;
 
         #region Storage Data
 
@@ -520,6 +520,14 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             #endregion
         }
 
+        /// <summary>
+        /// This function draws the tool settings visuals content data.
+        /// </summary>
+        /// <param name="styleHeaderText"></param>
+        /// <param name="style"></param>
+        /// <param name="defaultGUIColor"></param>
+        /// <param name="layout"></param>
+        /// <param name="infoTextFieldsLayout"></param>
         private void AppVisualsWindow(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
         {
             #region Build Settings
@@ -776,6 +784,14 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             #endregion
         }
 
+        /// <summary>
+        /// This function draws the tool settings header content data.
+        /// </summary>
+        /// <param name="styleHeaderText"></param>
+        /// <param name="style"></param>
+        /// <param name="defaultGUIColor"></param>
+        /// <param name="layout"></param>
+        /// <param name="infoTextFieldsLayout"></param>
         private void WindowHeaderContent(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
         {
             GUILayout.Space(5);
@@ -783,11 +799,22 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             GUILayoutOption[] toolBarLayout = new GUILayoutOption[1];
             toolBarLayout[0] = GUILayout.Height(35);
 
-            currentToolTab = GUILayout.Toolbar(currentToolTab, new string[] {"Build Settings", "Build Visuals" }, toolBarLayout);
+            if (BuildManager.AppIconsSupported(appBuildSettings.configurations.platform))
+            {
+                currentToolTab = GUILayout.Toolbar(currentToolTab, new string[] { "Build Settings", "Build Visuals" }, toolBarLayout);
+            }
 
             GUILayout.Space(5);
         }
 
+        /// <summary>
+        /// This function draws the tool settings main build content data.
+        /// </summary>
+        /// <param name="styleHeaderText"></param>
+        /// <param name="style"></param>
+        /// <param name="defaultGUIColor"></param>
+        /// <param name="layout"></param>
+        /// <param name="infoTextFieldsLayout"></param>
         private void BuildSettingsWindow(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
         {
             #region Build Settings
@@ -859,7 +886,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             #region Platform Specific Settings Section
 
-            GUILayout.Space(15);
+            GUILayout.Space(25);
 
             GUILayout.Label("Platform Settings", styleHeaderText);
 
@@ -951,6 +978,14 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             #endregion
         }
 
+        /// <summary>
+        /// This function draws the tool settings footer content data.
+        /// </summary>
+        /// <param name="styleHeaderText"></param>
+        /// <param name="style"></param>
+        /// <param name="defaultGUIColor"></param>
+        /// <param name="layout"></param>
+        /// <param name="infoTextFieldsLayout"></param>
         private void WindowFooterContent(GUIStyle styleHeaderText, GUIStyle style, Color defaultGUIColor, GUILayoutOption[] layout, GUILayoutOption[] infoTextFieldsLayout)
         {
 
@@ -966,32 +1001,6 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             bool settingsNotChanged = currentBuildSettingsState.Equals(defaultBuildSettingsState);
 
-
-            if (settingsNotChanged == false)
-            {
-                EditorGUILayout.BeginHorizontal();
-
-                GUI.backgroundColor = Color.grey;
-
-                if (GUILayout.Button("Apply Changes", GUILayout.Height(30)))
-                {
-                    window.SaveChanges();
-
-                    BuildManager.ApplyAppSettings(appBuildSettings.ToSerializable());
-                }
-
-                GUI.backgroundColor = Color.gray;
-
-                if (GUILayout.Button("Revert Changes", GUILayout.Height(30)))
-                {
-                    window.SaveChanges();
-
-                    appBuildSettings = defaultBuildSettingsState.ToInstance();
-                }
-
-                EditorGUILayout.EndHorizontal();
-            }
-
             #endregion
 
             // Buttons For Opening Build Settings / Folder.
@@ -1003,28 +1012,63 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             GUI.backgroundColor = Color.grey;
 
-            if (GUILayout.Button("Open Builds Settings", GUILayout.Height(30)))
+            GUIContent ApplySettingsContent = new GUIContent();
+            ApplySettingsContent.text = "Apply";
+            ApplySettingsContent.tooltip = "Saves Changes Made To The Build Tool.";
+
+            GUIContent revertSettingsContent = new GUIContent();
+            revertSettingsContent.text = "Revert";
+            revertSettingsContent.tooltip = "Reverts/Discard/Undo Changes Made To The Build Tool.";
+
+            GUIContent buildSettingsContent = new GUIContent();
+            buildSettingsContent.text = "Builds Settings";
+            buildSettingsContent.tooltip = "Opens Unity Build Settings Window.";
+
+            GUIContent playerSettingsContent = new GUIContent();
+            playerSettingsContent.text = "Player Settings";
+            playerSettingsContent.tooltip = "Opens Unity Player Settings Window.";
+
+            GUIContent buildFolderContent = new GUIContent();
+            buildFolderContent.text = "Build Folder";
+            buildFolderContent.tooltip = "Opens The Specified Build Folder.";
+
+            if (settingsNotChanged == false)
+            {
+                GUI.backgroundColor = Color.grey;
+
+                if (GUILayout.Button(ApplySettingsContent, GUILayout.Height(30)))
+                {
+                    window.SaveChanges();
+
+                    BuildManager.ApplyAppSettings(appBuildSettings.ToSerializable());
+                }
+
+                GUI.backgroundColor = Color.gray;
+
+                if (GUILayout.Button(revertSettingsContent, GUILayout.Height(30)))
+                {
+                    window.SaveChanges();
+
+                    appBuildSettings = defaultBuildSettingsState.ToInstance();
+                }
+            }
+
+            if (GUILayout.Button(buildSettingsContent, GUILayout.Height(30)))
             {
                 GetWindow(Type.GetType("UnityEditor.BuildPlayerWindow,UnityEditor"));
             }
 
-            if (GUILayout.Button("Open Player Settings", GUILayout.Height(30)))
+            if (GUILayout.Button(playerSettingsContent, GUILayout.Height(30)))
             {
                 SettingsService.OpenProjectSettings("Project/Player");
             }
 
-            EditorGUILayout.EndHorizontal();
-
-            GUILayout.Space(1);
-
-            if (Directory.Exists(appBuildSettings.configurations.targetBuildDirectory) == true)
+            if (Directory.Exists(appBuildSettings.configurations.targetBuildDirectory) == true && GUILayout.Button(buildFolderContent, GUILayout.Height(30)))
             {
-
-                if (GUILayout.Button("Open Build Folder", GUILayout.Height(30)))
-                {
-                    Storage.Directory.OpenFolder(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()).configurations.targetBuildDirectory);
-                }
+                Storage.Directory.OpenFolder(BuildManager.GetBuildSettings(BuildManager.GetDefaultStorageInfo()).configurations.targetBuildDirectory);
             }
+
+            EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(1);
 
@@ -1039,7 +1083,11 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
             buttonStyle.fontSize = 15;
             buttonStyle.fontStyle = FontStyle.Bold;
 
-            if (GUILayout.Button("Build App", buttonStyle, GUILayout.Height(80)))
+            GUIContent buildAppContent = new GUIContent();
+            buildAppContent.text = "Build App";
+            buildAppContent.tooltip = "Builds Application To A Specified Build Folder.";
+
+            if (GUILayout.Button(buildAppContent, buttonStyle, GUILayout.Height(50)))
             {
                 BuildManager.Build();
             }
@@ -1048,9 +1096,13 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
 
             GUILayout.Space(10);
 
+            GUIContent buildAndRunContent = new GUIContent();
+            buildAppContent.text = "Build App";
+            buildAppContent.tooltip = "Builds Application To A Specified Build Folder.";
+
             SerializedObject buildSerializedObject = new SerializedObject(appBuildSettings);
             SerializedProperty buildSerializedObjectProperty = buildSerializedObject.FindProperty("buildAndRun");
-            EditorGUILayout.PropertyField(buildSerializedObjectProperty, true);
+            EditorGUILayout.PropertyField(buildSerializedObjectProperty, buildAndRunContent, true);
             buildSerializedObject.ApplyModifiedProperties();
 
             GUILayout.Space(15);
@@ -1108,7 +1160,7 @@ namespace Bridge.Core.UnityCustomEditor.App.Manager
                 reordarableSceneList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) => 
                 {
                     GUIContent content = new GUIContent();
-                    content.tooltip = "Assign Scenes To Include In Build.";
+                    content.tooltip = (property.GetArrayElementAtIndex(index).FindPropertyRelative("scene").objectReferenceValue == null)? "Assign A New Scene To Include In Build." : $"Assigned Build Scene : {property.GetArrayElementAtIndex(index).FindPropertyRelative("scene").objectReferenceValue?.name}";
                     content.text = (string.IsNullOrEmpty(property.GetArrayElementAtIndex(index).FindPropertyRelative("scene").objectReferenceValue?.name))? "New Scene" : property.GetArrayElementAtIndex(index).FindPropertyRelative("scene").objectReferenceValue?.name;
 
                     EditorGUI.LabelField(new Rect(rect.x, rect.y, 150, EditorGUIUtility.singleLineHeight), content);
